@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Delete Collaboration Group
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-danger">Are you sure you want to delete "{{ collaboration_group.group_name }}"?</h1>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Confirm</button>
+            <a href="{% url 'collaboration_group:collaboration_group_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+{% endblock %}
