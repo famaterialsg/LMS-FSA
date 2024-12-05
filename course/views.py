@@ -1174,7 +1174,7 @@ def course_content_edit(request, pk, session_id):
     if request.GET.get('edit'):
         reading_material_id = request.GET['edit']
         editing_material = get_object_or_404(ReadingMaterial.objects.exclude(material__material_type='assessments'),id=reading_material_id)
-        editing_course_material = get_object_or_404(CourseMaterial, material_id=reading_material_id)
+        editing_course_material = get_object_or_404(CourseMaterial.objects.exclude(material_type='assessments'), material_id=reading_material_id)
 
     if request.method == 'POST':
         if editing_material is not None:

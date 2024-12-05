@@ -283,3 +283,45 @@ def helpful_rate(request, pk):
     else:
         feedback.helpful_rate.add(request.user)
     return redirect('feedback:course_all_feedback', course_id=feedback.course.id)
+
+
+def combined_feedback(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    instructor = course.instructor
+    if request.method == 'POST':
+        course_form = CourseFeedbackForm(request.POST)
+        instructor_form = InstructorFeedbackForm(request.POST)
+
+        # Check if both forms are valid
+        if course_form.is_valid() and instructor_form.is_valid():
+            print("Get IN")
+            # Save course feedback
+            course_feedback = course_form.save(commit=False)
+            course_feedback.student = request.user
+            course_feedback.course = course
+            course_feedback.course_comment = course_form.cleaned_data.get('course_comment')
+            course_feedback.material_comment = course_form.cleaned_data.get('material_comment')
+            course_feedback.save()
+
+            # Save instructor feedback
+            instructor_feedback = instructor_form.save(commit=False)
+            instructor_feedback.student = request.user
+            instructor_feedback.instructor = instructor
+            instructor_feedback.course = course
+            instructor_feedback.save()
+
+            messages.success(request, 'Both course and instructor feedback submitted successfully.')
+            return redirect('student_portal:course_detail', pk=course.id)
+        else:
+            messages.error(request, 'Please check your feedback forms and try again.')
+    else:
+        course_form = CourseFeedbackForm()
+        instructor_form = InstructorFeedbackForm()
+    context = {
+        'course': course,
+        'instructor': instructor,
+        'course_form': course_form,
+        'instructor_form': instructor_form,
+    }
+
+    return render(request, 'feedback_course_instructor.html', context)
