@@ -265,7 +265,26 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Get the current tab from localStorage
+        const activeTab = localStorage.getItem("activeTab");
+        if (activeTab) {
+            // Activate the saved tab
+            const tab = document.querySelector(`[data-bs-target="${activeTab}"]`);
+            if (tab) tab.click();
+        }
 
+        // Save the selected tab to localStorage
+        const tabElements = document.querySelectorAll('[data-bs-toggle="tab"]');
+        tabElements.forEach((tab) => {
+            tab.addEventListener("shown.bs.tab", function (event) {
+                const target = event.target.getAttribute("data-bs-target");
+                localStorage.setItem("activeTab", target);
+            });
+        });
+    });
+    </script>
 {% endblock %}
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -279,17 +298,24 @@
 
 <script>
 
-    function filterFeedback() {
-        const searchBar = document.getElementById('searchBar').value.toLowerCase();
-        const courseFilter = document.getElementById('courseFilter').value.toLowerCase();
-        const courseTable = document.getElementById('courseFeedbackTable');
-        const instructorTable = document.getElementById('instructorFeedbackTable');
-        const courseRows = courseTable.getElementsByTagName('tr');
-        const instructorRows = instructorTable.getElementsByTagName('tr');
+function filterFeedback() {
+    const searchBar = document.getElementById('searchBar').value.toLowerCase();
+    const courseFilter = document.getElementById('courseFilter').value.toLowerCase();
 
-        filterRows(courseRows, courseFilter, searchBar);
-        filterRows(instructorRows, courseFilter, searchBar);
+    // Lấy URL hiện tại và thêm các tham số bộ lọc
+    const url = new URL(window.location.href);
+    url.searchParams.set('search', searchBar);
+    url.searchParams.set('course', courseFilter);
+
+    // Giữ lại tham số phân trang nếu có
+    const pageParam = new URLSearchParams(window.location.search).get('page');
+    if (pageParam) {
+        url.searchParams.set('page', pageParam); // Giữ lại trang hiện tại
     }
+
+    window.location.href = url; // Điều hướng đến URL mới
+}
+
 
     function filterRows(rows, courseFilter, searchBar) {
         for (let i = 1; i < rows.length; i++) {
@@ -311,81 +337,55 @@
     }
 
     function filterInstructorFeedback() {
-        const searchBar = document.getElementById('instructorSearchBar').value.trim().toLowerCase();
-        const instructorFilter = document.getElementById('instructorFilter').value.toLowerCase();
-        const courseFilter = document.getElementById('courseFilterInstructor').value.toLowerCase(); // Get selected course filter
-        const table = document.getElementById('instructorFeedbackTable');
-        const rows = table.getElementsByTagName('tr');
+    const searchBar = document.getElementById('instructorSearchBar').value.trim().toLowerCase();
+    const instructorFilter = document.getElementById('instructorFilter').value.toLowerCase();
+    const courseFilter = document.getElementById('courseFilterInstructor').value.toLowerCase();
 
-        for (let i = 1; i < rows.length; i++) {
-            const instructor = rows[i].getElementsByTagName('td')[0].textContent.toLowerCase();
-            const course = rows[i].getElementsByTagName('td')[1].textContent.toLowerCase(); // Assuming course is in the second column
-            const comments = rows[i].getElementsByTagName('td')[3].textContent.toLowerCase(); // Assuming comments are in the fourth column
+    // Cập nhật URL với các tham số bộ lọc
+    const url = new URL(window.location.href);
+    url.searchParams.set('instructor_search', searchBar);
+    url.searchParams.set('instructor', instructorFilter);
+    url.searchParams.set('course_instructor', courseFilter);
 
-            let showRow = true;
-
-            // Filter by exact course match
-            if (courseFilter && course !== courseFilter) {
-                showRow = false;
-            }
-
-            // Filter by exact instructor match
-            if (instructorFilter && instructor !== instructorFilter) {
-                showRow = false;
-            }
-
-            // Filter by search bar: Exact Phrase Match
-            if (searchBar) {
-                const searchTerms = searchBar.split(' ');  // Split the search term into an array of words
-
-                const matchesInstructor = searchTerms.every(term => instructor.includes(term));
-                const matchesCourse = searchTerms.every(term => course.includes(term));
-                const matchesComments = searchTerms.every(term => comments.includes(term));
-
-                if (!(matchesInstructor || matchesCourse || matchesComments)) {
-                    showRow = false;
-                }
-            }
-
-            // Toggle row visibility based on filters
-            rows[i].style.display = showRow ? '' : 'none';
-        }
+    // Giữ lại tham số phân trang
+    const pageParam = new URLSearchParams(window.location.search).get('page');
+    if (pageParam) {
+        url.searchParams.set('page', pageParam);
     }
 
+    url.hash = '#instructor-feedback';  // Giữ hash nếu có
+    window.location.href = url; // Điều hướng đến URL mới
+}
 
-    function toggleInstructorRatingSort() {
-        const button = document.getElementById('instructorRatingSortButton');
-        const icon = button.querySelector('i');
-        const table = document.getElementById('instructorFeedbackTable');
-        const rows = Array.from(table.getElementsByTagName('tr')).slice(1);
 
-        let ascending = icon.classList.contains('fa-sort-amount-down');
+function toggleInstructorRatingSort() {
+    const button = document.getElementById('instructorRatingSortButton');
+    const icon = button.querySelector('i');
+    const table = document.getElementById('instructorFeedbackTable');
+    const rows = Array.from(table.getElementsByTagName('tr')).slice(1);
 
-        rows.sort((a, b) => {
-            const ratingA = parseFloat(a.getElementsByTagName('td')[2].textContent);
-            const ratingB = parseFloat(b.getElementsByTagName('td')[2].textContent);
-            return ascending ? ratingA - ratingB : ratingB - ratingA;
-        });
+    let ascending = icon.classList.contains('fa-sort-amount-down');
 
-        rows.forEach(row => table.appendChild(row));
-
-        icon.classList.toggle('fa-sort-amount-down', !ascending);
-        icon.classList.toggle('fa-sort-amount-up', ascending);
-    }
+    // Update URL for sorting
+    const url = new URL(window.location.href);
+    url.searchParams.set('instructor_sort', ascending ? 'desc' : 'asc');
+    window.location.href = url;
+}
 
     function toggleRatingSort() {
-        const button = document.getElementById('ratingSortButton');
-        const icon = button.querySelector('i');
-        const courseTable = document.getElementById('courseFeedbackTable');
-        const courseRows = Array.from(courseTable.getElementsByTagName('tr')).slice(1);
+    const button = document.getElementById('ratingSortButton');
+    const icon = button.querySelector('i');
+    const courseTable = document.getElementById('courseFeedbackTable');
+    const courseRows = Array.from(courseTable.getElementsByTagName('tr')).slice(1);
 
-        let ascending = icon.classList.contains('fa-sort-amount-down');
+    let ascending = icon.classList.contains('fa-sort-amount-down');
 
-        sortRows(courseRows, ascending);
+    // Update URL for sorting
+    const url = new URL(window.location.href);
+    url.searchParams.set('course_sort', ascending ? 'desc' : 'asc');
+    window.location.href = url;
+}
 
-        icon.classList.toggle('fa-sort-amount-down', !ascending);
-        icon.classList.toggle('fa-sort-amount-up', ascending);
-    }
 
     function sortRows(rows, ascending) {
         rows.sort((a, b) => {
@@ -526,13 +526,17 @@
     window.addEventListener('load', () => {
         // Set the "All Courses" option as selected by default
         const courseSelect = document.getElementById('courseChartFilter');
-        courseSelect.value = 'all'; // Ensure "All Courses" is selected
+        courseSelect.value = getUrlParameter('course') || 'all';  // Ensure "All Courses" is selected
         const instructorSelect = document.getElementById('instructorChartFilter');
-        instructorSelect.value = 'all'; // Ensure "All Courses" is selected
+        instructorSelect.value = getUrlParameter('instructor') || 'all'; // Ensure "All Courses" is selected
 
         // Update the course charts for the "All Courses" option
         updateCourseCharts();
         updateInstructorCharts();
     });
+    function getUrlParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
 </script>
 {% endblock %}

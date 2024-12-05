@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from module_group.models import ModuleGroup, Module
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import F, FloatField, ExpressionWrapper, Count
+from django.db.models import F, FloatField, ExpressionWrapper, Count, Q, Avg
 from django.http import Http404, JsonResponse
 
 '''def feedback_list(request):
@@ -34,13 +34,77 @@ def feedback_list(request):
     course_instructors = courses.values_list('instructor', flat=True).distinct()
     instructors = User.objects.filter(id__in=course_instructors)
 
-    # Separate instructor and course feedback for the first two tabs
-    instructor_feedbacks_all = InstructorFeedback.objects.all()
+    # Get the query parameters for filtering and searching
+    search_term = request.GET.get('search', '').strip().lower()
+    course_filter = request.GET.get('course', '').strip().lower()
+    instructor_search = request.GET.get('instructor_search', '').strip().lower()
+    instructor_filter = request.GET.get('instructor', '').strip().lower()
+    course_instructor_filter = request.GET.get('course_instructor', '').strip().lower()
+
+    # Sorting parameters for course feedback
+    course_sort_order = request.GET.get('course_sort', 'asc')  # Default to ascending
+    instructor_sort_order = request.GET.get('instructor_sort', 'asc')  # Default to ascending
+
+    # Filter course feedback
     course_feedbacks_all = CourseFeedback.objects.all()
+
+    if search_term:
+        course_feedbacks_all = course_feedbacks_all.filter(
+            Q(course__course_name__icontains=search_term) |
+            Q(course_comment__icontains=search_term) |
+            Q(material_comment__icontains=search_term)
+        )
+
+    if course_filter:
+        course_feedbacks_all = course_feedbacks_all.filter(course__course_name__icontains=course_filter)
+
+    # Annotate each course feedback with the average rating
+    course_feedbacks_all = course_feedbacks_all.annotate(
+        average_rating=(
+            (F('course_material') + F('clarity_of_explanation') +
+            F('course_structure') + F('practical_applications') +
+            F('support_materials')) / 5.0
+        )
+    )
+
+    # Sorting course feedback by average rating
+    if course_sort_order == 'desc':
+        course_feedbacks_all = course_feedbacks_all.order_by('-average_rating')
+    else:
+        course_feedbacks_all = course_feedbacks_all.order_by('average_rating')
 
     # Pagination for Course Feedback Tab
     course_paginator = Paginator(course_feedbacks_all, 8)
     course_page_obj = course_paginator.get_page(request.GET.get('course_page'))
+
+    # Filter instructor feedback
+    instructor_feedbacks_all = InstructorFeedback.objects.all()
+
+    if instructor_search:
+        instructor_feedbacks_all = instructor_feedbacks_all.filter(
+            Q(instructor__username__icontains=instructor_search) |
+            Q(comments__icontains=instructor_search)
+        )
+
+    if instructor_filter:
+        instructor_feedbacks_all = instructor_feedbacks_all.filter(instructor__username__icontains=instructor_filter)
+
+    if course_instructor_filter:
+        instructor_feedbacks_all = instructor_feedbacks_all.filter(course__course_name__icontains=course_instructor_filter)
+
+    # Annotate each instructor feedback with the average rating
+    instructor_feedbacks_all = instructor_feedbacks_all.annotate(
+        average_rating=(
+            (F('course_knowledge') + F('communication_skills') +
+            F('approachability') + F('engagement') + F('professionalism')) / 5.0
+        )
+    )
+
+    # Sorting instructor feedback by average rating
+    if instructor_sort_order == 'desc':
+        instructor_feedbacks_all = instructor_feedbacks_all.order_by('-average_rating')
+    else:
+        instructor_feedbacks_all = instructor_feedbacks_all.order_by('average_rating')
 
     # Pagination for Instructor Feedback Tab
     instructor_paginator = Paginator(instructor_feedbacks_all, 8)
@@ -50,8 +114,6 @@ def feedback_list(request):
     return render(request, 'feedback_list.html', {
         'courses': courses,
         'instructors': instructors,
-        'module_groups': ModuleGroup.objects.all(),
-        'modules': Module.objects.all(),
         'instructor_page_obj': instructor_page_obj,  # For Instructor Feedback Tab
         'course_page_obj': course_page_obj,  # For Course Feedback Tab
     })
