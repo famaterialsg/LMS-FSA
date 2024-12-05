@@ -10,13 +10,13 @@
             <!-- Tabs -->
             <ul class="nav nav-tabs mb-4" id="feedbackTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="course-tab" data-bs-toggle="tab" data-bs-target="#course" 
+                    <button class="nav-link active" id="course-tab" data-bs-toggle="tab" data-bs-target="#course"
                             type="button" role="tab" aria-controls="course" aria-selected="true">
                         Course Feedback
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="instructor-tab" data-bs-toggle="tab" data-bs-target="#instructor" 
+                    <button class="nav-link" id="instructor-tab" data-bs-toggle="tab" data-bs-target="#instructor"
                             type="button" role="tab" aria-controls="instructor" aria-selected="false">
                         Instructor Feedback
                     </button>
@@ -38,7 +38,7 @@
                             </div>
                             <input type="hidden" name="course_material" id="courseMaterialInput" value="{{ course_form.course_material.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="practicalApplications" class="form-label fw-bold" style="color:#2b59c3">Practical Applications</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="practicalApplications">
@@ -48,7 +48,7 @@
                             </div>
                             <input type="hidden" name="practical_applications" id="practical_applicationsInput" value="{{ course_form.practical_applications.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="clarityOfExplanation" class="form-label fw-bold" style="color:#2b59c3">Clarity of Explanation</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="clarityOfExplanation">
@@ -58,7 +58,7 @@
                             </div>
                             <input type="hidden" name="clarity_of_explanation" id="clarity_of_explanationInput" value="{{ course_form.clarity_of_explanation.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="courseStructure" class="form-label fw-bold" style="color:#2b59c3">Course Structure</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="courseStructure">
@@ -68,7 +68,7 @@
                             </div>
                             <input type="hidden" name="course_structure" id="course_structureInput" value="{{ course_form.course_structure.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="supportMaterials" class="form-label fw-bold" style="color:#2b59c3">Support Materials</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="supportMaterials">
@@ -78,7 +78,7 @@
                             </div>
                             <input type="hidden" name="support_materials" id="support_materialsInput" value="{{ course_form.support_materials.value|default_if_none:0 }}">
                         </div>
-        
+
                         <!-- Tabs for Comments -->
                         <div class="mb-4">
                             <ul class="nav nav-pills mb-3" id="commentTabs" role="tablist">
@@ -117,7 +117,7 @@
                             </div>
                             <input type="hidden" name="course_knowledge" id="course_knowledgeInput" value="{{instructor_form.course_knowledge.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="communicationSkills" class="form-label fw-bold" style="color:#2b59c3">Communication Skills</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="communicationSkills">
@@ -127,7 +127,7 @@
                             </div>
                             <input type="hidden" name="communication_skills" id="communication_skillsInput" value="{{ instructor_form.communication_skills.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="approachability" class="form-label fw-bold" style="color:#2b59c3">Approachability</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="approachability">
@@ -137,7 +137,7 @@
                             </div>
                             <input type="hidden" name="approachability" id="approachabilityInput" value="{{ instructor_form.approachability.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="engagement" class="form-label fw-bold" style="color:#2b59c3">Engagement</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="engagement">
@@ -147,7 +147,7 @@
                             </div>
                             <input type="hidden" name="engagement" id="engagementInput" value="{{ instructor_form.engagement.value|default_if_none:0 }}">
                         </div>
-        
+
                         <div class="mb-4 rating-container" style="display: flex; align-items: center; gap: 0.625rem;">
                             <label for="professionalism" class="form-label fw-bold" style="color:#2b59c3">Professionalism</label>
                             <div class="star-rating" style="display: flex; font-size: 1.5rem;" id="professionalism">
@@ -157,7 +157,7 @@
                             </div>
                             <input type="hidden" name="professionalism" id="professionalismInput" value="{{ instructor_form.professionalism.value|default_if_none:0 }}">
                         </div>
-        
+
                         <!-- Comments -->
                         <div class="form-group mb-4">
                             <label for="comments" class="form-label fw-bold" style="color:#2b59c3">Comments</label>
@@ -166,10 +166,11 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                <a href="{% url 'student_portal:course_detail' course.id %}" class="btn btn-outline-secondary" style="background-color: gray;">Back to Course Detail</a>
             </form>
         </div>
     </div>
-</div> 
+</div>
 
 <style>
 .star-rating .fa-star {
@@ -187,21 +188,21 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const starRatingContainers = document.querySelectorAll('.star-rating');
-    
+
         starRatingContainers.forEach(container => {
             const stars = container.querySelectorAll('.fas.fa-star');
             const hiddenInput = container.nextElementSibling;
-    
+
             if (!hiddenInput) {
                 console.error("Hidden input not found for:", container);
                 return;
             }
-    
+
             stars.forEach((star, index) => {
                 // Single click to select stars
                 star.addEventListener('click', () => {
                     hiddenInput.value = index + 1;
-    
+
                     stars.forEach((s, i) => {
                         if (i <= index) {
                             s.classList.add('checked');
@@ -212,11 +213,11 @@
                         }
                     });
                 });
-    
+
                 // Double click to clear selection
                 star.addEventListener('dblclick', () => {
                     hiddenInput.value = 0; // Clear the hidden input value
-    
+
                     stars.forEach(s => {
                         s.classList.remove('checked');
                         s.classList.add('unchecked');
@@ -225,6 +226,6 @@
             });
         });
     });
-    
+
 </script>
 {% endblock %}
