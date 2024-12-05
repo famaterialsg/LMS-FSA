@@ -4,20 +4,20 @@
 {% block title %}{{ form.instance.pk|yesno:"Edit User, Add New User" }}{% endblock %}
 
 {% block content %}
-<style>
-    #loading-spinner {
-        display: none; /* Ẩn spinner mặc định */
-    }
-    
-
-</style>   
 <form method="post" enctype="multipart/form-data" style="max-width: 100%; max-height: 100vh; transition: all 0.3s ease-in-out;" class="needs-validation" novalidate>
+    {% if messages %}
+        <div class="alert alert-success">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
     <div class="row mt-4">
         <div class="col-md-3">
             <div class="p-4 justify-content-center text-center bg-gradient-light rounded pt-3">
                 <div class="form-group">
                     <label class="h5 mt-2 mb-2">Profile Picture</label>
-                    <div class="avatar-wrapper justify-content-center align-items-center mb-2">
+                    <div class="avatar-wrapper d-flex justify-content-center align-items-center mb-2">
                         <img 
                             src="{% if form.instance.pk and user.profile.profile_picture_url %}{{ user.profile.profile_picture_url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}" 
                             class="img-fluid rounded-circle" 
@@ -185,56 +185,22 @@
                     {% endif %}    
                     <label class="h5 mt-2">Profile Picture:</label>
                     <input type="url" name="profile_picture_url" id="id_profile_picture_url" class="form-control" placeholder="Enter profile picture URL" value="{{ form.fields.profile_picture_url.initial|default:'' }}"> 
-
-                    <div class="col-md-12 mb-3">
-                        <label class="h5 mt-2">{{ form.bio.label_tag }}</label>
-                        <textarea class="form-control" rows="3" name="bio">{{ form.bio.value|default:'' }}</textarea>
-                        {% if form.bio.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.bio.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-12 mb-3">
-                        <label class="h5 mt-2">Describe your interests</label>
-                        <textarea class="form-control" rows="3" name="hi">{{ form.hi.value|default:'' }}</textarea>
-                        {% if form.hi.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.hi.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
                     <div class="row">
-                        <div class="col-md-6">
-                            <!-- Label ở trên cùng -->
-                            <label class="h5 mt-2">Suggesting interests: </label>
-                        
-                            <!-- Các button sẽ được thêm vào đây -->
-                            <div id="predicted-interests" class="btn-group mt-2" role="group">
-                                <!-- Các nút sẽ được thêm vào đây sau khi có kết quả dự đoán -->
-                            </div>
-                        
-                            <!-- Loading spinner sẽ xuất hiện khi người dùng nhấn vào nút -->
-                            <div id="loading-spinner" class="spinner-border text-primary mt-2 mb-3 text-center" style="display: none;" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        
-                            <!-- Nút bấm sẽ bị vô hiệu hóa trong lúc chờ đợi -->
-                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="predict-button" data-bs-toggle="button" aria-pressed="false">
-                                Suggesting interests
-                            </button>
+                        <div class="col-md-6 mb-3">
+                            <label class="h5 mt-2">{{ form.bio.label_tag }}</label>
+                            <textarea class="form-control" rows="5" name="bio">{{ form.bio.value|default:'' }}</textarea>
+                            {% if form.bio.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.bio.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                         </div>
                         
-                        
-                    
-                        <!-- Ô nhập interest -->
                         <div class="col-md-6 mb-3">
                             <label class="h5 mt-2">{{ form.interests.label_tag }}</label>
-                            <textarea class="form-control" rows="1" name="interests" id="interest-textarea">{{ form.interests.value|default:'' }}</textarea>
+                            <textarea class="form-control" rows="5" name="interests">{{ form.interests.value|default:'' }}</textarea>
                             {% if form.interests.errors %}
                                 <ul class="errorlist">
                                     {% for error in form.interests.errors %}
@@ -242,12 +208,8 @@
                                     {% endfor %}
                                 </ul>
                             {% endif %}
-                        </div>
+                        </div>            
                     </div>
-                            
-                            
-                            
-                        
                     <div class="row">
                         <div class="col-md-6">
                             <label class="h5 mt-2">{{ form.learning_style.label_tag }}</label>
@@ -279,7 +241,7 @@
                             {% endif %}
                         </div>              
                     </div>
-                </div>
+
                     
             </div>
         </div>
@@ -326,80 +288,4 @@
         toggleStudentCode();
     });
 </script>
-<script>
-    document.getElementById("predict-button").addEventListener("click", function () {
-        const interestInput = document.querySelector('[name="hi"]').value; // Lấy giá trị từ ô input 'hi'
-
-        if (interestInput) {
-            // Hiển thị spinner khi bắt đầu yêu cầu API
-            document.getElementById('loading-spinner').style.display = 'inline-block';
-
-            fetch("{% url 'user:predict_interests_api' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ hi: interestInput })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const predictedInterests = data.predicted_interests || [];
-                    const predictedInterestsArea = document.getElementById("predicted-interests");
-
-                    // Làm trống danh sách trước khi thêm các button mới
-                    predictedInterestsArea.innerHTML = '';
-
-                    // Thêm các button vào container
-                    if (Array.isArray(predictedInterests) && predictedInterests.length > 0) {
-                        predictedInterests.forEach(interest => {
-                            const button = document.createElement("button");
-                            button.type = "button";
-                            button.classList.add("btn", "btn-outline-secondary", "mb-2");
-                            button.textContent = interest;
-
-                            // Thêm sự kiện khi nhấn vào button
-                            button.addEventListener("click", function () {
-                                // Thay đổi kiểu dáng khi nhấn vào button
-                                button.classList.toggle("btn-primary");
-                                button.classList.toggle("btn-outline-secondary");
-
-                                // Cập nhật ô nhập interest với các interest đã chọn
-                                const currentInterests = document.getElementById("interest-textarea").value.split(", ");
-                                const interestValue = button.textContent;
-
-                                // Nếu interest đã được chọn, xóa nó, nếu chưa chọn, thêm vào
-                                if (currentInterests.includes(interestValue)) {
-                                    document.getElementById("interest-textarea").value = currentInterests.filter(i => i !== interestValue).join(", ");
-                                } else {
-                                    document.getElementById("interest-textarea").value = [...currentInterests, interestValue].join(", ");
-                                }
-                            });
-
-                            predictedInterestsArea.appendChild(button);
-                        });
-                    } else {
-                        // Nếu không có dự đoán, thông báo
-                        const noPredictionButton = document.createElement("button");
-                        noPredictionButton.type = "button";
-                        noPredictionButton.classList.add("btn", "btn-warning");
-                        noPredictionButton.textContent = "No prediction available";
-                        predictedInterestsArea.appendChild(noPredictionButton);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const predictedInterestsArea = document.getElementById("predicted-interests");
-                    predictedInterestsArea.innerHTML = '<button class="btn btn-danger">Error during prediction</button>';
-                })
-                .finally(() => {
-                    // Ẩn spinner khi API trả về kết quả
-                    document.getElementById('loading-spinner').style.display = 'none';
-                });
-        } else {
-            alert("Please enter a text to predict interests.");
-        }
-    });
-</script>
-
-
 {% endblock %}
