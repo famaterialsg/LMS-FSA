@@ -451,7 +451,7 @@ def course_detail(request, pk):
     if is_enrolled:
         enrollment = Enrollment.objects.get(student=request.user, course=course)
         if enrollment:
-            comeback = enrollment.come_back
+            comeback = enrollment.come_back if enrollment.come_back else 0
             if enrollment.last_accessed_material:
                 last_accessed_material = enrollment.last_accessed_material
                 last_accessed_session = last_accessed_material.session
@@ -467,6 +467,10 @@ def course_detail(request, pk):
                 last_accessed_material = last_accessed_session.materials.first()
             else:
                 last_accessed_material = None
+    else:
+        comeback = 0
+        last_accessed_session = sessions.first()
+        last_accessed_material = last_accessed_session.materials.first()
 
     context = {
         'course': course,
