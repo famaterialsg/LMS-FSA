@@ -21,7 +21,7 @@ def user_progress(request):
         admin_course_count = UserProgress.objects.filter(user = request.user).count()
         admin_completed = UserProgress.objects.filter(user=request.user, progress_percentage=100).count()
         admin_percent_complete = round((admin_completed / admin_course_count)*100,2) if admin_course_count > 0 else 0
-        admin_paginator_pro = Paginator(UserProgress.objects.filter(user = request.user), 2)
+        admin_paginator_pro = Paginator(UserProgress.objects.filter(user = request.user), 4)
         admin_page_number_pro = request.GET.get('page')
         admin_page_obj_pro = admin_paginator_pro.get_page(admin_page_number_pro)
 
@@ -60,7 +60,7 @@ def user_progress(request):
                 progress = UserProgress.objects.filter(user=users[0])
                 completed = UserProgress.objects.filter(user=users[0], progress_percentage=100).count()
                 percent_complete = round((completed / progress.count())*100,2) if progress.count() > 0 else 0
-                paginator_pro = Paginator(progress, 2) 
+                paginator_pro = Paginator(progress, 4) 
                 page_number_pro = request.GET.get('page')
                 page_obj_pro = paginator_pro.get_page(page_number_pro)
 

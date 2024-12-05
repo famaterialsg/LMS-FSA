@@ -229,7 +229,8 @@ class CourseFinalScore(models.Model):
 
     def final_score(self):
         final_score = AssessmentFinalScore.objects.filter(
-            user=self.user
+            user=self.user,
+            assessment__course = self.course
         ).aggregate(
             final_score=models.Sum('final_score')
         )['final_score']

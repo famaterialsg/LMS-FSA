@@ -230,7 +230,7 @@
                             <p><strong>Completed Courses:</strong> {{ admin_progress.admin_completed }}</p>
                         </div>
                     </div>
-                    {% if not percent_complete_user == 0 %}
+                    {% if not admin_progress.admin_percent_complete == 0 %}
                     <div class="progress" style="height: 25px;" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar" style="font-size: large; width: {{ admin_progress.admin_percent_complete }}%;">{{ admin_progress.admin_percent_complete }}%</div>
                     </div>

@@ -75,11 +75,11 @@ var passCount = JSON.parse(document.getElementById("pass-count-highest").textCon
 var InprogressCount = JSON.parse(document.getElementById("in_progress-count-highest").textContent);
 
 // Tính toán tổng số học viên
-var totalStudents = passCount + InprogressCount;
+var totalStudentHighest = passCount + InprogressCount;
 
 // Tính tỷ lệ phần trăm cho Pass và In Progress
-var passPercentage = (passCount / totalStudents) * 100;
-var inProgressPercentage = (InprogressCount / totalStudents) * 100;
+var passPercentage = (passCount / totalStudentHighest) * 100;
+var inProgressPercentage = (InprogressCount / totalStudentHighest) * 100;
 
 // Chart.js Pie Chart
 var pie_highest = document.getElementById('passRateChart').getContext('2d');
@@ -98,7 +98,7 @@ new Chart(pie_highest, {
         plugins: {
             title: {
                 display: true,
-                text: 'Hightest Pass Rate Distribution for ' + highestCourseName, // Tiêu đề biểu đồ, chứa tên khóa học
+                text: 'Highest Pass Rate Distribution for ' + highestCourseName, // Tiêu đề biểu đồ, chứa tên khóa học
                 position: 'bottom', // Vị trí tiêu đề
                 font: {
                     size: 16,
@@ -113,7 +113,10 @@ new Chart(pie_highest, {
                 callbacks: {
                     label: function(context) {
                         // Hiển thị số học viên và tỷ lệ phần trăm
-                        var percentage = (context.raw / totalStudents) * 100;
+                        var percentage = (context.raw / totalStudentHighest) * 100;
+                        console.log(percentage)
+                        console.log(context.raw)
+                        console.log(totalStudentHighest)
                         return `${context.label}: ${context.raw} students (${percentage.toFixed(2)}%)`;
                     }
                 }
@@ -122,7 +125,7 @@ new Chart(pie_highest, {
                 display: true,
                 color: '#fff', // Màu chữ hiển thị trên biểu đồ
                 formatter: function(value, context) {
-                    var percentage = (value / totalStudents) * 100;
+                    var percentage = (value / totalStudentHighest) * 100;
                     return `${percentage.toFixed(2)}%`; // Hiển thị tỷ lệ phần trăm
                 },
                 font: {
@@ -139,11 +142,11 @@ var passCount = JSON.parse(document.getElementById("pass-count_lowest").textCont
 var InprogressCount = JSON.parse(document.getElementById("in_progress-count-lowest").textContent);
 
 // Tính toán tổng số học viên
-var totalStudents = passCount + InprogressCount;
+var totalStudentsLowest = passCount + InprogressCount;
 
 // Tính tỷ lệ phần trăm cho Pass và In Progress
-var passPercentage = (passCount / totalStudents) * 100;
-var inProgressPercentage = (InprogressCount / totalStudents) * 100;
+var passPercentage = (passCount / totalStudentsLowest) * 100;
+var inProgressPercentage = (InprogressCount / totalStudentsLowest) * 100;
 
 // Chart.js Pie Chart
 var pie_lowest = document.getElementById('passRateChart1').getContext('2d');
@@ -177,7 +180,7 @@ new Chart(pie_lowest, {
                 callbacks: {
                     label: function(context) {
                         // Hiển thị số học viên và tỷ lệ phần trăm
-                        var percentage = (context.raw / totalStudents) * 100;
+                        var percentage = (context.raw / totalStudentsLowest) * 100;
                         return `${context.label}: ${context.raw} students (${percentage.toFixed(2)}%)`;
                     }
                 }
@@ -186,7 +189,7 @@ new Chart(pie_lowest, {
                 display: true,
                 color: '#fff', // Màu chữ hiển thị trên biểu đồ
                 formatter: function(value, context) {
-                    var percentage = (value / totalStudents) * 100;
+                    var percentage = (value / totalStudentsLowest) * 100;
                     return `${percentage.toFixed(2)}%`; // Hiển thị tỷ lệ phần trăm
                 },
                 font: {
