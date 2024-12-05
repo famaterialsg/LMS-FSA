@@ -18,14 +18,14 @@
                     <span class="fs-5 fw-semibold text-white" style="white-space: normal;">{{ course.course_name }}</span>
                 </div>
             </div>
-            
+
             <!-- Scrollable Lessons Section - fills remaining height -->
             <div id="lesson-scroll" class="overflow-auto small flex-grow-1 px-1">
                 <ul class="nav flex-column g-0">
                     {% for session in sessions %}
                     <li class="nav-item mb-1">
                         <!-- Session Header -->
-                        <a title="{{ session.name }}" 
+                        <a title="{{ session.name }}"
                            class="nav-link text-white d-flex align-items-center py-2 px-2 rounded-2 {% if session.id == current_session.id %}bg-primary bg-opacity-75{% else %}text-light hover-bg-light hover-bg-opacity-10{% endif %}"
                            href="{% url 'student_portal:course_content' course.pk session.id %}">
                             <i class="fas fa-folder{% if session.id == current_session.id %}-open{% endif %} fa-xs me-2 text-warning opacity-75"></i>
@@ -40,7 +40,7 @@
                             {% for material in materials %}
                                 {% if material.session.id == session.id %}
                                 <li>
-                                    <a title="{{ material.title }}" 
+                                    <a title="{{ material.title }}"
                                        class="nav-link d-flex align-items-center py-1 px-2 rounded-2 {% if material.id == current_material.id %}text-white bg-primary bg-opacity-50{% else %}text-light text-opacity-75 hover-bg-light hover-bg-opacity-10{% endif %}"
                                        href="{% url 'student_portal:course_content' course.pk session.id %}?file_id={{ material.id }}&file_type={{ material.material_type }}">
                                         <i class="fas fa-xs me-2 {% if material.material_type == 'lecture' %}fa-play-circle text-info
@@ -78,7 +78,7 @@
                     <h5>{{ current_material.title }}</h5>
                     <span class="badge bg-secondary">{{ current_material.material_type|title }}</span>
                 </div>
-                <div class="card-body" style="max-height: 70vh;">
+                <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
                     {% if content_type in 'assignments labs lectures references' %}
                         {{ preview_content|safe }}
                     {% else %}
@@ -89,14 +89,14 @@
 
             <!-- <div class="d-flex justify-content-end gap-3">
                 <a href="{% url 'student_portal:course_detail' course.id %}" class="btn btn-outline-secondary">Back to Course Detail</a>
-                <button id="complete-btn" 
-                        class="btn {% if completion_status %}btn-secondary{% else %}btn-success{% endif %}" 
-                        data-course-id="{{ course.pk }}" 
+                <button id="complete-btn"
+                        class="btn {% if completion_status %}btn-secondary{% else %}btn-success{% endif %}"
+                        data-course-id="{{ course.pk }}"
                         data-file-id="{{ current_material.id }}">
                     {% if completion_status %}Completed{% else %}Mark as Complete{% endif %}
                 </button>
                 {% if next_material or next_session %}
-                <a href="{% if next_session %}{% url 'student_portal:course_content' course.pk next_session.id %}{% else %}{% url 'student_portal:course_content' course.pk current_session.id %}?file_id={{ next_material.id }}&file_type={{ next_material.material_type }}{% endif %}" 
+                <a href="{% if next_session %}{% url 'student_portal:course_content' course.pk next_session.id %}{% else %}{% url 'student_portal:course_content' course.pk current_session.id %}?file_id={{ next_material.id }}&file_type={{ next_material.material_type }}{% endif %}"
                    class="btn btn-outline-primary">
                     {% if next_session %}Next Session{% else %}Next Item{% endif %}
                 </a>
@@ -109,7 +109,7 @@
                     {% if completion_status %}Completed{% else %}Mark as Complete{% endif %}
                 </button>
                 {% if next_material or next_session %}
-                <a id="next-btn" href="{% if next_session %}{% url 'student_portal:course_content' course.pk next_session.id %}{% else %}{% url 'student_portal:course_content' course.pk current_session.id %}?file_id={{ next_material.id }}&file_type={{ next_material.material_type }}{% endif %}" class="btn btn-secondary">
+                <a id="next-btn" href="{% if next_session %}{% url 'student_portal:course_content' course.pk next_session.id %}?file_id={{ next_material.id }}&file_type={{ next_material.material_type }}{% else %}{% url 'student_portal:course_content' course.pk current_session.id %}?file_id={{ next_material.id }}&file_type={{ next_material.material_type }}{% endif %}" class="btn btn-secondary" style="background-color: gray;">
                     {% if next_session %}Next Session{% else %}Next Item{% endif %}
                 </a>
                 {% endif %}
@@ -143,6 +143,68 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 <script>
 $(document).ready(function() {
+    function getCSRFToken() {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+    // Function to save end time when navigating away from the page
+    function saveEndTimeOnNavigation(materialId) {
+        if (materialId) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '{% url "student_portal:end_viewing_ajax" %}', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('X-CSRFToken', getCSRFToken());  // Add CSRF token here
+            xhr.send(JSON.stringify({
+                'material_id': materialId
+            }));
+        }
+    }
+
+    function saveLastAccessedMaterial(materialId) {
+        var courseId = '{{ course.pk }}';  // Assuming you have the course ID in your template context
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '{% url "student_portal:save_last_accessed_material" %}', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', getCSRFToken());
+        xhr.send(JSON.stringify({
+            'material_id': materialId,
+            'course_id': courseId  // Include course_id in the request
+        }));
+    }
+
+    // Handle navigation away (on link click)
+    $(document).on('click', '.nav-link, .list-group-item a, .btn-outline-secondary', function(e) {
+        var materialId = '{{ current_material.id }}'; // Get current material id
+        saveEndTimeOnNavigation(materialId); // Send end time on material navigation
+        saveLastAccessedMaterial(materialId);
+    });
+
+    // Handle page unload (when leaving or refreshing the page)
+    window.addEventListener('beforeunload', function(event) {
+        var materialId = '{{ current_material.id }}'; // Get current material ID
+        if (materialId) {
+            // Make an AJAX request to save the end time before leaving the page
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '{% url "student_portal:end_viewing_ajax" %}', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('X-CSRFToken', getCSRFToken());  // Add CSRF token here
+            xhr.send(JSON.stringify({
+                'material_id': materialId
+            }));
+        }
+    });
     // Ensure the session tabs are visible
     // $('#session-tabs').show();
 

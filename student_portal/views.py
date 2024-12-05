@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from course.models import Course, Enrollment, Session, CourseMaterial, ReadingMaterial, Completion, SessionCompletion
+from course.models import Course, Enrollment, Session, CourseMaterial, ReadingMaterial, Completion, SessionCompletion, Transaction, MaterialViewingDuration
 from student_portal.models import RecommendedCourse
 from django.contrib import messages
 from feedback.models import CourseFeedback
@@ -14,33 +14,159 @@ from user.models import User
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+import json
+import re
+
+
+def start_viewing(user, material, request):
+    # Get the last viewed material URL and material ID from the session
+    last_viewed_url = request.session.get('last_viewed_url', None)
+    last_viewed_material = request.session.get('last_viewed_material', None)
+
+    # Build the current material's URL
+    current_url = request.build_absolute_uri()
+    current_material_id = str(material.id)
+
+    # Check if the current URL or material is different from the last viewed
+    is_new_material = last_viewed_material != current_material_id
+    is_new_url = last_viewed_url != current_url
+
+    if is_new_material or is_new_url:
+        # Create or update the MaterialViewingDuration entry
+        viewing_duration, created = MaterialViewingDuration.objects.get_or_create(
+            user=user,
+            material=material,
+            defaults={'start_time': timezone.now()}
+        )
+
+        if not created:
+            # Update start time and increment come_back if a new view session
+            viewing_duration.start_time = timezone.now()
+            if is_new_material:
+                viewing_duration.come_back += 1
+
+        viewing_duration.save()
+
+        # Update session tracking
+        request.session['last_viewed_material'] = current_material_id
+        request.session['last_viewed_url'] = current_url
+    else:
+        # Reload of the same material detected
+        print("Page reload detected; no update to come_back or start time.")
+
+def end_viewing(user, material):
+    try:
+        # Get the MaterialViewingDuration object
+        viewing_duration = MaterialViewingDuration.objects.get(user=user, material=material)
+
+        # Update the end_time
+        viewing_duration.end_time = timezone.now()
+
+        # Calculate the time spent on this viewing session
+        if viewing_duration.start_time:
+            time_spent_now = viewing_duration.end_time - viewing_duration.start_time
+
+            # Add the new time spent to the total time_spent
+            viewing_duration.time_spent += time_spent_now
+
+        # Save the updated object
+        viewing_duration.save()
+    except MaterialViewingDuration.DoesNotExist:
+        # Handle the case where the object does not exist
+        pass
+
+
+def end_viewing_ajax(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            material_id = data.get('material_id')
+            material = get_object_or_404(CourseMaterial, id=material_id)
+            end_viewing(request.user, material)
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+
+def extract_course_content_url(url):
+    # Regular expression to capture 'course/<course_id>/content' part of the URL
+    match = re.search(r'/course/(\d+)/content', url)
+    if match:
+        return match.group(0)  # Returns the matched string '/course/<course_id>/content'
+    return None  # Return None if no match is found
 
 
 @login_required
-def course_content(request, pk, session_id=None):
+def save_last_accessed_material(request):
+    print(request.method)
+    if request.method == 'POST':
+        print("Started")
+        data = json.loads(request.body)
+        material_id = data.get('material_id')
+        course_id = data.get('course_id')  # Get the course_id from the JSON data
+
+        # Ensure that the course_id exists
+        if not course_id:
+            return JsonResponse({'success': False, 'error': 'Course ID is required'})
+
+        try:
+            enrollment = Enrollment.objects.get(student=request.user, course__pk=course_id)
+
+            # Update the enrollment with the last accessed material
+            material = CourseMaterial.objects.get(id=material_id)
+            enrollment.last_accessed_material = material
+            enrollment.save()
+            return JsonResponse({'success': True})
+
+        except CourseMaterial.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Material not found'})
+        except Enrollment.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Enrollment not found'})
+
+
+@login_required
+def course_content(request, pk, session_id):
     course = get_object_or_404(Course, pk=pk)
     sessions = Session.objects.filter(course=course).order_by('order')
 
-    # Select the first session if no session_id is provided
-    selected_session_id = session_id or request.POST.get(
-        'session_id') or sessions.first().id if sessions.exists() else None
+    selected_session_id = request.POST.get('session_id') or session_id
 
-    # Get the current session or default to the first available session
-    current_session = get_object_or_404(Session, id=selected_session_id) if selected_session_id else None
-    materials = CourseMaterial.objects.filter(session=current_session).order_by('order') if current_session else []
+    current_session = get_object_or_404(Session, id=selected_session_id)
 
-    # Handle material selection and default to the first material if none specified
+    materials = CourseMaterial.objects.filter(session=current_session).order_by('order')
+
+    enrollment = Enrollment.objects.get(student=request.user, course=course)
+
     file_id = request.GET.get('file_id')
     file_type = request.GET.get('file_type')
-    if file_id and file_type and current_session:
-        current_material = CourseMaterial.objects.filter(id=file_id, material_type=file_type,
-                                                         session=current_session).first()
+    if file_id and file_type:
+        try:
+            current_material = CourseMaterial.objects.get(id=file_id, material_type=file_type, session=current_session)
+        except CourseMaterial.DoesNotExist:
+            current_material = materials.first() if materials.exists() else None
     else:
         current_material = materials.first() if materials.exists() else None
 
-    # Determine the next material and session for navigation
+    if current_material:
+        start_viewing(request.user, current_material, request)
+
+    # Increment come_back only if the user is not navigating between materials or reloading
+    referer_url = request.META.get('HTTP_REFERER', '')
+    current_url = request.build_absolute_uri()
+
+    if f'student_portal/{pk}/content' not in referer_url:
+        enrollment.come_back += 1
+        enrollment.save()
+    else:
+        referer_course_url = extract_course_content_url(referer_url)
+        current_course_url = extract_course_content_url(current_url)
+        if referer_course_url != current_course_url:
+            enrollment.come_back += 1
+            enrollment.save()
+
     next_material = materials.filter(order__gt=current_material.order).first() if current_material else None
     next_session = None
+
     if not next_material and current_session:
         next_session = Session.objects.filter(course=course, order__gt=current_session.order).order_by('order').first()
         next_material = CourseMaterial.objects.filter(session=next_session).order_by(
@@ -204,6 +330,8 @@ def toggle_completion(request, pk):
 
 
 def course_list(request):
+    from collections import defaultdict
+
     # Retrieve all published courses
     courses = Course.objects.filter(published=True)
     query = request.GET.get('q')
@@ -221,11 +349,13 @@ def course_list(request):
     # Combine enrolled courses with other filtered courses, removing duplicates
     courses = list(enrolled_courses_list) + [course for course in courses if course not in enrolled_courses_list]
 
-    # Mark courses as enrolled or not
+    # Mark courses as enrolled or not, and process last accessed materials
+    last_access_data = defaultdict(lambda: {"material": None, "session": None})
+
     for course in courses:
         course.user_enrolled = course.id in enrolled_course_ids
 
-        # Calculate the average rating for each course
+        # Get average rating for each course
         feedbacks = course.coursefeedback_set.all()
         if feedbacks.exists():
             total_ratings = sum(feedback.average_rating() for feedback in feedbacks)
@@ -233,16 +363,22 @@ def course_list(request):
         else:
             course.average_rating = 0.0
 
-    # Insert or update recommended courses
-    for course in courses:
-        recommended_course, created = RecommendedCourse.objects.get_or_create(
-            course=course,
-            user=request.user,
-            defaults={'created_at': timezone.now()}
-        )
-        if not created:
-            recommended_course.created_at = timezone.now()
-            recommended_course.save()
+        # Get last accessed material for the student if enrolled
+        if course.user_enrolled:
+            enrollment = Enrollment.objects.get(student=request.user, course=course)
+            if enrollment.last_accessed_material:
+                last_access_data[course.id] = {
+                    "material": enrollment.last_accessed_material,
+                    "session": enrollment.last_accessed_material.session,
+                }
+            else:
+                # If no last accessed material, get the first session and its first material
+                first_session = Session.objects.filter(course=course).first()
+                if first_session and first_session.materials.exists():
+                    last_access_data[course.id] = {
+                        "material": first_session.materials.first(),
+                        "session": first_session,
+                    }
 
     # Pagination setup
     paginator = Paginator(courses, 6)  # Show 6 courses per page
@@ -256,6 +392,7 @@ def course_list(request):
     return render(request, 'courses/course_list.html', {
         'courses': page_obj,
         'recommended_courses': [rc.course for rc in recommended_courses],
+        'last_access_data': last_access_data,
     })
 
 
@@ -310,6 +447,27 @@ def course_detail(request, pk):
         for enrollment in enrolled_users
     ]
 
+    is_enrolled = Enrollment.objects.filter(student=request.user, course=course, is_active=True).exists()
+    if is_enrolled:
+        enrollment = Enrollment.objects.get(student=request.user, course=course)
+        if enrollment:
+            comeback = enrollment.come_back
+            if enrollment.last_accessed_material:
+                last_accessed_material = enrollment.last_accessed_material
+                last_accessed_session = last_accessed_material.session
+            else:
+                last_accessed_session = sessions.first()
+                if last_accessed_session and last_accessed_session.materials.exists():
+                    last_accessed_material = last_accessed_session.materials.first()
+                else:
+                    last_accessed_material = None
+        else:
+            last_accessed_session = sessions.first()
+            if last_accessed_session and last_accessed_session.materials.exists():
+                last_accessed_material = last_accessed_session.materials.first()
+            else:
+                last_accessed_material = None
+
     context = {
         'course': course,
         'prerequisites': prerequisites,
@@ -326,6 +484,9 @@ def course_detail(request, pk):
         'user_type': user_type,
         'user_progress': user_progress,
         'random_tags': random_tags,
+        'comeback': comeback,
+        'last_accessed_material': last_accessed_material,
+        'last_accessed_session': last_accessed_session,
     }
 
     return render(request, 'courses/course_detail.html', context)

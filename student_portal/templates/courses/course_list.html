@@ -2,6 +2,7 @@
 <!-- course_list.html -->
 {% extends 'basePortal.html' %}
 {%load static%}
+{% load last_accessed_filter %}
 {% block title %}Courses{% endblock %}
 {% block content %}
 <div class="container-fluid py-5 bg-light">
@@ -9,14 +10,14 @@
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bold text-dark mb-3">Discover Your Next Course</h1>
         <p class="lead text-dark mb-4">Expand your knowledge with our carefully curated courses</p>
-        
+
         <!-- Enhanced Search Form -->
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <form method="get" class="mb-4">
                     <div class="input-group input-group-lg">
-                        <input type="text" name="q" class="form-control border-2" 
-                               placeholder="What do you want to learn today?" 
+                        <input type="text" name="q" class="form-control border-2"
+                               placeholder="What do you want to learn today?"
                                value="{{ request.GET.q }}"
                                style="font-style: italic; font-size: 0.875rem;">
                         <button type="submit" class="btn btn-primary px-4">
@@ -34,16 +35,16 @@
         <div class="col-md-3">
             <div class="card border-0 bg-white h-100">
                 <div class="position-relative">
-                    <a href="{% url 'student_portal:course_content_no_session' course.id %}" 
+                    <a href="{% url 'student_portal:course_content_no_session' course.id %}"
                        class="text-decoration-none">
                         <div class="ratio ratio-16x9">
                             {% if course.image %}
-                                <img src="{{ course.image.url }}" 
-                                     class="card-img-top object-fit-cover" 
+                                <img src="{{ course.image.url }}"
+                                     class="card-img-top object-fit-cover"
                                      alt="{{ course.course_name }}">
                             {% else %}
-                                <img src="{% static 'course/images/chotbg.png' %}" 
-                                     class="card-img-top object-fit-cover" 
+                                <img src="{% static 'course/images/chotbg.png' %}"
+                                     class="card-img-top object-fit-cover"
                                      alt="Default Image">
                             {% endif %}
                         </div>
@@ -61,7 +62,7 @@
                     <h5 class="card-title fw-bold mb-3">{{ course.course_name }}</h5>
                     <p class="card-text text-muted mb-3">{{ course.instructor.username }} </p>
                     <!-- {{ course.description|truncatewords:15 }} -->
-                    
+
                     <!-- Rating Section -->
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-2">
@@ -80,12 +81,21 @@
                     <div class="mt-auto">
                         <div class="d-grid gap-2">
                             {% if course.user_enrolled %}
-                                <a href="{% url 'student_portal:course_content_no_session' course.id %}" 
-                                   class="btn btn-primary">
-                                    <i class="fas fa-play-circle me-2"></i>Continue Learning
-                                </a>
+                                {% with last_access_data|default_if_none:''|get_item:course.id as access_data %}
+                                    {% if access_data.material %}
+                                        <a href="{% url 'student_portal:course_content' course.pk access_data.session.id %}?file_id={{ access_data.material.id }}&file_type={{ access_data.material.material_type }}"
+                                           class="btn btn-primary">
+                                            <i class="fas fa-play-circle me-2"></i>Continue Learning
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'student_portal:course_detail' course.id %}"
+                                           class="btn btn-outline-primary">
+                                            <i class="fas fa-info-circle me-2"></i>View Details
+                                        </a>
+                                    {% endif %}
+                                {% endwith %}
                             {% else %}
-                                <a href="{% url 'student_portal:course_detail' course.id %}" 
+                                <a href="{% url 'student_portal:course_detail' course.id %}"
                                    class="btn btn-outline-primary">
                                     <i class="fas fa-info-circle me-2"></i>View Details
                                 </a>
@@ -103,13 +113,13 @@
         <ul class="pagination pagination-lg justify-content-center">
             {% if courses.has_previous %}
                 <li class="page-item">
-                    <a class="page-link rounded-start" 
+                    <a class="page-link rounded-start"
                        href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                 </li>
             {% endif %}
-            
+
             {% for num in courses.paginator.page_range %}
                 {% if num == courses.number %}
                     <li class="page-item active">
@@ -117,7 +127,7 @@
                     </li>
                 {% else %}
                     <li class="page-item">
-                        <a class="page-link" 
+                        <a class="page-link"
                            href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
                             {{ num }}
                         </a>
@@ -127,7 +137,7 @@
 
             {% if courses.has_next %}
                 <li class="page-item">
-                    <a class="page-link rounded-end" 
+                    <a class="page-link rounded-end"
                        href="?page={{ courses.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
                         <i class="fas fa-angle-double-right"></i>
                     </a>
@@ -149,12 +159,12 @@
                 <div class="card border-0 bg-white h-100">
                     <div class="ratio ratio-16x9">
                         {% if recommended_course.image %}
-                            <img src="{{ recommended_course.image.url }}" 
-                                 class="card-img-top object-fit-cover" 
+                            <img src="{{ recommended_course.image.url }}"
+                                 class="card-img-top object-fit-cover"
                                  alt="{{ recommended_course.course_name }}">
                         {% else %}
-                            <img src="{% static 'course/images/chotbg.png' %}" 
-                                 class="card-img-top object-fit-cover" 
+                            <img src="{% static 'course/images/chotbg.png' %}"
+                                 class="card-img-top object-fit-cover"
                                  alt="Default Image">
                         {% endif %}
                     </div>
@@ -162,7 +172,7 @@
                         <h5 class="card-title fw-bold">{{ recommended_course.course_name }}</h5>
                         <p class="card-text text-muted">{{ recommended_course.description|truncatewords:15 }}</p>
                         <div class="mt-auto">
-                            <a href="{% url 'student_portal:course_detail' recommended_course.id %}" 
+                            <a href="{% url 'student_portal:course_detail' recommended_course.id %}"
                                class="btn btn-outline-primary w-100">
                                 <i class="fas fa-arrow-right me-2"></i>Learn More
                             </a>
