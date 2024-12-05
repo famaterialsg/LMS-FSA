@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'reports/user/user_navtab.html' with active_tab='user_progress_and_milestones_report' %}
+    <div class="mt-4">
+        
+    
+        <h1 class="mb-4">User Progress and Milestones Report</h1>
+
+        <!-- Search bar for filtering by username -->
+        <div class="mb-4">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by username...">
+        </div>
+
+        <!-- Include Chart.js library -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Progress</th>
+                    <th>Quiz Scores</th>
+                    <th>Assessment Scores</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                {% for data in report_data %}
+                    {% if data.courses%}
+                        <tr class="user-card" data-username="{{ data.username }}">
+                            <td>{{ data.username }}</td>
+                            <td>
+                                <div class="chart-container" style="height: 20vh;">
+                                    <canvas id="chart-{{ data.username }}"></canvas>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Quiz</th>
+                                                <th>Score</th>
+                                                <th>Attempt Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for course in data.courses %}
+                                                {% if course.quiz_scores %}
+                                                    {% for quiz in course.quiz_scores %}
+                                                        <tr>
+                                                            <td>{{ quiz.quiz_name }}</td>
+                                                            <td>{{ quiz.score }}</td>
+                                                            <td>{{ quiz.attempt_date }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Assessment</th>
+                                                <th>Quiz Score</th>
+                                                <th>Assignment Score</th>
+                                                <th>Attempt Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for course in data.courses %}
+                                                {% if course.assessment_scores %}
+                                                    {% for assessment in course.assessment_scores %}
+                                                        <tr>
+                                                            <td>{{ assessment.assessment_name }}</td>
+                                                            <td>{{ assessment.score_quiz }}</td>
+                                                            <td>{{ assessment.score_ass }}</td>
+                                                            <td>{{ assessment.attempt_date }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function() {
+                                const courseNames = [{% for course in data.courses %}'{{ course.course_name }}',{% endfor %}];
+                                const progressValues = [{% for course in data.courses %}{{ course.progress_percent }},{% endfor %}];
+
+                                const ctx = document.getElementById('chart-{{ data.username }}').getContext('2d');
+
+                                new Chart(ctx, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: courseNames,
+                                        datasets: [{
+                                            label: 'Progress (%)',
+                                            data: progressValues,
+                                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                            borderColor: 'rgba(54, 162, 235, 1)',
+                                            borderWidth: 1
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                labels: {
+                                                    font: {
+                                                        size: 12,
+                                                        weight: 'normal'
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                max: 100
+                                            },
+                                            x: {
+                                                ticks: {
+                                                    callback: function(value) {
+                                                        return courseNames[value].length > 10 ? courseNames[value].substring(0, 10) + '...' : courseNames[value];
+                                                    },
+                                                    font: {
+                                                        style: 'normal'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            });
+                        </script>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Include Bootstrap Icons for the chevron icon -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function() {
+            const searchValue = this.value.toLowerCase();
+            document.querySelectorAll(".user-card").forEach(function(card) {
+                const username = card.getAttribute("data-username").toLowerCase();
+                card.style.display = username.includes(searchValue) ? "table-row" : "none";
+            });
+        });
+    </script>
+{% endblock %}

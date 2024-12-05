@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Include Tab Navigation -->
+
+{% include "menuReport.html" %}
+
+<div class="mt-1">
+    <h1>Course Completion Report</h1>
+   
+    <div class="row overflow-auto" style="max-height: 70vh;">
+        <!-- Charts Section -->
+        <div class="col-md-7 mb-4">
+            <div class="row"><!-- justify-content-center -->
+                {% for course, percent in course_progress.items %}
+                <div class="col-md-3 col-sm-12 mb-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate" title="{{ course.course_name }}" style="max-width: 200px;">
+                                {{ course.course_name }}
+                            </h5>                            
+                            <canvas id="chart_{{ forloop.counter }}" width="150" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const ctx = document.getElementById('chart_{{ forloop.counter }}').getContext('2d');
+                        const completionChart = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Completed', 'Not Completed'],
+                                datasets: [{
+                                    label: 'Completion Percentage',
+                                    data: [{{ percent }}, {{ 100|floatformat:0 }} - {{ percent }}],
+                                    backgroundColor: [
+                                        'rgba(255, 99, 132, 1)',// Completed
+                                        // 'rgba(75, 192, 192, 1)',  // Completed
+                                        'rgba(192, 192, 192, 1)'   // Not Completed (gray)
+                                    ],
+                                    borderColor: [
+                                        'rgba(255, 99, 132, 1)',
+                                        'rgba(192, 192, 192, 1)'   // Border color for not completed (gray)
+                                    ],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: { position: 'top' },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(tooltipItem) {
+                                                return tooltipItem.label + ': ' + tooltipItem.raw + '%';
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                </script>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="col-md-5">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Course Name</th>
+                        <th>Completion Percentage</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <!-- Scrollable second table (content) -->
+            <div class="overflow-auto" style="max-height: 53vh;"> <!-- Adjust height as needed -->
+                <table class="table table-striped">
+                    <tbody>
+                        {% for course, percent in course_progress.items %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ course.course_name }}</td>
+                            <td>{{ percent|floatformat:2 }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+</div>
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Application Management</h1>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'Application:application_submit' %}">Submit Application</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'Application:user_application_list' %}">My Applications</a>
+        </li>
+        {% if user.is_superuser %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'Application:application_add' %}">Add Applications</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'Application:manage_applications' %}">Manage Applications</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h1 class="text-center mb-4 text-danger">Confirm Delete</h1>
+            
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <p class="mb-4">Are you sure you want to delete the application "<strong>{{ application.application.name }}</strong>"?</p>
+                    
+                    <form method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Yes, Delete
+                        </button>
+                    </form>
+
+                    <a href="{% url 'Application:user_application_list' %}" class="btn btn-secondary ml-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

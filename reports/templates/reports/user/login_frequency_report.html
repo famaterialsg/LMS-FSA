@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'reports/user/user_navtab.html' with active_tab='login_frequency' %}
+<div class="mt-4">
+    
+
+    <div class="container mt-4">
+        <h2 class="text-center">Login Frequency</h2>  <!-- Sử dụng title động ở đây -->
+
+        <style>
+            .date-input {
+                width: 150px; /* Điều chỉnh chiều rộng theo ý muốn */
+            }
+            .form-inline .form-group {
+                display: inline-block; /* Đảm bảo các form-group nằm trên cùng một hàng */
+                margin-right: 1rem; /* Khoảng cách giữa các ô */
+            }
+        </style>
+        
+        <!-- Form chọn ngày -->
+        <form method="get" class="form-inline mb-4">
+            <div class="form-group">
+                <label for="from_date" class="mr-2"><i class="fas fa-calendar-alt"></i> From:</label>
+                <input type="date" id="from_date" name="from_date" class="form-control date-input" value="{{ from_date }}">
+            </div>
+            <div class="form-group">
+                <label for="to_date" class="mr-2"><i class="fas fa-calendar-alt"></i> To:</label>
+                <input type="date" id="to_date" name="to_date" class="form-control date-input" value="{{ to_date }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        
+        
+        <!-- Biểu đồ tần suất đăng nhập -->
+        <canvas id="loginFrequencyChart" width="400" height="200"></canvas>
+        
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const ctx = document.getElementById('loginFrequencyChart').getContext('2d');
+            const loginFrequencyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ times|safe }},
+                    datasets: [{
+                        label: 'Number of logins',
+                        data: {{ counts|safe }},
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of logins'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Day'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        </script>
+
+        <!-- Bảng tần suất đăng nhập -->
+        <table class="table table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Number of logins</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in login_frequency %}
+                    <tr>
+                        <td>{{ record.day|date:"Y-m-d" }}</td>
+                        <td>{{ record.login_count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center">There was no login activity during the selected time period.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

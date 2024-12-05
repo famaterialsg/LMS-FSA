@@ -34,11 +34,11 @@ class Assessment(models.Model):
     title = models.CharField(max_length=255)
     
     # Many-to-many relationships
-    exercises = models.ManyToManyField(Exercise, related_name='assessments', blank=True)
-    questions = models.ManyToManyField(Question, related_name='assessments', blank=True)
+    exercises = models.ManyToManyField(Exercise, related_name='assessment', blank=True)
+    questions = models.ManyToManyField(Question, related_name='assessment', blank=True)
 
     # Foreign key to AssessmentType
-    assessment_type = models.ForeignKey(AssessmentType, on_delete=models.CASCADE, related_name='assessments')
+    assessment_type = models.ForeignKey(AssessmentType, on_delete=models.CASCADE, related_name='assessment')
 
     invited_count = models.IntegerField(default=0, verbose_name="Invited Count")
     assessed_count = models.IntegerField(default=0, verbose_name="Assessed Count")
@@ -46,6 +46,9 @@ class Assessment(models.Model):
 
     qualify_score = models.IntegerField(default=60, verbose_name="Qualify Score")
     total_score = models.IntegerField(default=100, verbose_name="Total Score")
+
+    quiz_score_ratio  = models.IntegerField(default=40, verbose_name="Quiz score ratio")
+    exercise_score_ratio  = models.IntegerField(default=60, verbose_name="Exercise score ratio")
     
     created_at = models.DateTimeField(default=timezone.now)
     # due_date = models.DateTimeField(null=True, blank=True)
@@ -103,31 +106,26 @@ class InvitedCandidate(models.Model):
 
     def __str__(self):
         return f"Invited Candidate: {self.email} for {self.assessment.title}"
-    
-class UserAnswer(models.Model):
-    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    # selected_option = models.ForeignKey(AnswerOption, on_delete=models.SET_NULL, null=True, blank=True)
-    selected_options = models.ManyToManyField(AnswerOption, blank=True)
-    text_response = models.TextField(null=True, blank=True)
 
-    def __str__(self):
-        return f"Answer for {self.question} in {self.assessment}"
 
 class StudentAssessmentAttempt(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     email = models.EmailField(blank=True, null=True, verbose_name="Email Address")  # Optional email for anonymous users
     assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE)
 
+    duration = models.IntegerField(default=0)
+    
     # Scoring and feedback
     score_quiz = models.IntegerField(default=0, verbose_name="Quiz Score")
     score_ass = models.IntegerField(default=0, verbose_name="Assignment Score")
     note = models.TextField(blank=True, null=True, verbose_name="Notes")
 
     # Additional fields to track user answers and submissions
-    user_answers = models.ManyToManyField(UserAnswer, related_name='attempts', blank=True)
-    user_submissions = models.ManyToManyField('exercises.Submission', related_name='attempts', blank=True)
+    # user_answers = models.ForeignKey(UserAnswer, related_name='attempts', blank=True)
+    # user_submissions = models.ManyToManyField('exercises.Submission', related_name='attempts', blank=True)
 
+
+    is_submitted = models.BooleanField(default=False)
     is_proctored = models.BooleanField(default=False)
     proctoring_data = models.JSONField(null=True, default=dict)
     
@@ -155,3 +153,14 @@ class StudentAssessmentAttempt(models.Model):
         # Clean data before saving
         self.clean()
         super().save(*args, **kwargs)
+
+
+class UserAnswer(models.Model):
+    # assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    # selected_option = models.ForeignKey(AnswerOption, on_delete=models.SET_NULL, null=True, blank=True)
+    selected_options = models.ManyToManyField(AnswerOption, blank=True)
+    text_response = models.TextField(null=True, blank=True)
+    attempt = models.ForeignKey(StudentAssessmentAttempt, on_delete=models.CASCADE, related_name='quiz_answers')
+    def __str__(self):
+        return f"Answer for {self.question} in {self.attempt}"

@@ -4,34 +4,123 @@ from course.models import Course
 from django.core.paginator import Paginator
 from .models import UserProgress, PerformanceAnalytics, AIInsights
 import json
-from .forms import AI_InsightsCourseForm
+from .forms import AI_InsightsCourseForm, UserProgressForm, AIInsightsFilterForm
 from assessments.models import StudentAssessmentAttempt, Assessment
+from user.models import User
 # Create your views here.
 module_groups = ModuleGroup.objects.all()
 modules = Module.objects.all()
-def user_progress(request):
 
-    module_groups = ModuleGroup.objects.all()
-    modules = Module.objects.all()
+# def user_progress(request):
+
+#     module_groups = ModuleGroup.objects.all()
+#     modules = Module.objects.all()
     
-    progress = UserProgress.objects.filter(user = request.user)
-    completed = UserProgress.objects.filter(user=request.user, progress_percentage=100).count()
+#     progress = UserProgress.objects.filter(user = request.user)
+#     completed = UserProgress.objects.filter(user=request.user, progress_percentage=100).count()
 
-    percent_complete = round((completed / progress.count())*100,2) if progress.count() > 0 else 0
+#     percent_complete = round((completed / progress.count())*100,2) if progress.count() > 0 else 0
 
-    paginator_pro = Paginator(progress, 3) 
+#     paginator_pro = Paginator(progress, 3) 
 
-    page_number_pro = request.GET.get('page')
-    page_obj_pro = paginator_pro.get_page(page_number_pro)
+#     page_number_pro = request.GET.get('page')
+#     page_obj_pro = paginator_pro.get_page(page_number_pro)
 
-    return render(request,'user_progress.html',{'module_groups': module_groups,
-                                             'modules': modules,
-                                             'courses': page_obj_pro,
-                                             'course_count':progress.count(),
-                                             'completed': completed,
-                                             'percent_complete':percent_complete,
-                                             'user': request.user ,
-                                             'page_obj_pro':page_obj_pro})
+#     return render(request,'user_progress.html',{'module_groups': module_groups,
+#                                              'modules': modules,
+#                                              'courses': page_obj_pro,
+#                                              'course_count':progress.count(),
+#                                              'completed': completed,
+#                                              'percent_complete':percent_complete,
+#                                              'user': request.user ,
+#                                              'page_obj_pro':page_obj_pro})
+
+def user_progress(request):
+###################################### For Admin #############################################
+    if request.user.is_superuser:
+        all_user =  users = User.objects.all()
+        form = UserProgressForm(request.GET) 
+        # Variable for tab My Progress
+        admin_user = request.user
+        admin_course_count = UserProgress.objects.filter(user = request.user).count()
+        admin_completed = UserProgress.objects.filter(user=request.user, progress_percentage=100).count()
+        admin_percent_complete = round((admin_completed / admin_course_count)*100,2) if admin_course_count > 0 else 0
+        admin_paginator_pro = Paginator(UserProgress.objects.filter(user = request.user), 2)
+        admin_page_number_pro = request.GET.get('page')
+        admin_page_obj_pro = admin_paginator_pro.get_page(admin_page_number_pro)
+
+        admin_progress = {
+            'admin_user': admin_user,
+            'admin_course_count': admin_course_count,
+            'admin_completed': admin_completed,
+            'admin_percent_complete': admin_percent_complete,
+            'admin_course': admin_page_obj_pro,
+            'admin_page_obj_pro':admin_page_obj_pro
+        }
+
+        if not form.is_valid():
+            message = 'Please select User'
+            return render(request, 'user_progress_admin.html', {'module_groups': module_groups,
+                                                           'modules': modules,
+                                                           'form':form,
+                                                           'users':all_user,
+                                                           'message':message,
+                                                           'admin_progress':admin_progress})
+        else:
+    
+            username = form.data['search_user']
+            users = User.objects.filter(username = username)
+            if users.count() == 0:
+                message  = 'Not Found User'
+                return render(request, 'user_progress_admin.html', {'module_groups': module_groups,
+                                                           'modules': modules,
+                                                           'form':form,
+                                                           'users':all_user,
+                                                           'message':message,
+                                                           'admin_progress':admin_progress})
+            else: 
+                message = None
+                
+                progress = UserProgress.objects.filter(user=users[0])
+                completed = UserProgress.objects.filter(user=users[0], progress_percentage=100).count()
+                percent_complete = round((completed / progress.count())*100,2) if progress.count() > 0 else 0
+                paginator_pro = Paginator(progress, 2) 
+                page_number_pro = request.GET.get('page')
+                page_obj_pro = paginator_pro.get_page(page_number_pro)
+
+                return render(request, 'user_progress_admin.html', {'module_groups': module_groups,
+                                                            'modules': modules,
+                                                            'form':form,
+                                                            'users':all_user,
+                                                            'message':message,
+                                                            'percent_complete':percent_complete,
+                                                            'courses': page_obj_pro,
+                                                            'course_count':progress.count(),
+                                                            'completed': completed,
+                                                            'search_user':users[0],
+                                                            'page_obj_pro':page_obj_pro,
+                                                            'admin_progress':admin_progress})
+    
+###################################### For User #############################################
+    else:
+        progress = UserProgress.objects.filter(user = request.user)
+        completed = UserProgress.objects.filter(user=request.user, progress_percentage=100).count()
+
+        percent_complete = round((completed / progress.count())*100,2) if progress.count() > 0 else 0
+
+        paginator_pro = Paginator(progress, 3) 
+
+        page_number_pro = request.GET.get('page')
+        page_obj_pro = paginator_pro.get_page(page_number_pro)
+
+        return render(request,'user_progress.html',{'module_groups': module_groups,
+                                                'modules': modules,
+                                                'courses': page_obj_pro,
+                                                'course_count':progress.count(),
+                                                'completed': completed,
+                                                'percent_complete':percent_complete,
+                                                'user': request.user ,
+                                                'page_obj_pro':page_obj_pro})
 
 
 def performance_analytics(request):
@@ -73,100 +162,67 @@ def performance_analytics(request):
     }
     return render(request, 'performance_analytics.html', context)
 
+
 def ai_insights(request):
-    user = request.user      
-    labels = ['Warning', 'Compliment', 'Info', 'Undefined']
-    if request.method == 'POST':
-        filter_form = AI_InsightsCourseForm(request.POST)
-        if filter_form.is_valid():
-            if filter_form.data['course'] == '':
-                filter_form = AI_InsightsCourseForm()
-                ai_insights = AIInsights.objects.filter(user=user.id).order_by('-created_at')
-                ai_insights_count = len(list(ai_insights))
+    user = request.user 
+    form = AIInsightsFilterForm(request.GET)
+    chart_name = []
 
-                warning = ai_insights.filter(insight_type='Warning')
-                compliment = ai_insights.filter(insight_type='Compliment')
-                info = ai_insights.filter(insight_type='Info')
+    ai_insights = AIInsights.objects.all()
+    if form.is_valid() and form.data.getlist('courses'):  # Sử dụng getlist() để lấy danh sách
+        course_ids = form.data.getlist('courses')  # Lấy danh sách các ID khóa học đã chọn
 
-                warning_count = len(list(warning))
-                compliment_count = len(list(compliment))
-                info_count = len(list(info))
+        # Lọc AI Insights cho các khóa học được chọn
+        ai_insights = AIInsights.objects.filter(
+            user=user.id,
+            course__in=course_ids  
+        ).order_by('-created_at')
 
-                data = [warning_count, compliment_count, info_count, (ai_insights_count-warning_count-compliment_count-info_count)]
-                paginator = Paginator(ai_insights, 4) 
-                page_number = request.GET.get('page')
-                page_obj = paginator.get_page(page_number)
-                context = {
-                    'page_ai_insights': page_obj,
-                    'user': request.user,
-                    'filter_form': filter_form,
-                    'data': json.dumps(data),
-                    'labels': json.dumps(labels),
-                    'chart_name': 'All courses',
-                    'is_valid': False
-                    }
-                return render(request, 'ai_insights_summary.html', context)
-            ai_insights = AIInsights.objects.filter(user=user.id, course=filter_form.data['course']).order_by('-created_at')
-            course = Course.objects.get(id=filter_form.data['course']).course_name
-            ai_insights_count = len(list(ai_insights))
-
-            warning = ai_insights.filter(insight_type='Warning')
-            compliment = ai_insights.filter(insight_type='Compliment')
-            info = ai_insights.filter(insight_type='Info')
-
-            warning_count = len(list(warning))
-            compliment_count = len(list(compliment))
-            info_count = len(list(info))
-
-            data = [warning_count, compliment_count, info_count, (ai_insights_count-warning_count-compliment_count-info_count)]
-            paginator = Paginator(ai_insights, 4) 
-
-            page_number = request.GET.get('page')
-            page_obj = paginator.get_page(page_number)
-
-            context = {
-                'page_ai_insights': page_obj,
-                'user': request.user,
-                'filter_form': filter_form,
-                'data': json.dumps(data),
-                'labels': json.dumps(labels),
-                'chart_name': course,
-                'is_valid': True,
-                'module_groups': module_groups,
-                'modules': modules,
-            }
-            return render(request, 'ai_insights.html', context)
+        course_names = Course.objects.filter(id__in=course_ids).values_list('course_name', flat=True)  
+        chart_name = list(course_names)
+        is_valid = True
     else:
-        filter_form = AI_InsightsCourseForm()
+        course_id = request.GET.get('course')  # Use the GET parameter for course
+        if course_id:
+            ai_insights = AIInsights.objects.filter(user=user.id, course=course_id).order_by('-created_at')
+            course = Course.objects.get(id=course_id).course_name
+            chart_name = course
+            is_valid = True
+        else:
+            ai_insights = AIInsights.objects.filter(user=user.id).order_by('-created_at')
+            chart_name = ['All courses']
+            is_valid = False
 
-        ai_insights = AIInsights.objects.filter(user=user.id).order_by('-created_at')
+    labels = ['Good', 'Improvement', 'Worsening', 'Try Harder', 'Bad', 'Other']
+    color = ['#00b627', '#2196F3', '#FFD700', '#FFA500', '#ff2c2c', '#535353']
+    dict_color = dict(zip(labels, color))
+    ai_insights_count = ai_insights.count()
 
-        ai_insights_count = len(list(ai_insights))
+    # Filter insights by type and count them
+    counts = {label.lower(): ai_insights.filter(insight_type__iexact=label).count() for label in labels[:-1]}
+    other_count = ai_insights_count - sum(counts.values())
+    data = [counts['good'], counts['improvement'], counts['worsening'], counts['try harder'], counts['bad'], other_count]
 
-        warning = ai_insights.filter(insight_type='Warning')
-        compliment = ai_insights.filter(insight_type='Compliment')
-        info = ai_insights.filter(insight_type='Info')
+    paginator = Paginator(ai_insights, 4)  # Show 10 insights per page
+    page_number = request.GET.get('page')  # Get the page number from the URL
+    page_obj = paginator.get_page(page_number)
 
-        warning_count = len(list(warning))
-        compliment_count = len(list(compliment))
-        info_count = len(list(info))
+    # Prepare query parameters to keep form values on page change
+    query_params = request.GET.copy()  # Make a copy of the GET parameters
+    if 'page' in query_params:
+        del query_params['page']  # Remove the current page parameter if it exists
+    chart_name = ', '.join(chart_name)
 
-        data = [warning_count, compliment_count, info_count, (ai_insights_count-warning_count-compliment_count-info_count)]
-        paginator = Paginator(ai_insights, 4) 
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-
-        
-
-        context = {
-            'page_ai_insights': page_obj,
-            'user': request.user,
-            'filter_form': filter_form,
-            'data': json.dumps(data),
-            'labels': json.dumps(labels),
-            'chart_name': 'All courses',
-            'is_valid': True,
-            'module_groups': module_groups,
-            'modules': modules,
-        }
-    return render(request, 'ai_insights.html', context)
+    return render(request, 'ai_insights.html', {
+        'form': form,
+        'page_obj': page_obj,
+        'query_params': query_params,
+        'chart_name':chart_name,
+        'user': request.user,
+        'data': data,
+        'labels': labels,
+        'chart_name': chart_name,
+        'is_valid': is_valid,
+        'dict_color': dict_color,
+        'color': color
+    })

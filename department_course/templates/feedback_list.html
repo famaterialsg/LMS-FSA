@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+
+{% block title %}Feedback List{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Feedback List</h2>
+
+    <!-- Tab navigation -->
+    <ul class="nav nav-tabs mb-3 d-flex justify-content-between" id="feedbackTab" role="tablist">
+        <div class="d-flex">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="course-feedback-tab" data-bs-toggle="tab" data-bs-target="#course-feedback" type="button" role="tab" aria-controls="course-feedback" aria-selected="true">Course Feedback</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="instructor-feedback-tab" data-bs-toggle="tab" data-bs-target="#instructor-feedback" type="button" role="tab" aria-controls="instructor-feedback" aria-selected="false">Instructor Feedback</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analyst-tab" data-bs-toggle="tab" data-bs-target="#analyst" type="button" role="tab" aria-controls="analyst" aria-selected="false">Analyst</button>
+            </li>
+        </div>
+        <div class="d-flex">
+            <input type="text" id="searchBar" class="form-control me-2" placeholder="Search..." onkeyup="filterFeedback()">
+            <select id="courseFilter" class="form-select me-2" onchange="filterFeedback()">
+                <option value="">All Courses</option>
+                {% for course in courses %}
+                <option value="{{ course.course_name }}">{{ course.course_name }}</option>
+                {% endfor %}
+            </select>
+            <button id="ratingSortButton" class="btn btn-secondary" onclick="toggleRatingSort()">
+                <i class="fas fa-sort-amount-down"></i>
+            </button>
+        </div>
+    </ul>
+
+    <!-- Tab content -->
+    <div class="tab-content" id="feedbackTabContent">
+        <!-- Course Feedback Tab -->
+        <div class="tab-pane fade show active" id="course-feedback" role="tabpanel" aria-labelledby="course-feedback-tab">
+            <h3>Course Feedback</h3>
+
+            <table class="table table-striped" id="courseFeedbackTable">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Average Rating</th>
+                        <th>Comments</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <!-- Scrollable container for the feedback list -->
+            <div class="feedback-scroll-container">
+                <table class="table table-striped">
+                    <tbody>
+                        {% for feedback in course_page_obj %}
+                        <tr>
+                            <td>{{ feedback.course.course_name }}</td>
+                            <td>{{ feedback.average_rating }}</td>
+                            <td>{{ feedback.comments }}</td>
+                            <td>{{ feedback.created_at }}</td>
+                            <td>
+                                <a href="{% url 'feedback:course_feedback_detail' feedback.id %}" class="btn btn-info">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination for Course Feedbacks -->
+            <nav aria-label="Page navigation" class="mb-6">
+                <ul class="pagination justify-content-center">
+                    {% if course_page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=course-feedback&course_page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=course-feedback&course_page={{ course_page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% for num in course_page_obj.paginator.page_range %}
+                        {% if course_page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link main-color">{{ num }}</a></li>
+                        {% elif num > course_page_obj.number|add:-3 and num < course_page_obj.number|add:3 %}
+                        <li class="page-item"><a class="page-link main-color-text" href="?tab=course-feedback&course_page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if course_page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=course-feedback&course_page={{ course_page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=course-feedback&course_page={{ course_page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Instructor Feedback Tab -->
+        <div class="tab-pane fade" id="instructor-feedback" role="tabpanel" aria-labelledby="instructor-feedback-tab">
+            <h3>Instructor Feedback</h3>
+            <table class="table table-striped" id="instructorFeedbackTable">
+                <thead>
+                    <tr>
+                        <th>Instructor</th>
+                        <th>Average Rating</th>
+                        <th>Comments</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <!-- Scrollable container for the feedback list -->
+            <div class="feedback-scroll-container">
+                <table class="table table-striped">
+                    <tbody>
+                        {% for feedback in instructor_page_obj %}
+                        <tr>
+                            <td>{{ feedback.instructor.username }}</td>
+                            <td>{{ feedback.average_rating }}</td>
+                            <td>{{ feedback.comments }}</td>
+                            <td>{{ feedback.created_at }}</td>
+                            <td>
+                                <a href="{% url 'feedback:instructor_feedback_detail' feedback.id %}" class="btn btn-info">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination controls -->
+            <nav aria-label="Page navigation" class="mb-6">
+                <ul class="pagination justify-content-center">
+                    {% if instructor_page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=instructor-feedback&instructor_page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=instructor-feedback&instructor_page={{ instructor_page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% for num in instructor_page_obj.paginator.page_range %}
+                        {% if instructor_page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link main-color">{{ num }}</a></li>
+                        {% elif num > instructor_page_obj.number|add:-3 and num < instructor_page_obj.number|add:3 %}
+                            <li class="page-item"><a class="page-link main-color-text" href="?tab=instructor-feedback&instructor_page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if instructor_page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=instructor-feedback&instructor_page={{ instructor_page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link main-color-text" href="?tab=instructor-feedback&instructor_page={{ instructor_page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        <div class="tab-pane fade" id="analyst" role="tabpanel" aria-labelledby="analyst-tab">
+            <h3>Course’s Criterias Report Graph</h3>
+            <div class="mb-4">
+                <label for="courseChartFilter">Select Course to Display Chart:</label>
+                <select id="courseChartFilter" class="form-select" onchange="updateCharts()">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                        <option value="{{ course.course_id }}">{{ course.course_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Row for the charts -->
+            <div class="row">
+                <!-- Stacked Bar Chart -->
+                <div class="col-sm-6">
+                    <div class="chart-container mb-4" style="position: relative; height:400px; width:100%">
+                        <canvas id="stackedBarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Pie Chart -->
+                <div class="col-sm-6">
+                    <h4>Specific Criteria Distribution</h4>
+                    <div class="chart-container" style="position: relative; height:400px; width:100%">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="instructorChartFilter">Select Instructor to Display Chart:</label>
+                <select id="instructorChartFilter" class="form-select" onchange="updateInstructorCharts()">
+                    <option value="">All Instructors</option>
+                    {% for instructor in instructors %}
+                        <option value="{{ instructor.id }}">{{ instructor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <h3>Instructor’s Criterias Report Graph</h3>
+            <div class="row">
+                <!-- Stacked Bar Chart for Instructor -->
+                <div class="col-sm-6">
+                    <h4>Overall Criteria Distribution</h4>
+                    <div class="chart-container mb-4" style="position: relative; height:400px; width:100%">
+                        <canvas id="stackedBarChartInstructor"></canvas>
+                    </div>
+                </div>
+
+                <!-- Pie Chart for Instructor -->
+                <div class="col-sm-6">
+                    <h4>Specific Criteria Distribution</h4>
+                    <div class="chart-container" style="position: relative; height:400px; width:100%">
+                        <canvas id="pieChartInstructor"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .feedback-scroll-container {
+        max-height: 400px; /* Set the height to your preferred value */
+        overflow-y: auto;  /* Enable vertical scrolling */
+    }
+</style>
+
+<script>
+    function filterFeedback() {
+        const searchBar = document.getElementById('searchBar').value.toLowerCase();
+        const courseFilter = document.getElementById('courseFilter').value.toLowerCase();
+        const courseTable = document.getElementById('courseFeedbackTable');
+        const instructorTable = document.getElementById('instructorFeedbackTable');
+
+        // Filter the course feedback table
+        [...courseTable.getElementsByTagName('tr')].forEach(row => {
+            const courseName = row.cells[0]?.textContent.toLowerCase() || "";
+            const comments = row.cells[2]?.textContent.toLowerCase() || "";
+            const show = (courseName.includes(courseFilter) && (comments.includes(searchBar) || searchBar === ""));
+            row.style.display = show ? "" : "none";
+        });
+
+        // Filter the instructor feedback table
+        [...instructorTable.getElementsByTagName('tr')].forEach(row => {
+            const instructorName = row.cells[0]?.textContent.toLowerCase() || "";
+            const comments = row.cells[2]?.textContent.toLowerCase() || "";
+            const show = (instructorName.includes(courseFilter) && (comments.includes(searchBar) || searchBar === ""));
+            row.style.display = show ? "" : "none";
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Lấy tab hiện tại từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get("tab") || "course-feedback";
+
+        // Đặt tab active dựa trên tham số URL
+        const tabButton = document.getElementById(`${activeTab}-tab`);
+        if (tabButton) {
+            new bootstrap.Tab(tabButton).show();
+        }
+
+        // Thêm sự kiện cho các tab để cập nhật URL khi chuyển tab
+        const tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                const newTab = button.getAttribute("data-bs-target").replace("#", "");
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set("tab", newTab);
+                window.history.replaceState(null, "", newUrl);
+            });
+        });
+        const ratingPercentages = {{ rating_percentages|safe }};
+        if (!ratingPercentages || Object.keys(ratingPercentages).length === 0) {
+            console.error("rating_percentages is empty or undefined.");
+            return; // Ngừng nếu không có dữ liệu
+        }
+
+        const criteriaLabels = Object.keys(ratingPercentages);
+        const stars = [1, 2, 3, 4, 5];
+
+        const stackedData = {
+            labels: criteriaLabels,
+            datasets: stars.map(star => ({
+                label: `${star} Star`,
+                backgroundColor: `rgba(${(star-1) * 50}, ${(5-star) * 50}, ${star * 40}, 0.6)`,
+                data: criteriaLabels.map(criterion => ratingPercentages[criterion][star] || 0),
+            })),
+        };
+        const stackedOptions = {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Course Feedback Criteria Distribution' }
+            },
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, beginAtZero: true, max: 100 }
+            }
+        };
+
+        // Render stacked bar chart
+        const stackedBarCtx = document.getElementById("stackedBarChart").getContext("2d");
+        new Chart(stackedBarCtx, {
+            type: "bar",
+            data: stackedData,
+            options: stackedOptions
+        });
+        // Data for pie chart
+        const selectedCriterion = "course_material"; // Default criterion, can be changed
+        const pieData = {
+            labels: stars.map(star => `${star} Star`),
+            datasets: [{
+                data: stars.map(star => ratingPercentages[selectedCriterion][star] || 0),
+                backgroundColor: [
+                    "rgba(255, 99, 132, 0.6)",
+                    "rgba(54, 162, 235, 0.6)",
+                    "rgba(255, 206, 86, 0.6)",
+                    "rgba(75, 192, 192, 0.6)",
+                    "rgba(153, 102, 255, 0.6)"
+                ],
+            }]
+        };
+
+        const pieOptions = {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Rating Distribution for Course Material' }
+            }
+        };
+        // Render pie chart
+        const pieCtx = document.getElementById("pieChart").getContext("2d");
+        new Chart(pieCtx, {
+            type: "pie",
+            data: pieData,
+            options: pieOptions
+        });
+        // === Instructor Feedback Charts ===
+        const instructorRatingPercentages = {{ instructor_rating_percentages|safe }};
+        if (!instructorRatingPercentages || Object.keys(instructorRatingPercentages).length === 0) {
+            console.error("instructor_rating_percentages is empty or undefined.");
+            return; // Ngừng nếu không có dữ liệu
+        }
+
+        const instructorLabels = Object.keys(instructorRatingPercentages);
+
+        // Stacked Bar Chart Data for Instructor
+        const instructorStackedData = {
+            labels: instructorLabels,
+            datasets: stars.map(star => ({
+                label: `${star} Star`,
+                backgroundColor: `rgba(${(star-1) * 50}, ${(5-star) * 50}, ${star * 40}, 0.6)`,
+                data: instructorLabels.map(label => instructorRatingPercentages[label][star] || 0),
+            })),
+        };
+
+        const instructorStackedCtx = document.getElementById("stackedBarChartInstructor").getContext("2d");
+        new Chart(instructorStackedCtx, {
+            type: "bar",
+            data: instructorStackedData,
+            options: stackedOptions
+        });
+
+        // Pie Chart Data for Instructor Communication Skills (or another default criterion)
+        const instructorCriterion = "communication_skills"; // Default criterion for instructor
+        const instructorPieData = {
+            labels: stars.map(star => `${star} Star`),
+            datasets: [{
+                data: stars.map(star => instructorRatingPercentages[instructorCriterion][star] || 0),
+                backgroundColor: [
+                    "rgba(255, 99, 132, 0.6)",
+                    "rgba(54, 162, 235, 0.6)",
+                    "rgba(255, 206, 86, 0.6)",
+                    "rgba(75, 192, 192, 0.6)",
+                    "rgba(153, 102, 255, 0.6)"
+                ],
+            }]
+        };
+
+        const instructorPieCtx = document.getElementById("pieChartInstructor").getContext("2d");
+        new Chart(instructorPieCtx, {
+            type: "pie",
+            data: instructorPieData,
+            options: pieOptions
+        });
+    });
+</script>
+{% endblock %}

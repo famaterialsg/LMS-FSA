@@ -40,13 +40,6 @@ h1 {
 .tab-content.active {
     display: block;
 }
-.card {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 15px;
-}
 .badge {
     display: inline-block;
     padding: 3px 7px;
@@ -161,3 +154,57 @@ h1 {
 .current {
     font-weight: bold;
 }
+
+
+/* Ensure the grid container adapts to the screen size */
+.container.mt-3.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Flexibly adjust column width */
+    gap: 20px; /* Add space between cards */
+    padding-bottom: 20px;
+}
+/* Center the insight type text */
+.centered {
+    text-align: center;  /* Center the text */
+    font-weight: bold;   /* Optional: Make the insight type bold */
+    font-size: 18px;     /* Optional: Adjust the font size */
+    margin-bottom: 10px; /* Optional: Add space below the centered text */
+}
+
+
+/* Style for the 'Show More' link */
+.toggle-text {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;  /* Optional: Make the cursor pointer to indicate it's clickable */
+}
+
+/* Optionally style the full text span to make it look distinct */
+.full-text {
+    display: none;  /* Hide the full text by default */
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+/* Additional styles for the card body */
+.card-body {
+    padding: 15px;
+    background-color: #f9f9f9;  /* Optional: Light background color for the body */
+    border-radius: 8px;          /* Optional: Rounded corners */
+}
+
+.card-body a.btn {
+    margin-top: 15px;  /* Optional: Add space above the button */
+}
+
+/* Custom style for the link to make the text black */
+.black-link {
+    color: black;  /* Set text color to black */
+    text-decoration: none;  /* Optional: Remove underline */
+}
+
+.black-link:hover {
+    color: darkgray;  /* Optional: Change color on hover for a better user experience */
+}
+
+

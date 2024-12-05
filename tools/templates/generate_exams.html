@@ -1,5 +1,58 @@
 {% extends 'base.html' %}
+
 {% load main_form_filters %}
+
+{% block content %}
+<div class="mt-1">
+    {% include "menuTools.html" %}
+    
+    <h2 class="mb-4 text-center">Generate Exams</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Generate Exams</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="id_excel_file">Upload Excel File:</label>
+                            {{ form.excel_file|add_class:"form-control-file" }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_number_of_exams">Number of Exams:</label>
+                            {{ form.number_of_exams|add_class:"form-control" }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_number_of_questions">Number of Questions per Exam:</label>
+                            {{ form.number_of_questions|add_class:"form-control" }}
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Generate Exams</button> <!--đang nghi ngờ chỗ này có bug-->
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if success_message %}
+        <div class="mt-4">
+            <div class="alert alert-success">
+                <h4 class="alert-heading">Success!</h4>
+                <p>{{ success_message }}</p>
+                <p>Number of sheets in the uploaded file: {{ sheet_count }}</p>
+                <a href="{{ download_url }}" class="btn btn-primary">Download All as ZIP</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% comment %}
+{% extends 'base.html' %}
+{% load main_form_filters %}
+
 {% block content %}
 <div class="container mt-5">
     <h2 class="mb-4 text-center">Generate Exams</h2>
@@ -39,6 +92,7 @@
             <div class="alert alert-success">
                 <h4 class="alert-heading">Success!</h4>
                 <p>{{ success_message }}</p>
+                <p>Number of sheets in the uploaded file: {{ sheet_count }}</p>  <!-- Hiển thị số lượng sheet -->
                 <a id="download-link" href="{{ download_url }}" class="btn btn-primary">Download All as ZIP</a>
             </div>
 
@@ -54,5 +108,5 @@
         </div>
     {% endif %}
 </div>
-{% endblock %}
-
+{% endblock %}  
+{% endcomment %}

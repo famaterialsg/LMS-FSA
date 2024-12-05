@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% include 'reports/user/user_navtab.html' with active_tab='engagement_activity_report' %}
+<div class="mt-4">  
+    <!-- Chart Container -->
+    <div class="mt-4" style="max-width: 1000px; margin: auto;">
+        <canvas id="engagementChart"></canvas>
+    </div>
+    
+    <!-- Tìm kiếm -->
+    <form id="searchForm" class="row align-items-center g-3 mb-2 mt-4">
+        <div class="col-auto">
+            <h2>Engagement Report from {{ start_of_period|date:"d/m" }} to {{ end_of_period|date:"d/m" }}</h2>
+        </div>
+        <div class="col-auto ms-auto">
+            <input type="text" id="usernameSearch" class="form-control" placeholder="Username">
+        </div>
+        <div class="col-auto">
+            <select id="roleSearch" class="form-select">
+                <option value="">Role</option>
+                <option value="Student">Student</option>
+                <option value="Admin">Admin</option>
+                <option value="Partner">Partner</option>
+                <option value="User">User</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="button" class="btn btn-primary me-2" onclick="filterTable()">Search</button>
+            <button type="button" class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+        </div>
+    </form>
+    
+    <table class="table table-bordered" id="engagementReportTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Active Count</th>
+                <th>Login Count</th>
+                <th>Last Login</th>
+                <th>
+                    Engagement Score 
+                    <i id="sortIcon" class="fa fa-sort" onclick="sortTable()"></i> <!-- Biểu tượng sắp xếp -->
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in evaluation_report %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ entry.username }}</td>
+                <td>{{ entry.role }}</td>
+                <td>{{ entry.active_count }}</td>
+                <td>{{ entry.login_count }}</td>
+                <td>{{ entry.last_login_time|date:"Y-m-d H:i" }}</td>
+                <td>
+                    {% if entry.engagement_score >= 2000 %}
+                        <span style="color: green; font-weight: bold;">{{ entry.engagement_score }} (High)</span>
+                    {% elif entry.engagement_score >= 1000 %}
+                        <span style="color: orange; font-weight: bold;">{{ entry.engagement_score }} (Medium)</span>
+                    {% else %}
+                        <span style="color: red; font-weight: bold;">{{ entry.engagement_score }} (Low)</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No engagement data available for this period.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="alert alert-info mt-3" style="max-width: 100%; margin: 0;">
+        <strong>Note:</strong> The Engagement Score is categorized as follows:
+        <ul>
+            <li><span style="color: green;"><strong>High</strong></span>: Engagement score of 2000 or more</li>
+            <li><span style="color: orange;"><strong>Medium</strong></span>: Engagement score between 1000 and 1999</li>
+            <li><span style="color: red;"><strong>Low</strong></span>: Engagement score less than 1000</li>
+        </ul>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Dữ liệu từ báo cáo
+    const evaluationReportData = [
+        {% for entry in evaluation_report %}
+        {
+            username: "{{ entry.username }}",
+            role: "{{ entry.role }}",
+            activeCount: {{ entry.active_count }},
+            loginCount: {{ entry.login_count }},
+            engagementScore: {{ entry.engagement_score }}
+        },
+        {% endfor %}
+    ];
+
+    // Chuẩn bị dữ liệu cho biểu đồ
+    const labels = evaluationReportData.map(entry => entry.username);
+    const activeCounts = evaluationReportData.map(entry => entry.activeCount);
+    const loginCounts = evaluationReportData.map(entry => entry.loginCount);
+    const engagementScores = evaluationReportData.map(entry => entry.engagementScore);
+
+    // Tạo biểu đồ
+    const ctx = document.getElementById('engagementChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Active Count',
+                    data: activeCounts,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Login Count',
+                    data: loginCounts,
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Engagement Score',
+                    data: engagementScores,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    beginAtZero: true
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+    
+    // Hàm lọc bảng
+    function filterTable() {
+        const usernameSearch = document.getElementById("usernameSearch").value.toLowerCase();
+        const roleSearch = document.getElementById("roleSearch").value;
+
+        const table = document.getElementById("engagementReportTable");
+        const rows = Array.from(table.rows).slice(1);  // Bỏ qua hàng tiêu đề
+
+        rows.forEach(row => {
+            const username = row.cells[1].textContent.toLowerCase();  // Lấy username từ cột thứ hai
+            const role = row.cells[2].textContent;  // Lấy role từ cột thứ ba
+
+            // Lọc theo username và role
+            if ((username.includes(usernameSearch)) && (role.includes(roleSearch))) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+
+    // Hàm reset bộ lọc
+    function resetFilters() {
+        document.getElementById('usernameSearch').value = '';
+        document.getElementById('roleSearch').value = '';
+        filterTable();
+    }
+    let isDescending = true; // Biến kiểm tra hướng sắp xếp
+
+    // Hàm sắp xếp bảng
+    function sortTable() {
+        const table = document.getElementById("engagementReportTable");
+        const rows = Array.from(table.rows).slice(1); // Bỏ qua hàng tiêu đề
+
+        const engagementIndex = 5; // Cột "Engagement Score" (cột thứ 6)
+
+        rows.sort((a, b) => {
+            const scoreA = parseInt(a.cells[engagementIndex].innerText.replace(/[^\d.-]/g, '')); // Lấy số điểm
+            const scoreB = parseInt(b.cells[engagementIndex].innerText.replace(/[^\d.-]/g, ''));
+
+            return isDescending ? scoreB - scoreA : scoreA - scoreB; // Kiểm tra hướng sắp xếp
+        });
+
+        rows.forEach(row => table.appendChild(row)); // Gắn lại các hàng đã sắp xếp vào bảng
+
+        // Đổi biểu tượng sắp xếp
+        isDescending = !isDescending;
+        const icon = document.getElementById("sortIcon");
+
+        if (isDescending) {
+            icon.classList.remove("fa-sort");
+            icon.classList.add("fa-sort-down");
+        } else {
+            icon.classList.remove("fa-sort-down");
+            icon.classList.add("fa-sort-up");
+        }
+    }
+
+</script>
+
+{% endblock %}

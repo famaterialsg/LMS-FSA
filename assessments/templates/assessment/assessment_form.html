@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Assessment{% endblock %}
+{% block title %}{% if assessment %}Edit Assessment{% else %}Create New Assessment{% endif %}{% endblock %}
 
 {% block content %}
 <head>
@@ -51,7 +51,6 @@
             </div>
         </div>
 
-
         <!-- Tab Section for Exercises, Questions and Settings -->
         <div class="card mb-4">
             <div class="card-header bg-secondary text-white">
@@ -77,41 +76,43 @@
                         <div class="row">
                             <div class="col-md-12">  <!-- Wrap both columns in a single column for search -->
                                 <div class="mb-3">
-                                    <label for="search-exercises" class="form-label"></label>   
-                                    <div class="input-group">   
-                                        <span class="input-group-text">🔍</span> <!-- Biểu tượng kính lúp -->
+                                    <div style="display: flex; align-items: center;">
+                                        <span style="margin-right: 5px;">🔍</span> 
                                         <input type="text" id="search-exercises" class="form-control" placeholder="Search for exercises..." onkeyup="filterExercises()">
-                                    </div>                                                               
+                                    </div>                                                             
                                 </div>
                             </div>  
                             <!-- Exercise List Section -->
                             <div class="col-md-6">
-                                <div class="mb-3">
+                                <div class="mb-1">
                                     <label for="search-exercises" class="form-label">Exercises</label>                           
                                 </div>
                                 <div class="exercise-list" id="exercise-list" style="height: 300px; overflow-y: auto; border: 1px solid #f5ebeb;">
-                                    {% for exercise in exercises %}
-                                        <div class="d-flex align-items-center justify-content-between exercise-item border mb-1 p-2 cursor-pointer" data-exercise-id="{{ exercise.id }}">
+                                    {% for exercise in exercises %} 
+                                        <div class="d-flex align-items-center exercise-item border mb-1 p-2 cursor-pointer" data-exercise-id="{{ exercise.id }}">
                                             <input type="checkbox" name="exercises" value="{{ exercise.id }}" id="exercise-{{ exercise.id }}"
-                                                {% if exercise.id in selected_exercises %}checked{% endif %}>
-                                            <label for="exercise-{{ exercise.id }}" class="me-2">{{ exercise.title }}</label>
-                                
-                                            <!-- Nút biểu tượng mắt -->
-                                            <button type="button" class="view-button btn btn-link text-secondary" 
-                                                onmouseover="if (!this.classList.contains('active')) { this.classList.remove('text-secondary'); this.classList.add('text-primary'); }" 
-                                                onmouseout="if (!this.classList.contains('active')) { this.classList.remove('text-primary'); this.classList.add('text-secondary'); }"
-                                                onclick="toggleViewButton(this, {{ exercise.id }})">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
+                                                {% if exercise.id in selected_exercises %}checked{% endif %} class="me-4">
+                                            <label for="exercise-{{ exercise.id }}" >{{ exercise.title }}</label>
+                                                                
+                                            <div class="d-flex align-items-center ms-auto">  
+                                                <span class="badge rounded-pill bg-light text-dark small me-2 border border-primary">{{ exercise.language|capfirst }}</span>
+                                                <button type="button" class="view-button btn btn-link text-secondary" 
+                                                    onmouseover="if (!this.classList.contains('active')) { this.classList.remove('text-secondary'); this.classList.add('text-primary'); }" 
+                                                    onmouseout="if (!this.classList.contains('active')) { this.classList.remove('text-primary'); this.classList.add('text-secondary'); }"
+                                                    onclick="toggleViewButton(this, {{ exercise.id }})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     {% endfor %}
                                 </div>
+                                <div id="filtered-exercises" style="height: 300px; overflow-y: auto; border: 1px solid #f5ebeb; display: none;"></div>
                             </div>
 
                             <!-- Exercise Preview Section -->
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="mb-3">
+                                <div class="mb-1">
+                                    <div class="mb-1">
                                         <label for="search-exercises2" class="form-label">Preview Selected Exercise</label>                                       
                                     </div>                            
                                     <div id="exercise-content" class="border p-2" style="height: 300px; overflow-y: auto;">
@@ -126,52 +127,136 @@
                     <!-- Questions Tab -->
                     <div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="questions-tab">
                         <div class="row">
-                            <!-- Question List Section -->
+                            <!-- Search Bar -->
                             <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="search-questions" class="form-label"></label>   
+                                <div class="mb-3"> 
                                     <div class="input-group">   
                                         <span class="input-group-text">🔍</span> 
-                                        <input type="text" id="search-questions" class="form-control" placeholder="Search for questions..." onkeyup="filterQu()">
-                                    </div>                                                               
+                                        <input type="text" id="search-questions" class="form-control" placeholder="Search for questions..." onkeyup="filterQuestions()">
+                                    </div>                                                                                               
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="search-questions" class="form-label">Questions</label>
-                                </div>
-                                <div class="question-content" id="question-content" style="height: 300px; overflow-y: auto; border: 1px solid #ccc;">
-                                    {% for question in questions %}
-                                        <div class="question-item d-flex justify-content-between align-items-center" style="cursor: pointer;">
-                                            <label for="question-{{ question.id }}">{{ forloop.counter }}. {{ question.question_text }}</label>
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="addQuestion('{{ question.id }}', '{{ question.question_text }}')" aria-label="Add Question">
-                                                <i class="fas fa-plus"></i> <!-- Font Awesome Plus Icon -->
-                                            </button>
+                            
+                            <!-- Multiple Choice Library -->
+                            <div class="col-md-5">
+                                <div class="card shadow-sm hover-shadow">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Multiple Choice Library</h5> <!-- Use the "Questions" label from Code 1 -->
+                                    </div>
+                                    <div class="card-body question-library" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                                        <div class="accordion" id="quizAccordion">
+                                            {% for quiz_option in all_quizzes %}
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header" id="heading{{ quiz_option.id }}">
+                                                    <div class="quiz-dropdown border rounded p-2 mb-2 bg-light" id="quizDropdown{{ quiz_option.id }}" style="cursor: pointer;">
+                                                        <div class="quiz-header d-flex justify-content-between align-items-center border-bottom pb-1 mb-1" style="font-size: 0.8rem;">
+                                                            <div class="position-relative">
+                                                                <span class="quiz-title h6 fw-bold" style="font-size: 16px; margin-right: 10px;">
+                                                                    {{ quiz_option.quiz_title }}
+                                                                    <span class="badge bg-success" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">{{ quiz_option.total_questions }} questions</span>
+                                                                </span>
+                                                                
+                                                                <div class="quiz-info d-flex gap-3" style="font-size: 0.7rem; color: #666;">
+                                                                    <div style="position: absolute; left: 200px; margin-top: 12px; transform: rotate(180deg);">
+                                                                        <svg width="10" height="10" viewBox="0 0 24 24">
+                                                                            <path d="M 12 4 L 20 16 L 4 16 Z" fill="#999999" stroke="#999999" stroke-width="4" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px cyan);"/>
+                                                                        </svg>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        
+                                                            <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center position-relative btn-add-question add-questions" 
+                                                                    data-quiz-id="{{ quiz_option.id }}" 
+                                                                    data-question-id="{{ question.id }}" 
+                                                                    style="width: 35px; height: 35px; border-radius: 50%; transition: width 0.3s ease; overflow: hidden;" 
+                                                                    onmouseover="this.style.width='70px'; this.style.borderRadius='5px'; this.querySelector('.add-all-text').style.opacity='1'; this.querySelector('.add-all-text').style.transform='translateY(0)'; this.querySelector('.plus-sign').style.opacity='0';" 
+                                                                    onmouseout="this.style.width='35px'; this.style.borderRadius='50%'; this.querySelector('.add-all-text').style.opacity='0'; this.querySelector('.add-all-text').style.transform='translateY(-10px)'; this.querySelector('.plus-sign').style.opacity='1';">
+                                                                <span class="plus-sign" style="font-size: 1.3rem; transition: opacity 0.3s ease;">+</span>
+                                                                <span class="add-all-text position-absolute" style="opacity: 0; left: 20%; transform: translateX(-50%) translateY(-10px); font-size: 0.8rem; transition: opacity 0.3s ease, transform 0.3s ease;">Add All</span>
+                                                            </button>
+                                                        </div>
+
+                                                        {% if selected_quiz %}
+                                                            <div class="selected-quiz-info">
+                                                                <span>Selected Quiz: {{ selected_quiz.quiz_title }}</span>
+                                                                <span>Total Questions: {{ total_questions_selected_quiz }}</span>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </h2>
+                                                <div id="collapse{{ quiz_option.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ quiz_option.id }}" data-bs-parent="#quizAccordion">
+                                                    <div class="accordion-body">
+                                                        <ul class="list-group" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                                                            {% for question in quiz_option.questions.all %}
+                                                            <li class="list-group-item d-flex align-items-start justify-content-between shadow-sm">
+                                                                <span class="question-text">{{ question.question_text }}</span>
+                                                                <button class="btn btn-sm btn-primary add-question ms-3 align-self-center" data-question-id="{{ question.id }}">+</button>
+                                                                <div class="answer-options bg-success-subtle d-none">
+                                                                    {% for answer in question.answer_options.all %}
+                                                                    <span class="answer-option" data-is-correct="{{ answer.is_correct|yesno:'true,false' }}" data-answer-id="{{ answer.id }}">{{ answer.option_text }}</span>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
                                         </div>
-                                    {% endfor %}
+                                    </div>
                                 </div>
                             </div>
-                           <!-- Selected Questions Section -->
-                            <div class="col-md-6">  
-                                <div class="mb-3">
-                                    <label for="search-questions" class="form-label">Selected Exercises</label>
-                                </div>                                 
-                                <ul id="selected-questions-list" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; list-style-type: disc;">
-                                    {% if selected_questions %}
-                                        {% for question in selected_questions %}
-                                            <li class="selected-question-item d-flex justify-content-between align-items-center" style="cursor: pointer;" data-id="{{ question.id }}">
-                                                <span class="question-text">{{ forloop.counter }}. {{ question.question_text }}</span>
-                                                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion('{{ question.id }}')" aria-label="Remove Question">
-                                                    <i class="fas fa-minus"></i> <!-- Font Awesome Minus Icon -->
-                                                </button>
-                                            </li>
-                                        {% endfor %}
-                                    {% else %}
-                                        <li>No questions selected yet.</li>
-                                    {% endif %}
-                                </ul>
-                                <input type="hidden" name="selected_questions" id="selected-questions" value="{% for question in selected_questions %}{{ question.id }}{% if not forloop.last %},{% endif %}{% endfor %}">
-                               
+
+                            <!-- Selected Questions -->
+                            <div class="col-md-7">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Selected Questions</h5> 
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group" id="selected-questions" style="max-height: 350px; overflow-y: auto;">
+                                            <!-- Selected questions will be dynamically added here -->
+                                            {% for question in assessment.questions.all %}
+                                                <li class="list-group-item d-flex" data-question-id="{{ question.id }}">
+                                                    <div class="question-content flex-grow-1">
+                                                        <!-- Question text area (readonly for view-only mode) -->
+                                                        <textarea class="form-control question-input" name="question_text_{{ question.id }}" placeholder="Edit question..." readonly>{{ question.question_text }}</textarea>
+                                                        <br>
+                                                        <!-- Answers section (readonly for view-only mode) -->
+                                                        
+                                                        {% for answer in question.answer_options.all %}
+                                                            <div class="answer-container d-flex align-items-center mb-3"> <!-- Bootstrap margin-bottom for spacing -->
+                                                                <!-- Checkbox before the answer textarea -->
+                                                                <input type="checkbox" name="answer_{{ answer.id }}" {% if answer.is_correct %} checked {% endif %} disabled>
+                                                                
+                                                                <!-- Answer textarea with conditional background color -->
+                                                                <textarea class="form-control answer-input" name="answer_text_{{ answer.id }}" rows="2" readonly
+                                                                        style="{% if answer.is_correct %}background-color: #d9f7d9;{% endif %}">{{ answer.option_text }}</textarea>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                            
+                                                    <!-- Actions section (optional) -->
+                                                    <div class="actions d-flex flex-column align-items-center ml-2" style="gap: 5px;"> <!-- Align vertically with gap -->
+                                                        <!-- Trash icon button to remove question -->
+                                                        <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center remove-question" style="width: 30px; height: 30px; font-size: 1rem; border: none; background-color: transparent; margin-left: 15px;" data-question-id="{{ question.id }}" title="Remove question">
+                                                            <i class="fas fa-trash-alt text-danger" style="font-size: 1.2rem;"></i> <!-- Trash icon -->
+                                                        </button>
+                                                        
+                                                        <!-- Question number (read-only view) -->
+                                                        <span class="question-number d-flex justify-content-center align-items-center" style="font-size: 0.9rem; width: 30px; height: 30px; border-radius: 50%; background-color: #f8f9fa; color: #6c757d; font-weight: bold; margin-left: 15px;">
+                                                            {{ forloop.counter }}
+                                                        </span>
+                                                    </div>                                                                                                   
+                                            
+                                                    <!-- Hidden input to keep track of selected questions -->
+                                                    <input type="hidden" name="selected_questions[]" value="{{ question.id }}">
+                                                </li>
+                                            {% endfor %}
+                                        </ul>                                                                                
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -221,221 +306,646 @@
 </div>
 
 <script>
-
-// Function to filter exercises in the list
-function filterExercises() {
-    const input = document.getElementById('search-exercises').value.toLowerCase();
-    const exercises = document.querySelectorAll('.exercise-item');
-    exercises.forEach(exercise => {
-        const label = exercise.querySelector('label').textContent.toLowerCase();
-        exercise.style.display = label.includes(input) ? 'block' : 'none';
-    });
-}
-
-function filterQuestions() {
-    const input = document.getElementById('search-questions').value.toLowerCase(); // Get search input
-    const questions = document.querySelectorAll('.question-item'); // Select all question items
-
-    console.log("Search Input:", input); // Log the search input for debugging
-
-    // Iterate through each question item
-    questions.forEach(question => {
-        const label = question.querySelector('label').textContent.toLowerCase();
-        question.style.display = label.includes(input) ? 'block' : 'none';
-       
-        // Check if the questionText includes the input value
-        if (label.toLowerCase().includes(input.toLowerCase().trim())) {
-            console.log("Match Found:", label); // Log each question text
-            question.style.display = 'block'; // Show the question if it matches
-        } else {
-            console.log("No Match:", label); // Log each question text
-            question.style.display = 'none'; // Hide the question if it doesn't match
-        }
-
-    });
-}
-
-function addQuestion(id, text) {
-    // Get the selected questions div and input field
-    const selectedQuestionsList = document.getElementById('selected-questions-list');
-    const selectedQuestionsInput = document.getElementById('selected-questions');
-
-    // Split the value into an array of selected question IDs
-    let selectedQuestions = selectedQuestionsInput.value ? selectedQuestionsInput.value.split(',') : [];
-
-    // Check if this question is already added
-    if (!selectedQuestions.includes(id)) {
-        // Create the question item element
-        const questionItem = document.createElement('li');
-        questionItem.classList.add('selected-question-item', 'd-flex', 'justify-content-between', 'align-items-center');
-        questionItem.setAttribute('data-id', id);
-        questionItem.innerHTML = `
-            <span>${text}</span>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion('${id}')">
-                <i class="fas fa-minus"></i> <!-- Font Awesome Minus Icon -->
-            </button>
-        `;
-
-        // Add the question to the right section
-        selectedQuestionsList.appendChild(questionItem);
-
-        // Add the question ID to the array
-        selectedQuestions.push(id);
+    document.addEventListener('DOMContentLoaded', function () {
+        const addQuestionButtons = document.querySelectorAll('.add-question');
+        const selectedQuestionsList = document.getElementById('selected-questions');
         
-        // Update the hidden input with the selected question IDs (comma-separated)
-        selectedQuestionsInput.value = selectedQuestions.join(',');
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'd-flex justify-content-end mt-3';
+
+        const saveButton = document.createElement('button');
+        saveButton.className = 'btn btn-success btn-sm'; 
+        saveButton.innerText = 'Save';
+        saveButton.style.display = 'none'; 
+        buttonContainer.appendChild(saveButton);
+        selectedQuestionsList.parentElement.appendChild(buttonContainer);
+
         
-        // Debugging log to check the hidden input value
-        console.log("Selected Questions (after addition):", selectedQuestionsInput.value);
-    } else {
-        console.log("Question already added:", id);
-    }
-}
-
-// Function to remove a question
-function removeQuestion(id) {
-    // Get the selected questions div and input field
-    const selectedQuestionsList = document.getElementById('selected-questions-list');
-    const selectedQuestionsInput = document.getElementById('selected-questions');
-
-    // Remove the question from the right section
-    const questionItem = selectedQuestionsList.querySelector(`[data-id='${id}']`);
-    if (questionItem) {
-        questionItem.remove();
-    }
-
-    // Update the hidden input to remove the question ID
-    let selectedQuestions = selectedQuestionsInput.value.split(',');
-    selectedQuestions = selectedQuestions.filter(qid => qid !== id);
-    selectedQuestionsInput.value = selectedQuestions.join(',');
-
-    // If no questions left, display a message
-    if (selectedQuestions.length === 0) {
-        selectedQuestionsList.innerHTML = '<li>No questions selected yet.</li>';
-    }
-
-    // Update numbering
-    updateNumbering();
-}
-  
-
-
- // Function to filter selected questions based on the search input
-function filterSelectedQuestions() {
-    const searchInput = document.getElementById('search-selected-questions').value.toLowerCase();
-    const questionItems = document.querySelectorAll('#selected-questions-list .selected-question-item');
-    
-    questionItems.forEach(item => {
-        const questionText = item.querySelector('.question-text').textContent.toLowerCase();
-        item.style.display = questionText.includes(searchInput) ? '' : 'none';  // Show or hide based on the search input
-    });
-}
-
-
-
-
-fullscreenPreview.appendChild(closeFullscreenButton);
-
-function viewExercise(exerciseId) {
-    const exerciseContent = document.getElementById('exercise-content');
-    const fullscreenPreview = document.getElementById('fullscreen-preview');
-    
-    // Use a data attribute to track the currently displayed exercise ID
-    const displayedExerciseId = exerciseContent.dataset.exerciseId;
-
-    if (displayedExerciseId == exerciseId) {
-        exerciseContent.innerHTML = '<p>Select an exercise from the list to preview its content here.</p>';
-        delete exerciseContent.dataset.exerciseId; // Clear the data attribute
-        return;
-    }
-
-    fetch("{% url 'assessment:get_exercise_content' 0 %}".replace('0', exerciseId))
-        .then(response => {
-            if (!response.ok) {
-                console.error("Fetch error:", response.status, response.statusText); 
-                exerciseContent.innerHTML = `<p>Error loading exercise ${exerciseId}: ${response.status} ${response.statusText}</p>`;
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            exerciseContent.innerHTML = `
-                <div class="d-flex align-items-start">
-                    <h3 style="font-size: 1.2rem; margin-bottom: 0;">Exercise ${exerciseId}: ${data.title}</h3>
-                    <span id="extend-button" class="ms-auto" style="display: inline-block; transform: rotate(135deg);">↔</span>
-                </div>
-                <p>${data.content}</p>
-                `;
-            
-            exerciseContent.dataset.exerciseId = exerciseId; // Set the data attribute
-            const extendButton = document.getElementById('extend-button');
-
-            extendButton.addEventListener('click', (event) => {
-                event.preventDefault(); 
-
-                fullscreenPreview.innerHTML = `
-                    <div class="d-flex justify-content-center align-items-center w-100 h-100 bg-light" style="opacity: 0.8;">
-                    <div class="fullscreen-preview-content p-4 bg-white" style="border-radius: 5px; position: relative; max-width: 80%; max-height: 80%; overflow-y: auto;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 style="margin-bottom: 0; font-size: 1.2rem;">Exercise ${exerciseId}: ${data.title}</h3> <!-- Điều chỉnh kích thước ở đây -->
-                            <span id="close-fullscreen" aria-label="Close" style="cursor: pointer; font-size: 1.5rem;">×</span>
-                        </div>
-                        <p>${data.content}</p>
-                    </div>
-                </div>
-                `;
-
-                fullscreenPreview.classList.remove('d-none');
-
-                const closeBtn = document.getElementById('close-fullscreen');
-                closeBtn.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    fullscreenPreview.classList.add('d-none');
-                });
-
-                fullscreenPreview.addEventListener('click', (event) => {
-                    if (event.target === fullscreenPreview) {
-                        fullscreenPreview.classList.add('d-none');
+        // Add event listener to each remove button
+        const removeButtons = document.querySelectorAll('.remove-question');
+        
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Get the question id from the button's data attribute
+                const questionId = this.getAttribute('data-question-id');
+                
+                // Find the <li> element containing the question
+                const questionItem = this.closest('li');
+                
+                // Remove the <li> element from the DOM
+                questionItem.remove();
+                
+                // Optionally, remove the question's ID from the hidden input field (if needed)
+                const selectedQuestionsInput = document.querySelector('input[name="selected_questions[]"][value="' + questionId + '"]');
+                if (selectedQuestionsInput) {
+                    selectedQuestionsInput.remove();
+                }
+                
+                // Recalculate the numbers for the remaining questions
+                const questionsList = document.querySelectorAll('#selected-questions .list-group-item');
+                questionsList.forEach((item, index) => {
+                    // Update the question number text
+                    const questionNumber = item.querySelector('.question-number');
+                    if (questionNumber) {
+                        questionNumber.textContent = index + 1;
                     }
                 });
-
-                fullscreenPreview.classList.remove('d-none');
             });
-        })
-        .catch(error => {
-            console.error('Error fetching exercise content:', error);
-            exerciseContent.innerHTML = `<p>Error loading exercise ${exerciseId}. See console for details.</p>`;
-            delete exerciseContent.dataset.exerciseId; // Clear in case of error
         });
-}
+
+        const questionMap = new Map(); 
+
+        const quizDropdowns = document.querySelectorAll('.quiz-dropdown');
+        quizDropdowns.forEach(dropdown => {
+            dropdown.addEventListener('click', function (event) {
+                // Check if the click target is NOT the `+` button or `Add All` text
+                if (!event.target.classList.contains('btn-add-question') && !event.target.classList.contains('add-all-text')) {
+                    const quizId = dropdown.getAttribute('id').replace('quizDropdown', 'collapse');
+                    const targetCollapse = document.getElementById(quizId);
+
+                    // Toggle the collapse state
+                    const isCollapsed = targetCollapse.classList.contains('show');
+                    if (isCollapsed) {
+                        targetCollapse.classList.remove('show');
+                    } else {
+                        targetCollapse.classList.add('show');
+                    }
+                }
+            });
+
+            // Optional: Add functionality to the Add All button
+            const addAllButton = dropdown.querySelector('.btn-add-question');
+            addAllButton.addEventListener('click', function(event) {
+                event.stopPropagation(); // Prevent the click from bubbling up to the dropdown
+                const quizId = addAllButton.getAttribute('data-quiz-id');
+                const questionId = addAllButton.getAttribute('data-question-id');
+            });
+        });
+        
+
+        addQuestionButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const questionId = this.dataset.questionId; 
+                const questionTextElement = this.parentElement.querySelector('.question-text');
+                questionTextElement.classList.add('fw-normal');
+                const questionText = questionTextElement.innerText.trim();
+                const answerOptions = Array.from(this.parentElement.querySelectorAll('.answer-option'));
+        
+                // Kiểm tra nếu câu hỏi đã có trong danh sách
+                if (questionMap.has(questionId)) {
+                    const listItem = questionMap.get(questionId);
+                    listItem.querySelector('.question-input').value = questionText; 
+        
+                    // Cập nhật câu trả lời
+                    const answerInputs = listItem.querySelectorAll('.answer-field');
+                    answerOptions.forEach((option, index) => {
+                        if (answerInputs[index]) {
+                            const textarea = answerInputs[index].querySelector('textarea');
+                            const checkbox = answerInputs[index].querySelector('input[type="checkbox"]');
+                            textarea.value = option.innerText; 
+                            checkbox.checked = option.dataset.isCorrect === "true"; // Cập nhật trạng thái checkbox
+                        } else {
+                            // Tạo mới nếu không tồn tại
+                            addAnswerField(listItem, {
+                                option_text: option.innerText,
+                                is_correct: option.dataset.isCorrect === "true",
+                                id: option.dataset.answerId
+                            });
+                        }
+                    });
+        
+                    // Xóa bất kỳ câu trả lời nào thừa
+                    answerInputs.forEach((input, index) => {
+                        if (index >= answerOptions.length) {
+                            input.remove(); // Xóa các câu trả lời thừa
+                        }
+                    });
+        
+                } else {
+                    // Tạo mục mới cho câu hỏi đã chọn
+                    const listItem = document.createElement('li');
+                    // Add a data attribute to store the question's order
+                    listItem.dataset.order = selectedQuestionsList.children.length + 1; 
+
+                    listItem.className = 'list-group-item d-flex align-items-center justify-content-between'; 
+
+                    listItem.innerHTML = `
+                        <div class="question-content flex-grow-1">
+                            <textarea class="form-control question-input" placeholder="Edit question..." required>${questionText}</textarea>
+                            <div id="answerOptionsContainer" class="mt-2"></div>
+                            <button class="btn btn-primary btn-sm add-answer">Add Answer</button>
+                        </div>
+                        <div class="actions d-flex flex-column align-items-center" style="margin-left: 10px; gap: 5px;"> <!-- Giảm khoảng cách giữa các phần tử -->
+                            <i class="fas fa-trash-alt remove-question text-danger" data-question-id="${questionId}" title="Remove question" style="cursor: pointer; font-size: 1.1rem;"></i>
+
+                            <button class="move-up btn btn-light btn-sm d-flex justify-content-center align-items-center rounded-circle" style="width: 30px; height: 30px; font-size: 0.9rem;">
+                                <i class="fas fa-arrow-up" style="font-size: 0.8rem;"></i>
+                            </button>
+
+                            <span class="question-number d-flex justify-content-center align-items-center" style="font-size: 0.9rem; width: 30px; height: 30px; border-radius: 50%; background-color: #f8f9fa; color: #6c757d; font-weight: bold;"> <!-- Thêm font-weight: bold -->
+                                ${listItem.dataset.order}
+                            </span>
+
+                            <button class="move-down btn btn-light btn-sm d-flex justify-content-center align-items-center rounded-circle" style="width: 30px; height: 30px; font-size: 0.9rem;">
+                                <i class="fas fa-arrow-down" style="font-size: 0.8rem;"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    // Create and append the hidden input
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'selected_questions[]';  // The [] is important!
+                    hiddenInput.value = questionId;       // Use questionId (already defined in your code)
+                    listItem.appendChild(hiddenInput);
+
+                    selectedQuestionsList.appendChild(listItem);
+                    questionMap.set(questionId, listItem);
+
+                    // NOW add the event listeners:
+                    const moveUpButton = listItem.querySelector('.move-up');
+                    const moveDownButton = listItem.querySelector('.move-down');
+                    moveUpButton.addEventListener('click', () => moveQuestion(listItem, 'up'));
+                    moveDownButton.addEventListener('click', () => moveQuestion(listItem, 'down'));
+        
+                    // Hiển thị nút lưu nếu có ít nhất một câu hỏi
+                    saveButton.style.display = 'block';
+        
+                    let deleted_ids = []; // Array to keep track of deleted question IDs
+
+                    // Add event listener for removing the question
+                    const removeButton = listItem.querySelector('.remove-question');
+                    removeButton.addEventListener('click', () => {
+                        const questionId = questionMap.get(listItem.dataset.questionId); // Get the ID of the question being removed
+
+                        // Mark the question as deleted by adding a class
+                        listItem.classList.add('deleted'); // Add a deleted class to the item
+                        deleted_ids.push(questionId); // Add the question ID to the deleted_ids array
+
+                        listItem.remove(); // Remove the question from the DOM
+                        questionMap.delete(questionId); // Remove from questionMap
+                        updateQuestionNumbers(); // Update numbering after deletion
+                    });
+                
+            
+        
+                    // Sự kiện để thêm câu trả lời
+                    const addAnswerButton = listItem.querySelector('.add-answer');
+                    addAnswerButton.addEventListener('click', function () {
+                        addNewAnswerField(listItem);
+                    });
+        
+                    // Thêm các tùy chọn câu trả lời cho câu hỏi mới
+                    answerOptions.forEach(option => {
+                        addAnswerField(listItem, {
+                            option_text: option.innerText,
+                            is_correct: option.dataset.isCorrect === "true",
+                            id: option.dataset.answerId
+                        });
+                    });
+                    updateQuestionNumbers();
+                }
+            updateQuestionNumbers();
+            });
+        });
+        
+        function moveQuestion(listItem, direction) {
+            const parent = listItem.parentNode;
+            const currentIndex = Array.from(parent.children).indexOf(listItem);
+        
+            if (direction === 'up' && currentIndex > 0) {
+                parent.insertBefore(listItem, parent.children[currentIndex - 1]);
+            } else if (direction === 'down' && currentIndex < parent.children.length - 1) {
+                parent.insertBefore(listItem, parent.children[currentIndex + 1 === parent.children.length ? currentIndex + 1 : parent.children[currentIndex + 2] ]); // Corrected this logic
+        
+            }
+        
+            updateQuestionNumbers();
+        }
+        
+        
+        function updateQuestionNumbers() {
+            const questions = selectedQuestionsList.querySelectorAll('li');
+            questions.forEach((question, index) => {
+                question.dataset.order = index + 1;
+                const numberSpan = question.querySelector('.question-number');
+                if (numberSpan) {
+                        numberSpan.textContent = index + 1;
+                }
+                
+            });
+        }
+
+        // Function to dynamically add answer fields for editing
+        function addAnswerField(listItem, answerData = null) {
+            const newAnswerDiv = document.createElement('div');
+            newAnswerDiv.className = 'form-group mb-3 answer-field';
+            console.log(listItem)
+            // Sử dụng dữ liệu câu trả lời nếu có
+            let answerText = answerData ? answerData.option_text : ""; // Nội dung câu trả lời
+            let isChecked = answerData && (answerData.is_correct === 'true' || answerData.is_correct === true) ? "checked" : ""; // Trạng thái checkbox
+            let answerId = answerData ? answerData.id : ""; // ID câu trả lời
+        
+            newAnswerDiv.innerHTML = `
+                <div class="input-group">
+                    <input type="checkbox" class="form-check-input" name="is_correct[]" value="${answerId}" ${isChecked}>
+                    <input type="hidden" name="answer_id[]" value="${answerId}">
+                    
+                    <textarea class="form-control" style="${answerData && (answerData.is_correct === 'true' || answerData.is_correct === true) ? 'background-color: #d9f7d9;' : ''}"
+                            name="option_text[]" 
+                            placeholder="Enter answer..." 
+                            required>${answerText}</textarea>
+                    
+                    <i class="fas fa-times remove-answer" data-answer-id="${answerId}" style="color: #dc3545; cursor: pointer;"></i>
+                </div>
+            `;
+            
+
+            listItem.querySelector('#answerOptionsContainer').appendChild(newAnswerDiv);
+        
+            // Thêm chức năng xóa cho câu trả lời
+            const removeButton = newAnswerDiv.querySelector('.remove-answer');
+            removeButton.addEventListener('click', () => {
+                newAnswerDiv.remove(); // Xóa câu trả lời khỏi DOM
+            });
+        }
+        
+        
+
+        function addNewAnswerField(listItem) {
+            addAnswerField(listItem); // Call to add a new empty answer field
+        }
+
+        saveButton.addEventListener('click', function () {
+            const savedData = [];
+        
+            // Collect edited questions and answers
+            questionMap.forEach((item, questionId) => {
+                const editedQuestionText = item.querySelector('.question-input').value;
+                const answerInputs = Array.from(item.querySelectorAll('.answer-field'));
+                
+                // Check if the question is marked as deleted
+                if (item.classList.contains('deleted')) {
+                    deletedIds.push(questionId); // Collect ID of deleted question
+                    return; // Skip this question
+                }
+
+                const editedAnswerOptions = answerInputs.map(input => {
+                    const textarea = input.querySelector('textarea');
+                    const checkbox = input.querySelector('input[type="checkbox"]');
+                    return {
+                        text: textarea.value,
+                        is_correct: checkbox.checked 
+                    };
+                });
+        
+                // Save edited question information
+                if (editedQuestionText !== '' || editedAnswerOptions.some(option => option.text !== '')) {
+                    savedData.push({
+                        id: questionId, // Existing question ID if updating
+                        text: editedQuestionText,
+                        answers: editedAnswerOptions.map(answer => ({ text: answer.text, is_correct: answer.is_correct })) 
+                    });
+                }
+            });
+        
+            // Collect new questions that need to be added
+            const newQuestions = document.querySelectorAll('.new-question'); // Class for new questions in HTML
+        
+            newQuestions.forEach((newItem) => {
+                const newQuestionText = newItem.querySelector('.question-input').value;
+                const newAnswerInputs = Array.from(newItem.querySelectorAll('.answer-field'));
+        
+                const newAnswerOptions = newAnswerInputs.map(input => {
+                    const textarea = input.querySelector('textarea');
+                    const checkbox = input.querySelector('input[type="checkbox"]');
+                    return {
+                        text: textarea.value,
+                        is_correct: checkbox.checked 
+                    };
+                });
+        
+                // Only add new question if it is not empty
+                if (newQuestionText !== '' || newAnswerOptions.some(option => option.text !== '')) {
+                    savedData.push({
+                        text: newQuestionText,
+                        answers: newAnswerOptions.map(answer => ({ text: answer.text, is_correct: answer.is_correct })) 
+                    });
+                }
+            });
+        
+            // Collect copied questions from another quiz (if applicable)
+            const copiedQuestionElements = document.querySelectorAll('.copied-question'); // Class for copied questions
+            copiedQuestionElements.forEach((item) => {
+                const copiedQuestionId = item.dataset.questionId; // Assuming question ID is stored in a data attribute
+                const copiedQuestionText = item.querySelector('.copied-question-text').innerText.trim();
+                const answerOptions = Array.from(item.querySelectorAll('.copied-answer-option')); // Class for copied answer options
+        
+                const copiedAnswerOptions = answerOptions.map(option => {
+                    return {
+                        text: option.querySelector('.copied-answer-text').value,
+                        is_correct: option.querySelector('.copied-answer-checkbox').checked 
+                    };
+                });
+        
+                // Add copied question and answers to saved data
+                if (copiedQuestionText !== '' || copiedAnswerOptions.some(option => option.text !== '')) {
+                    savedData.push({
+                        text: copiedQuestionText,
+                        answers: copiedAnswerOptions.map(answer => ({ text: answer.text, is_correct: answer.is_correct })) 
+                    });
+                }
+            });
+
+        
+            // Determine the URL based on the presence of assessment.id
+            const url = "{% if assessment and assessment.id %}{% url 'assessment:assessment_edit' assessment.id %}{% else %}{% url 'assessment:assessment_create' %}{% endif %}";
+
+            // Send collected data
+            if (savedData.length > 0 || deletedIds.length > 0) {
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'), 
+                    },
+                    body: JSON.stringify({
+                        questions: savedData,
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.status === 'success') {
+                        location.reload(); // Reload the page if saved successfully
+                    } else {
+                        alert('Failed to save questions and answers.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert('No changes detected to save.');
+            }
+        });
+        
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+
+        const addQuizButtons = document.querySelectorAll('.add-questions');
+
+        addQuizButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                
+                const questions = this.closest('.accordion-header').nextElementSibling.querySelectorAll('.add-question');
+        
+                // Kiểm tra nếu danh sách đã có câu hỏi
+                if (selectedQuestionsList.children.length === 0) {  
+                    // Nếu danh sách rỗng, thêm các câu hỏi vào danh sách
+                    questions.forEach(question => {
+                        question.click();
+                    });
+                } else {
+                    // Nếu danh sách không rỗng, xóa tất cả câu hỏi khỏi danh sách
+                    while (selectedQuestionsList.firstChild) {
+                        selectedQuestionsList.removeChild(selectedQuestionsList.firstChild);
+                    }
+                    questionMap.clear(); 
+                    saveButton.style.display = 'none'; 
+                }
+            });
+        });
+    });
+            
+        
+
+    // Function to filter exercises in the list
+    function filterExercises() {
+        const input = document.getElementById('search-exercises').value.toLowerCase();
+        const exercises = document.querySelectorAll('.exercise-item');
+        const filteredExercisesContainer = document.getElementById('filtered-exercises');
+        filteredExercisesContainer.innerHTML = '';
+
+        if (input.trim() === "") {
+            filteredExercisesContainer.style.display = 'none';
+            document.getElementById('exercise-list').style.display = 'block';
+            exercises.forEach(exercise => exercise.style.display = 'flex');
+            return;
+        }
+
+        let filteredExercises = [];
+        let addedExerciseIds = new Set(); // Dùng Set để lưu ID của các exercise đã thêm
+
+        exercises.forEach(exercise => {
+            const title = exercise.querySelector('label').textContent.toLowerCase();
+            const language = exercise.querySelector('.badge').textContent.toLowerCase();
+            const exerciseId = exercise.dataset.exerciseId; // Lấy ID của exercise
+
+            // Kiểm tra nếu exercise đã được thêm hay chưa
+            if ((title.includes(input) || language.includes(input)) && !addedExerciseIds.has(exerciseId)) {
+                filteredExercises.push(exercise.cloneNode(true));
+                addedExerciseIds.add(exerciseId); // Thêm ID vào Set
+            }
+        });
 
 
-// Hàm để chuyển đổi trạng thái nút và gọi viewExercise
-function toggleViewButton(button, exerciseId) {
-        const isActive = button.classList.contains("active");
-
-        if (isActive) {
-            // Nếu đã active, thì reset về trạng thái ban đầu
-            button.classList.remove("active", "text-primary");
-            button.classList.add("text-secondary");
-            viewExercise(null); // Đóng nội dung
+        if (filteredExercises.length > 0) {
+            document.getElementById('exercise-list').style.display = 'none';
+            filteredExercisesContainer.style.display = 'block';
+            filteredExercises.forEach(exercise => filteredExercisesContainer.appendChild(exercise));
         } else {
-            // Nếu chưa active, thì hiển thị nội dung
-            button.classList.add("active", "text-primary");
-            button.classList.remove("text-secondary");
-            viewExercise(exerciseId); // Hiển thị nội dung
+            filteredExercisesContainer.style.display = 'none';
+            document.getElementById('exercise-list').style.display = 'block';
+            exercises.forEach(exercise => {
+                const title = exercise.querySelector('label').textContent.toLowerCase();
+                const language = exercise.querySelector('.badge').textContent.toLowerCase();
+                if (title.includes(input) || language.includes(input)) {
+                    exercise.style.display = 'flex';
+                } else {
+                    exercise.style.display = 'none';
+                }
+            });
         }
     }
-// Add active class to exercise-item (No changes needed here)
-const exerciseItems = document.querySelectorAll('.exercise-item');
-exerciseItems.forEach(item => {
-    item.addEventListener('click', function(event) {
-        if (event.target.tagName !== 'BUTTON' ) {
-            exerciseItems.forEach(otherItem => otherItem.classList.remove('selected'));
-            this.classList.add('selected');
+
+    document.getElementById('search-exercises').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            filterExercises();
         }
     });
-});
+
+    function filterQuestions() {
+        const input = document.getElementById('search-questions').value.toLowerCase();
+        const quizAccordion = document.getElementById('quizAccordion');
+        const accordionItems = quizAccordion.querySelectorAll('.accordion-item');
+    
+        accordionItems.forEach(item => {
+            const questionsList = item.querySelector('.list-group');
+            const accordionCollapse = item.querySelector('.accordion-collapse');
+            let anyMatchInQuiz = false;
+    
+            if (questionsList) {
+                const questions = questionsList.querySelectorAll('.list-group-item');
+    
+                // Hide all questions initially
+                questions.forEach(question => {
+                    question.style.display = 'none';
+                });
+    
+                // Loop through each question to check if it matches the search term
+                questions.forEach(question => {
+                    const questionText = question.querySelector('.question-text').textContent.toLowerCase();
+                    const isMatch = questionText.includes(input);
+    
+                    if (isMatch) {
+                        question.style.display = 'block'; // Show only the matching question
+                        anyMatchInQuiz = true;
+                    }
+                });
+    
+                // Show only quizzes that contain a matching question
+                const quizHeader = item.querySelector('.quiz-dropdown');
+                if (input === "") {
+                    // Show all quizzes and questions if input is empty
+                    item.style.display = 'block';
+                    quizHeader.style.display = 'block';
+                    accordionCollapse.classList.remove('show'); // Collapse quiz if input is empty
+                    questions.forEach(question => {
+                        question.style.display = 'block'; // Show all questions
+                    });
+                } else {
+                    // Show only quizzes with at least one matching question
+                    item.style.display = anyMatchInQuiz ? 'block' : 'none';
+                    quizHeader.style.display = anyMatchInQuiz ? 'block' : 'none';
+                    accordionCollapse.classList.toggle('show', anyMatchInQuiz); // Expand quiz only if it has a matching question
+                }
+            }
+        });
+    }
+        
+    
+
+    fullscreenPreview.appendChild(closeFullscreenButton);
+
+    function viewExercise(exerciseId) {
+        const exerciseContent = document.getElementById('exercise-content');
+        const fullscreenPreview = document.getElementById('fullscreen-preview');
+        
+        // Use a data attribute to track the currently displayed exercise ID
+        const displayedExerciseId = exerciseContent.dataset.exerciseId;
+
+        if (displayedExerciseId == exerciseId) {
+            exerciseContent.innerHTML = '<p>Select an exercise from the list to preview its content here.</p>';
+            delete exerciseContent.dataset.exerciseId; // Clear the data attribute
+            return;
+        }
+
+        fetch("{% url 'assessment:get_exercise_content' 0 %}".replace('0', exerciseId))
+            .then(response => {
+                if (!response.ok) {
+                    console.error("Fetch error:", response.status, response.statusText); 
+                    exerciseContent.innerHTML = `<p>Error loading exercise ${exerciseId}: ${response.status} ${response.statusText}</p>`;
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                exerciseContent.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <h3 style="font-size: 1.2rem; margin-bottom: 0;">Exercise ${exerciseId}: ${data.title}</h3>
+                        <span id="extend-button" class="ms-auto" style="display: inline-block; transform: rotate(135deg);">↔</span>
+                    </div>
+                    <p>${data.content}</p>
+                    `;
+                
+                exerciseContent.dataset.exerciseId = exerciseId; // Set the data attribute
+                const extendButton = document.getElementById('extend-button');
+
+                extendButton.addEventListener('click', (event) => {
+                    event.preventDefault(); 
+
+                    fullscreenPreview.innerHTML = `
+                        <div class="d-flex justify-content-center align-items-center w-100 h-100 bg-light" style="opacity: 0.8;">
+                        <div class="fullscreen-preview-content p-4 bg-white" style="border-radius: 5px; position: relative; max-width: 80%; max-height: 80%; overflow-y: auto;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 style="margin-bottom: 0; font-size: 1.2rem;">Exercise ${exerciseId}: ${data.title}</h3> <!-- Điều chỉnh kích thước ở đây -->
+                                <span id="close-fullscreen" aria-label="Close" style="cursor: pointer; font-size: 1.5rem;">×</span>
+                            </div>
+                            <p>${data.content}</p>
+                        </div>
+                    </div>
+                    `;
+
+                    fullscreenPreview.classList.remove('d-none');
+
+                    const closeBtn = document.getElementById('close-fullscreen');
+                    closeBtn.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        fullscreenPreview.classList.add('d-none');
+                    });
+
+                    fullscreenPreview.addEventListener('click', (event) => {
+                        if (event.target === fullscreenPreview) {
+                            fullscreenPreview.classList.add('d-none');
+                        }
+                    });
+
+                    fullscreenPreview.classList.remove('d-none');
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching exercise content:', error);
+                exerciseContent.innerHTML = `<p>Error loading exercise ${exerciseId}. See console for details.</p>`;
+                delete exerciseContent.dataset.exerciseId; // Clear in case of error
+            });
+    }
+
+
+    // Hàm để chuyển đổi trạng thái nút và gọi viewExercise
+    function toggleViewButton(button, exerciseId) {
+            const isActive = button.classList.contains("active");
+
+            if (isActive) {
+                // Nếu đã active, thì reset về trạng thái ban đầu
+                button.classList.remove("active", "text-primary");
+                button.classList.add("text-secondary");
+                viewExercise(null); // Đóng nội dung
+            } else {
+                // Nếu chưa active, thì hiển thị nội dung
+                button.classList.add("active", "text-primary");
+                button.classList.remove("text-secondary");
+                viewExercise(exerciseId); // Hiển thị nội dung
+            }
+        }
+    // Add active class to exercise-item (No changes needed here)
+    const exerciseItems = document.querySelectorAll('.exercise-item');
+    exerciseItems.forEach(item => {
+        item.addEventListener('click', function(event) {
+            if (event.target.tagName !== 'BUTTON' ) {
+                exerciseItems.forEach(otherItem => otherItem.classList.remove('selected'));
+                this.classList.add('selected');
+            }
+        });
+    });
+
+
 
 </script>
 {% endblock %}

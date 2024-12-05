@@ -3,32 +3,483 @@
 {% block title %}Student Activity Log{% endblock %}
 
 {% block extra_css %}
-<!-- Bootstrap 5 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    :root {
+        --primary-color: #3498db;
+        --secondary-color: #2c3e50;
+        --background-color: #ecf0f1;
+        --text-color: #34495e;
+        --accent-color: #e74c3c;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--background-color);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    h2 {
+        color: var(--secondary-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-form {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .search-form input,
+    .search-form button {
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .search-form input[type="text"],
+    .search-form input[type="date"] {
+        flex-grow: 1;
+    }
+
+    .search-form button {
+        background-color: var(--primary-color);
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .search-form button:hover {
+        background-color: #2980b9;
+    }
+
+    .activity-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-table th,
+    .activity-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .activity-table th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: bold;
+    }
+
+    .activity-table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .activity-table tr:hover {
+        background-color: #e9ecef;
+    }
+
+    /* New styles for updated pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+
+    .pagination {
+        display: flex;
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .page-item {
+        margin: 0 2px;
+    }
+
+    .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        color: #0d6efd;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .page-link:hover {
+        z-index: 2;
+        color: #0a58ca;
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    .page-item.active .page-link {
+        z-index: 3;
+        color: #fff;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+
+    .ellipsis {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        font-size: 14px;
+    }
+
+
+    .button {
+        position: absolute;
+        top: 80px;
+        left: 1000px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 280px;
+        height: 80px;
+        background-color: var(--main-color);
+        border: none;
+        border-radius: 40px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .button--frog {
+        --main-color: #4CAF50;
+        --dark-color: #2E7D32;
+        --light-color: #81C784;
+        --spot-color: #1B5E20;
+    }
+
+    .button:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .button__wrapper {
+        z-index: 1;
+    }
+
+    .button__text {
+        font-family: 'Arial', sans-serif;
+        font-size: 32px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .button:hover .button__text {
+        transform: scale(1.1);
+    }
+
+    /* Existing frog styles remain unchanged */
+    .frog {
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: all 0.3s ease;
+    }
+
+    .frog__body {
+        width: 100px;
+        height: 60px;
+        background-color: var(--main-color);
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .frog__eyes {
+        position: absolute;
+        top: 10px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-around;
+    }
+
+    .frog__eye {
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .frog__eye::after {
+        content: '';
+        position: absolute;
+        top: 25%;
+        left: 25%;
+        width: 50%;
+        height: 50%;
+        background-color: black;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .frog__spots {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-around;
+    }
+
+    .frog__spot {
+        width: 10px;
+        height: 10px;
+        background-color: var(--spot-color);
+        border-radius: 50%;
+        opacity: 0.7;
+    }
+
+    .frog__legs {
+        position: absolute;
+        bottom: -10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .frog__leg {
+        width: 20px;
+        height: 30px;
+        background-color: var(--main-color);
+        border-radius: 0 0 10px 10px;
+    }
+
+    .button:hover .frog {
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    .button:hover .frog__eye::after {
+        transform: scale(0.8);
+    }
+
+    @keyframes blink {
+        0%, 100% { transform: scaleY(1); }
+        50% { transform: scaleY(0.1); }
+    }
+
+    .button:hover .frog__eye::after {
+        animation: blink 3s infinite;
+    }
+
+    .button::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background-color: var(--light-color);
+        border-radius: 40%;
+        opacity: 0.8;
+        animation: rotate 6s linear infinite;
+    }
+
+    @keyframes rotate {
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Existing butterfly styles remain unchanged */
+    .butterfly-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .butterfly {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+    }
+
+    .butterfly-1 { top: 10%; left: 10%; animation: fly1 25s infinite alternate; }
+    .butterfly-2 { top: 20%; left: 80%; animation: fly2 28s infinite alternate; }
+    .butterfly-3 { top: 70%; left: 20%; animation: fly3 22s infinite alternate; }
+    .butterfly-4 { top: 40%; left: 60%; animation: fly4 26s infinite alternate; }
+    .butterfly-5 { top: 80%; left: 40%; animation: fly5 24s infinite alternate; }
+    .butterfly-6 { top: 30%; left: 30%; animation: fly6 27s infinite alternate; }
+    .butterfly-7 { top: 60%; left: 70%; animation: fly7 23s infinite alternate; }
+    .butterfly-8 { top: 50%; left: 50%; animation: fly8 29s infinite alternate; }
+    .butterfly-9 { top: 90%; left: 90%; animation: fly9 21s infinite alternate; }
+    .butterfly-10 { top: 15%; left: 45%; animation: fly10 30s infinite alternate; }
+
+    .wings {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        animation: flutter 0.8s infinite alternate;
+    }
+
+    .wing {
+        position: absolute;
+        width: 15px;
+        height: 20px;
+        top: 0;
+        background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+        border-radius: 50% 50% 0 50%;
+    }
+
+    .wing.left {
+        left: 0;
+        transform-origin: right center;
+    }
+
+    .wing.right {
+        right: 0;
+        transform: scaleX(-1);
+        transform-origin: left center;
+    }
+
+    .body {
+        position: absolute;
+        width: 4px;
+        height: 20px;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #000;
+        border-radius: 2px;
+    }
+
+    .butterfly-1 .wing { background-color: #FF9AA2; }
+    .butterfly-2 .wing { background-color: #FFB7B2; }
+    .butterfly-3 .wing { background-color: #FFDAC1; }
+    .butterfly-4 .wing { background-color: #E2F0CB; }
+    .butterfly-5 .wing { background-color: #B5EAD7; }
+    .butterfly-6 .wing { background-color: #C7CEEA; }
+    .butterfly-7 .wing { background-color: #FF9AA2; }
+    .butterfly-8 .wing { background-color: #FFB7B2; }
+    .butterfly-9 .wing { background-color: #FFDAC1; }
+    .butterfly-10 .wing { background-color: #E2F0CB; }
+
+    @keyframes flutter {
+        0% { transform: rotateY(0deg); }
+        100% { transform: rotateY(60deg); }
+    }
+
+    @keyframes fly1 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(100px, 50px) rotate(360deg); } }
+    @keyframes fly2 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-120px, -80px) rotate(-360deg); } }
+    @keyframes fly3 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(80px, -100px) rotate(360deg); } }
+    @keyframes fly4 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-90px, 70px) rotate(-360deg); } }
+    @keyframes fly5 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(110px, -60px) rotate(360deg); } }
+    @keyframes fly6 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-100px, 90px) rotate(-360deg); } }
+    @keyframes fly7 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(70px, -110px) rotate(360deg); } }
+    @keyframes fly8 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-80px, 100px) rotate(-360deg); } }
+    @keyframes fly9 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(90px, -80px) rotate(360deg); } }
+    @keyframes fly10 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-110px, 70px) rotate(-360deg); } }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2 class="text-primary">Student Activity Log</h2>
-
-    <form method="get" class="d-flex gap-3 mb-4">
-        <input type="text" name="search" class="form-control" placeholder="Search activity details..." value="{{ search_query }}">
+<div class="container">
+    <div class="header-container">
+        <h2>Student Activity Log</h2>
+        <a href="{% url 'activity:activity_dashboard_view' %}" class="button button--frog">
+            <div class="button__wrapper">
+                <span class="button__text">Dashboard</span>
+            </div>
+            <div class="frog">  
+                <div class="frog__body">
+                    <div class="frog__eyes">
+                        <div class="frog__eye"></div>
+                        <div class="frog__eye"></div>
+                    </div>
+                    <div class="frog__spots">
+                        <div class="frog__spot"></div>
+                        <div class="frog__spot"></div>
+                        <div class="frog__spot"></div>
+                    </div>
+                </div>
+                <div class="frog__legs">
+                    <div class="frog__leg"></div>
+                    <div class="frog__leg"></div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="butterfly-container">
+        <div class="butterfly butterfly-1"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-2"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-3"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-4"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-5"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-6"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-7"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-8"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-9"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+        <div class="butterfly butterfly-10"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
+    </div>
+    
+    <form method="get" class="search-form">
+        <input type="text" name="search" placeholder="Search activity details..." value="{{ search_query }}">
         
-        <div class="d-flex flex-column">
-            <label for="from_date" class="form-label">From:</label>
-            <input type="date" id="from_date" name="from_date" class="form-control" value="{{ from_date }}">
-        </div>
+        <label for="from_date">From:</label>
+        <input type="date" id="from_date" name="from_date" value="{{ from_date }}">
         
-        <div class="d-flex flex-column">
-            <label for="to_date" class="form-label">To:</label>
-            <input type="date" id="to_date" name="to_date" class="form-control" value="{{ to_date }}">
-        </div>
+        <label for="to_date">To:</label>
+        <input type="date" id="to_date" name="to_date" value="{{ to_date }}">
         
-        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit">Search</button>
     </form>
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-light">
+    <table class="activity-table">
+        <thead>
             <tr>
                 <th>NO</th>
                 <th>Activity Type</th>
@@ -36,7 +487,7 @@
                 <th>Timestamp</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="activity-table-body">
             {% for log in activity_logs %}
                 <tr>
                     <td>{{ forloop.counter0|add:activity_logs.start_index }}</td>
@@ -46,69 +497,218 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="4" class="text-center">No activity records found.</td>
+                    <td colspan="4">No activity records found.</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if activity_logs.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}&page={{ activity_logs.previous_page_number }}" aria-label="Previous">
-                        &laquo; Previous
-                    </a>
-                </li>
-            {% endif %}
-    
-            {% if activity_logs.number > 3 %}
-                <li class="page-item">
-                    <a class="page-link" href="?search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}&page=1">1</a>
-                </li>
-                {% if activity_logs.number > 4 %}
+    <nav aria-label="Activity log pagination">
+        <div class="pagination-container">
+            <ul class="pagination" id="pagination">
+                {% if activity_logs.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}&page=2">2</a>
+                        <a class="page-link" href="?page={{ activity_logs.previous_page_number }}&search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}" aria-label="Previous">
+                            « Previous
+                        </a>
                     </li>
+                {% else %}
                     <li class="page-item disabled">
-                        <span class="page-link">...</span>
+                        <span class="page-link">« Previous</span>
                     </li>
                 {% endif %}
-            {% endif %}
-    
-            {% for num in activity_logs.paginator.page_range %}
-                {% if num >= activity_logs.number|add:'-2' and num <= activity_logs.number|add:'2' %}
-                    {% if num == activity_logs.number %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                    {% else %}
+
+                {% if activity_logs.number > 3 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}">1</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=2&search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}">2</a>
+                    </li>
+                    {% if activity_logs.number > 4 %}
                         <li class="page-item">
-                            <a class="page-link" href="?search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}&page={{ num }}">{{ num }}</a>
+                            <span class="ellipsis">...</span>
                         </li>
                     {% endif %}
                 {% endif %}
-            {% endfor %}
-    
-            {% if activity_logs.number < activity_logs.paginator.num_pages|add:'-2' %}
-                {% if activity_logs.number < activity_logs.paginator.num_pages|add:'-3' %}
-                    <li class="page-item disabled">
-                        <span class="page-link">...</span>
+
+                {% for num in activity_logs.paginator.page_range %}
+                    {% if num >= activity_logs.number|add:'-2' and num <= activity_logs.number|add:'2' %}
+                        {% if num == activity_logs.number %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if activity_logs.number < activity_logs.paginator.num_pages|add:'-2' %}
+                    <li class="page-item">
+                        <span class="ellipsis">...</span>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ activity_logs.paginator.num_pages }}&search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}">{{ activity_logs.paginator.num_pages }}</a>
                     </li>
                 {% endif %}
-                <li class="page-item">
-                    <a class="page-link" href="?search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}&page={{ activity_logs.paginator.num_pages }}">{{ activity_logs.paginator.num_pages }}</a>
-                </li>
-            {% endif %}
-    
-            {% if activity_logs.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}&page={{ activity_logs.next_page_number }}" aria-label="Next">
-                        Next &raquo;
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>        
+
+                {% if activity_logs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ activity_logs.next_page_number }}&search={{ search_query|urlencode }}&from_date={{ from_date|urlencode }}&to_date={{ to_date|urlencode }}" aria-label="Next">
+                            Next »
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next »</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
 </div>
+
+<script>
+    let lastFetchTime = null;
+    let currentPage = 1;
+    let searchQuery = '';
+    let fromDate = '';
+    let toDate = '';
+
+    function fetchActivityLogs(forceUpdate = false) {
+        const logActivity = forceUpdate ? 'true' : 'false';
+        const url = `{% url 'activity:fetch_activity_logs' %}?page=${currentPage}&search=${encodeURIComponent(searchQuery)}&from_date=${fromDate}&to_date=${toDate}&log_activity=${logActivity}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.logs && Array.isArray(data.logs)) {
+                    updateActivityTable(data.logs);
+                    updatePagination(data.pagination);
+                    lastFetchTime = data.last_update;
+                }
+            })
+            .catch(error => console.error('Error fetching activity logs:', error));
+    }
+
+
+    function updateActivityTable(logs) {
+        const tableBody = document.getElementById('activity-table-body');
+        tableBody.innerHTML = ''; // Clear existing rows
+
+        logs.forEach((log, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${log.activity_type}</td>
+                <td>${log.activity_details}</td>
+                <td>${log.activity_timestamp}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function updatePagination(pagination) {
+        const paginationContainer = document.querySelector('.pagination');
+        paginationContainer.innerHTML = ''; // Clear existing pagination
+
+        // Previous button
+        const prevButton = createPageItem('« Previous', pagination.previous_page_number, !pagination.has_previous);
+        paginationContainer.appendChild(prevButton);
+
+        // First two pages
+        if (pagination.current_page > 3) {
+            paginationContainer.appendChild(createPageItem('1', 1));
+            paginationContainer.appendChild(createPageItem('2', 2));
+            if (pagination.current_page > 4) {
+                paginationContainer.appendChild(createEllipsis());
+            }
+        }
+
+        // Pages around the current page
+        for (let i = Math.max(1, pagination.current_page - 2); i <= Math.min(pagination.num_pages, pagination.current_page + 2); i++) {
+            paginationContainer.appendChild(createPageItem(i.toString(), i, false, i === pagination.current_page));
+        }
+
+        // Last pages
+        if (pagination.current_page < pagination.num_pages - 2) {
+            if (pagination.current_page < pagination.num_pages - 3) {
+                paginationContainer.appendChild(createEllipsis());
+            }
+            paginationContainer.appendChild(createPageItem(pagination.num_pages.toString(), pagination.num_pages));
+        }
+
+        // Next button
+        const nextButton = createPageItem('Next »', pagination.next_page_number, !pagination.has_next);
+        paginationContainer.appendChild(nextButton);
+    }
+
+    function createPageItem(text, pageNumber, disabled = false, active = false) {
+        const li = document.createElement('li');
+        li.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
+
+        const link = document.createElement(disabled || active ? 'span' : 'a');
+        link.className = 'page-link';
+        link.textContent = text;
+
+        if (!disabled && !active) {
+            link.href = '#';
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentPage = pageNumber;
+                fetchActivityLogs(true);
+            });
+        }
+
+        li.appendChild(link);
+        return li;
+    }
+
+    function createEllipsis() {
+        const li = document.createElement('li');
+        li.className = 'page-item';
+        const span = document.createElement('span');
+        span.className = 'ellipsis';
+        span.textContent = '...';
+        li.appendChild(span);
+        return li;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get initial search parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        searchQuery = urlParams.get('search') || '';
+        fromDate = urlParams.get('from_date') || '';
+        toDate = urlParams.get('to_date') || '';
+        currentPage = parseInt(urlParams.get('page')) || 1;
+
+        // Initial fetch of activity logs
+        fetchActivityLogs(true);
+
+        // Set up periodic fetching every 10 seconds
+        setInterval(() => fetchActivityLogs(true), 600000);
+    });
+
+    // Event listener for search form submission
+    document.querySelector('.search-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        searchQuery = document.querySelector('input[name="search"]').value;
+        fromDate = document.querySelector('input[name="from_date"]').value;
+        toDate = document.querySelector('input[name="to_date"]').value;
+        currentPage = 1; // Reset to first page on new search
+
+        // Update URL with new search parameters
+        const url = new URL(window.location);
+        url.searchParams.set('search', searchQuery);
+        url.searchParams.set('from_date', fromDate);
+        url.searchParams.set('to_date', toDate);
+        url.searchParams.set('page', currentPage);
+        window.history.pushState({}, '', url);
+
+        fetchActivityLogs(true);
+    });
+</script>
 {% endblock %}

@@ -42,6 +42,22 @@ class NumberForm(forms.Form):
 class FilterByQuestionTypeForm(forms.Form):
     filter_by = forms.ChoiceField(choices=[('MCQ', 'MCQ'), ('TF', 'TF'), ('TEXT', 'TEXT')])
 
+class ExportTypeForm(forms.Form):
+    export_type = forms.ChoiceField(choices=[('JSON', 'JSON'), ('EXCEL', 'EXCEL')])
+
+class SearchByCourseForm(forms.Form):
+    search_by = forms.CharField(
+        label="Search course (code/name):",
+        widget=forms.TextInput(attrs={'autocomplete': 'off', 'list': 'course_list'}),
+        required=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        # courses = kwargs.pop('courses', [])
+        super().__init__(*args, **kwargs)
+        self.fields['search_by'].widget.attrs['datalist'] = 'course_list'
+        # self.fields['search_by'].widget.choices = [(course.course_name, course.course_name) for course in courses] + [(course.course_code, course.course_code) for course in courses]
+
 class AnswerForm(forms.ModelForm):
     class Meta:
         model = Answer
@@ -57,6 +73,11 @@ class QuestionForm(forms.ModelForm):
     class Meta:
         model = QuizBank
         fields = ['question_text']
+
+class QuestionAddForm(forms.ModelForm):
+    class Meta:
+        model = QuizBank
+        fields = ['question_text', 'question_type', 'points']
 
 class ExcelImportWithoutCourseForm(forms.Form):
     excel_file = forms.FileField(label="Upload Excel File")

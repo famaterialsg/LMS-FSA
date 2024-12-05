@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% load form_filters %}
+{%load static%}
+{% block title %}Home{% endblock %}
+{% block content %}
+<style>
+    .course-container {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+    .course-info {
+        display: flex;
+        align-items: center;
+        width: 90%;
+    }
+
+    .course-icon img {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        margin-right: 10px;
+    }
+
+    .course-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+    .add-linkedin {
+        background-color: #0073b1;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-left: auto;
+        transition: background-color 0.3s;
+    }
+
+    .add-linkedin:hover {
+        background-color: #005582;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0;
+        color: #0561ab;
+    }
+
+    .step-links a {
+        color: #333;
+        padding: 5px 10px;
+        margin: 0 5px;
+        text-decoration: none;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+
+    .step-links a:hover {
+        background-color: #f0f0f0;
+    }
+
+    .step-links .disabled {
+        color: #aaa;
+        padding: 5px 10px;
+        margin: 0 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: not-allowed;
+    }
+
+    .current {
+        font-weight: bold;
+    }
+</style>
+
+<div class="container" style="margin: 0 auto; padding: 20px;border-radius: 8px;box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+    {% include "achievement_tab.html" %}
+    <ul class="nav justify-content-center" id="enrollmentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if active_tab == 'all-progress' or not active_tab %}active{% endif %}" id="all-progress-tab" data-bs-toggle="tab" href="#all-progress" role="tab" aria-controls="all-progress" aria-selected="false">All User Progress</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if active_tab == 'my-progress' %}active{% endif %}" id="my-progress-tab" data-bs-toggle="tab" href="#my-progress" role="tab" aria-controls="my-progress" aria-selected="true">My Progress</a>
+        </li>
+    </ul>
+    
+    <div class="tab-content p-3">
+        <!-- Tab All User Progress -->
+        
+        <div class="tab-pane fade {% if active_tab == 'all-progress' or not active_tab %}show active{% endif %}" id="all-progress" role="tabpanel" aria-labelledby="all-progress-tab">
+            <div class="card" style="padding: 25px; padding-bottom: 7px; margin-bottom: 15px;">
+                <form method = "get">
+                    <div class = 'form-group'>
+                        <label for="id_search_by">Search User:</label>
+                        <input type="text" list="user_list" name="search_user" class="form-control" required="" aria-invalid="true" placeholder="{{ search_user.username }}">
+                        <datalist id="user_list">
+                            {% for user in users %}
+                                <option value="{{user.username}}">
+                            {% endfor %}
+                        </datalist>
+                    
+                        <button type="submit" class="btn btn-primary" style="margin-top: 5px;">
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% if message %}   
+                <div class="">
+                    <h5 class="text-center" style="color: rgb(226, 107, 15);"> {{message}}</h5>
+                </div>
+            {%else%}
+                <div class="card" style="padding: 25px; padding-bottom: 10px;">
+                    <h2>User Progress</h2>
+                    <div class="row">
+                        <!-- Cột bên trái -->
+                        <div class="col-md-6" style="margin-right: 25%;">
+                            <p><strong>Name:</strong> {{ search_user.username }}</p>
+                            <p><strong>Email:</strong> {{ search_user.email }}</p>
+                        </div>
+                        
+                        <!-- Cột bên phải -->
+                        <div class="col-md-3">
+                            <p><strong>Total Courses:</strong> {{ course_count }}</p>
+                            <p><strong>Completed Courses:</strong> {{ completed }}</p>
+                        </div>
+                    </div>
+                    {% if not percent_complete == 0 %}
+                    <div class="progress" style="height: 25px;" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="font-size: large; width: {{ percent_complete }}%;">{{ percent_complete }}%</div>
+                    </div>
+                    {% else %}
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar" style="width: 100%; background-color: rgba(0, 0, 0, 0); color: red; font-size: large;">
+                            0%
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% for course in page_obj_pro %}
+                    <div class="course-container">
+                        <div class="course-info">
+                            <div class="course-icon">
+                                {% if course.course.image %} 
+                                    <img src="{{ course.course.image.url}}">
+                                {% else %}
+                                    <img src="{% static 'course/images/chotbg.png' %}" alt="Picture">
+                                {% endif %}
+                                
+                            </div>
+                            <div class="course-details">
+                                <p class="course-title" style="padding-right: 0px;">{{ course.course.course_name }}</p>
+                                {% if not course.progress_percentage == 0 %}
+                                <div class="progress" style="height: 25px; width: 90vh;"> 
+                                    <div class="progress-bar" style="font-size: large; width: {{ course.progress_percentage }}%;">{{ course.progress_percentage }}%</div>
+                                </div>
+                                {% else %}
+                                <div class="progress" style="height: 25px;width: 90vh">
+                                    <div class="progress-bar" style="width: 100%; background-color: rgba(0, 0, 0, 0); color: red; font-size: large;">
+                                        0%
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- <button class="add-linkedin">Add to LinkedIn</button> -->
+                        <a href="{% url 'course:course_detail' course.course.id %}" class="add-linkedin">Go to Course</a>
+                    </div>
+                {% empty %}
+                    <p>No courses found.</p>
+                {% endfor %}
+
+                <div class="pagination">
+                    <span class="step-links">
+
+                        {% if page_obj_pro.has_previous %}
+                            <a href="?search_user={{ search_user }}&?page=1&active_tab=all-progress">&laquo; First</a>
+                            <a href="?search_user={{ search_user }}&page={{ page_obj_pro.previous_page_number }}&active_tab=all-progress">Previous</a>
+                        {% else %}
+                            <span class="disabled">&laquo; First</span>
+                            <span class="disabled">Previous</span>
+                        {% endif %}
+
+                        <span class="current">
+                            Page {{ page_obj_pro.number }} of {{ page_obj_pro.paginator.num_pages }}.
+                        </span>
+
+                        {% if page_obj_pro.has_next %}
+                            <a href="?search_user={{ search_user }}&page={{ page_obj_pro.next_page_number }}&active_tab=all-progress&current_all={{ page_obj_pro.next_page_number }}">Next</a>
+                            <a href="?search_user={{ search_user }}&page={{ page_obj_pro.paginator.num_pages }}&active_tab=all-progress">Last &raquo;</a>
+                        {% else %}
+                            <span class="disabled">Next</span>
+                            <span class="disabled">Last &raquo;</span>
+                        {% endif %}
+
+                    </span>
+                </div>
+
+            {%endif%}
+
+        </div>
+            
+
+
+
+        <!-- Tab My Progress -->
+        <div class="tab-pane fade {% if active_tab == 'my-progress' %}show active{% endif %}" id="my-progress" role="tabpanel" aria-labelledby="my-progress-tab">
+            <div class="card" style="padding: 25px; padding-bottom: 10px;">
+                    <h2>User Progress</h2>
+                    <div class="row">
+                        <!-- Cột bên trái -->
+                        <div class="col-md-6" style="margin-right: 25%;">
+                            <p><strong>Name:</strong> {{ admin_progress.admin_user }}</p>
+                            <p><strong>Email:</strong> {{admin_progress.admin_user.email }}</p>
+                        </div>
+                        
+                        <!-- Cột bên phải -->
+                        <div class="col-md-3">
+                            <p><strong>Total Courses:</strong> {{ admin_progress.admin_course_count }}</p>
+                            <p><strong>Completed Courses:</strong> {{ admin_progress.admin_completed }}</p>
+                        </div>
+                    </div>
+                    {% if not percent_complete_user == 0 %}
+                    <div class="progress" style="height: 25px;" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="font-size: large; width: {{ admin_progress.admin_percent_complete }}%;">{{ admin_progress.admin_percent_complete }}%</div>
+                    </div>
+                    {% else %}
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar" style="width: 100%; background-color: rgba(0, 0, 0, 0); color: red; font-size: large;">
+                            0%
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% for course in admin_progress.admin_course %}
+                    <div class="course-container">
+                        <div class="course-info">
+                            <div class="course-icon">
+                                {% if course.course.image %} 
+                                    <img src="{{ course.course.image.url}}">
+                                {% else %}
+                                    <img src="{% static 'course/images/chotbg.png' %}" alt="Picture">
+                                {% endif %}
+                                
+                            </div>
+                            <div class="course-details">
+                                <p class="course-title" style="padding-right: 0px;">{{ course.course.course_name }}</p>
+                                {% if not course.progress_percentage == 0 %}
+                                <div class="progress" style="height: 25px; width: 90vh;"> 
+                                    <div class="progress-bar" style="font-size: large; width: {{ course.progress_percentage }}%;">{{ course.progress_percentage }}%</div>
+                                </div>
+                                {% else %}
+                                <div class="progress" style="height: 25px;width: 90vh">
+                                    <div class="progress-bar" style="width: 100%; background-color: rgba(0, 0, 0, 0); color: red; font-size: large;">
+                                        0%
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- <button class="add-linkedin">Add to LinkedIn</button> -->
+                        <a href="{% url 'course:course_detail' course.course.id %}" class="add-linkedin">Go to Course</a>
+                    </div>
+                {% empty %}
+                    <p>No courses found.</p>
+                {% endfor %}
+
+                <div class="pagination">
+                    <span class="step-links">
+
+                        {% if admin_progress.admin_page_obj_pro.has_previous %}
+                            <a href="?search_user={{ search_user }}&?page=1&active_tab=my-progress">&laquo; First</a>
+                            <a href="?search_user={{ search_user }}&page={{ admin_progress.admin_page_obj_pro.previous_page_number }}&active_tab=my-progress">Previous</a>
+                        {% else %}
+                            <span class="disabled">&laquo; First</span>
+                            <span class="disabled">Previous</span>
+                        {% endif %}
+
+                        <span class="current">
+                            Page {{ admin_progress.admin_page_obj_pro.number }} of {{ admin_progress.admin_page_obj_pro.paginator.num_pages }}.
+                        </span>
+
+                        {% if admin_progress.admin_page_obj_pro.has_next %}
+                            <a href="?search_user={{ search_user }}&page={{ admin_progress.admin_page_obj_pro.next_page_number }}&active_tab=my-progress&current_my={{ admin_progress.admin_page_obj_pro.next_page_number }}">Next</a>
+                            <a href="?search_user={{ search_user}}&page={{ admin_progress.admin_page_obj_pro.paginator.num_pages }}&active_tab=my-progress">Last &raquo;</a>
+                        {% else %}
+                            <span class="disabled">Next</span>
+                            <span class="disabled">Last &raquo;</span>
+                        {% endif %}
+
+                    </span>
+                </div>
+        </div>
+    </div>
+</div>
+<script>
+    // JavaScript to activate tab based on active_tab URL parameter or default to "all-progress" on first load
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    var activeTab = getUrlParameter('active_tab') || 'all-progress';  // Default to "all-progress" if no active_tab is found
+    var myTab = new bootstrap.Tab(document.getElementById(activeTab + '-tab'));
+    myTab.show();
+</script>
+{% endblock %}

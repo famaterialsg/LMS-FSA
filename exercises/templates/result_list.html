@@ -1,10 +1,16 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<h2>Your Submissions</h2>
-<ul>
-    {% for submission in submissions %}
-        <li>{{ submission.exercise.title }} - Score: {{ submission.score }}</li>
-    {% endfor %}
-</ul>
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <div class="col-12">
+            <h4>Your Submissions</h4>
+            <ul>
+                {% for submission in submissions %}
+                    <li>{{ submission.exercise.title }} - Score: {{ submission.score }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div> 
 {% endblock %}

@@ -1,5 +1,5 @@
 from django import forms
-from .models import CollaborationGroup, GroupMember
+from .models import CollaborationGroup, GroupMember, Feedback
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -35,3 +35,19 @@ class GroupMemberForm(forms.ModelForm):
         user_queryset = kwargs.pop('user_queryset', User.objects.none())  # Extract user_queryset if provided
         super().__init__(*args, **kwargs)
         self.fields['user'].queryset = user_queryset
+
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = ['groups', 'feedback_text']
+        widgets = {
+            'groups': forms.Select(attrs={'class': 'form-control'}),
+            'feedback_text': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter your feedback here...'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(FeedbackForm, self).__init__(*args, **kwargs)
+        if user:
+            # Limit dropdown options to groups the user has joined
+            self.fields['groups'].queryset = CollaborationGroup.objects.filter(members=user)

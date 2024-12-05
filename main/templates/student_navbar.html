@@ -31,7 +31,7 @@
             {% if user.is_authenticated %}
             <ul class="navbar-nav ms-auto">
                 {% include 'notification_bell.html' %}
-                {% if user.is_superuser %}
+                {% if user.profile.role.role_name != "Student" %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="roleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user-shield"></i> Role
@@ -43,9 +43,13 @@
                                     <select name="role" class="form-select" onchange="this.form.submit()">
                                         <option value="" class="text-muted" disabled selected>Select Role</option>
                                         {% for role in roles %}
-                                        <option value="{{ role.role_name }}" {% if role.role_name == request.user.profile.role.role_name or role.role_name == request.session.temporary_role %}selected{% endif %}>
-                                            {{ role.role_name }}
-                                        </option>
+                                            {% if role.role_name != "Super Admin" %}
+                                                {% if role.role_name != user.profile.role.role_name and role.role_name != temporary_role %}
+                                                    <option value="{{ role.role_name }}" {% if role.role_name == temporary_role %}selected{% endif %}>
+                                                        {{ role.role_name }}
+                                                    </option>
+                                                {% endif %}
+                                            {% endif %}
                                         {% endfor %}
                                     </select>
                                 </form>
@@ -73,7 +77,7 @@
                         {% if request.user.profile.profile_picture_url %}
                             <img src="{{ request.user.profile.profile_picture_url }}" class="img-fluid rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
                         {% else %}
-                            <i class="fas fa-user rounded-circle mt-1"></i>
+                            <i class="fas fa-user rounded-circle mt-2"></i>
                         {% endif %}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-center" aria-labelledby="navbarUserDropdown">

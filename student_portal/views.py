@@ -196,7 +196,7 @@ def toggle_completion(request, pk):
 #         'recommended_courses': [rc.course for rc in recommended_courses],
 #     })
 
-@login_required
+
 def course_list(request): 
     # Retrieve all published courses
     courses = Course.objects.filter(published=True)

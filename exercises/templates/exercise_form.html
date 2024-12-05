@@ -6,41 +6,78 @@
 <!-- CodeMirror JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
 <!-- CodeMirror Theme (Monokai) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
 <!-- CodeMirror Language Modes -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
 
-<div class="card shadow">
-    <div class="card-header bg-info text-white">
-        <h2>{{ exercise.title }}</h2>
-        {{ exercise.description | safe }}
-    </div>
-    <div class="card-body">
-        <form id="code-form" method="POST" action="{% url 'exercises:submit_code' exercise.id assessment_id%}">
-            {% csrf_token %}
-            <label for="language-select">Language:</label>
-            <select id="language-select" disabled>
-                <option value="{{ exercise.language }}">{{ exercise.language|capfirst }}</option>
-            </select>
-            {{ form.code.label }}
-            <textarea id="code-editor" name="code" class="form-control"
-                rows="5">{{ form.code.value|default_if_none:"" }}</textarea>
-            <button type="button" id="precheck-button" class="btn btn-outline-warning mt-3">Pre-check</button>
-            <button type="button" id="clear-button" class="btn btn-outline-danger mt-3">Clear</button>
-            {% comment %} {% if submissed is False %} {% endcomment %}
-                <button type="button" class="btn btn-primary mt-3" data-toggle="modal" data-target="#confirmModal">Submit Code</button>
-            {% comment %} {% else %}
-                <!-- Disabled Submit Button with Tooltip wrapped in a span -->
-                <span tabindex="0" data-toggle="tooltip" data-placement="top" data-title="Submission is disabled because you have already submitted once!!!">
-                    <button type="button" id="submit-code-button" class="btn btn-primary mt-3" disabled>
-                        Disabled Submit
-                    </button>
-                </span>
-                <button type="button" class="btn mt-3">{{score}} POINTS</button>
-            {% endif %} {% endcomment %}
-        </form>
-        <div id="output" class="mt-3"></div> <!-- Phần hiển thị kết quả -->
+<div class="container-fluid" style="height: 100%; !important">
+    <div class="row" style="height: 100%;">
+        <!-- Left Panel -->
+        <div class="col-md-3 p-4 text-white d-flex flex-column" 
+            style="overflow-y:auto; max-height:calc(100vh - 10vh); font-size:0.875em; background-color:#314251;">
+            <h4>{{ exercise.title }}</h4></br>
+            <div class="description">
+                {{ exercise.description | safe }}
+            </div>
+            <div class="examples mt-4">
+                {% if language != 'mysql' %}
+                    <h5>Examples:</h5>
+                    <p><strong>Input:</strong> {{input_example}}</p>
+                    <p><strong>Output:</strong> {{output_example}}</p>
+                {% else %}
+                    <h5>Write the queries in the following structure::</h5>
+                    {% for sql in input_example %}
+                        <p>"{{sql}}": ...</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Center Panel (Code Editor) -->
+        <div class="col-md-6 p-0 bg-dark text-white d-flex flex-column" style="overflow-y:auto; max-height:calc(100vh - 10vh);">
+            <form id="code-form" method="POST" action="{% url 'exercises:submit_code' exercise.id assessment_id%}" class="h-100 d-flex flex-column">
+                {% csrf_token %}
+                <div class="ml-1 mr-1 h-100 d-flex flex-column" style="background-color:#404040;">
+                    <div class="btn-toolbar mb-2 mt-2" role="toolbar">
+                        <div class="btn-group mr-auto" role="group">
+                            <select id="language-select" disabled class="form-control" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; min-width: 5rem;">
+                                <option value="{{ exercise.language }}">{{ exercise.language|capfirst }}</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" id="theme-toggle-button" class="btn btn-secondary form-control" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; min-width: 5rem;">
+                                <i class="fa fa-moon" aria-hidden="true"></i> Light</button>
+                            <button type="button" id="reset-button" class="btn btn btn-secondary form-control ml-1" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; min-width: 5rem;">
+                                <i class="fa fa-redo-alt" aria-hidden="true"></i> Reset</button>
+                        </div>
+                    </div>
+                    <textarea id="code-editor" name="code" class="form-control h-100 mt-2"
+                            style="background-color:#121311 !important;">{{ form.code.value|default_if_none:"" }}</textarea>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Panel (Buttons and Output) -->
+        <div class="col-md-3 p-0 text-white d-flex flex-column" style="overflow-y:auto; max-height:calc(100vh - 10vh); background-color: #282a36 !important;">
+            <div class="btn-group btn-group-sm mb-2 mt-1 p-2" role="group">
+                <button type="button" id="precheck-button" class="btn btn-outline-success mr-2 w-100">
+                    <i class="fa fa-terminal" aria-hidden="true"></i> Pre-check</button>
+                <button type="button" id="clear-button" class="btn btn-outline-danger mr-2 w-100">
+                    <i class="fa fa-eraser" aria-hidden="true"></i> Clear</button>
+                {% if submission is None %}
+                    <button type="button" id="submit-button" class="btn btn-primary w-100" data-toggle="modal" data-target="#confirmModal">
+                        <i class="fa fa-paper-plane" aria-hidden="true"></i> Submit Code</button>
+                {% else %}
+                    <button type="button" id="submit-button" class="btn btn-primary w-100" data-toggle="modal" data-target="#confirmModal" hidden>Submit Code</button>
+                    <button type="button" class="btn btn-outline-dark text-light w-100">
+                        <i class="fa fa-star" aria-hidden="true"></i> {{score}} POINTS</button>
+                {% endif %}
+            </div>
+            <div id="output" class="mt-1 p-2" style="overflow:auto; font-size:0.75em;">
+                <!-- Output log will appear here -->
+            </div>
+        </div>
     </div>
 </div>
 
@@ -69,11 +106,35 @@
     var editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
         mode: 'python',  // Mặc định là Python
         lineNumbers: true,
-        theme: 'default',
+        theme: 'dracula',
         tabSize: 4,
         indentUnit: 4,
         matchBrackets: true,
         autoCloseBrackets: true
+    });
+    editor.setSize('100%', '100%');
+
+    // Lưu nội dung ban đầu của trình soạn thảo
+    const initialCode = editor.getValue();
+
+    // Toggle between light and dark themes
+    document.getElementById('theme-toggle-button').addEventListener('click', function() {
+        var currentTheme = editor.getOption('theme');
+        editor.setOption('theme', currentTheme === 'dracula' ? 'default' : 'dracula');
+    });
+
+    // Reset the editor content to its initial value
+    document.getElementById('reset-button').addEventListener('click', function() {
+        editor.setValue(initialCode); // Reset editor content
+    });
+
+    // Prevent form submission when using theme or reset buttons
+    document.getElementById('theme-toggle-button').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent form submission
+    });
+
+    document.getElementById('reset-button').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent form submission
     });
 
     document.getElementById('language-select').addEventListener('change', function () {
@@ -81,18 +142,86 @@
         editor.setOption("mode", selectedLanguage);
     });
 
+    // Đảm bảo textarea sẽ nhận giá trị từ CodeMirror khi submit form
     document.querySelector('form').addEventListener('submit', function() {
         editor.save();
     });
 
-    // Đảm bảo textarea sẽ nhận giá trị từ CodeMirror khi submit form
-    document.querySelector('form').addEventListener('submit', function () {
-        editor.save();
-    });
-
-    
     // Xử lý sự kiện nhấn nút Pre-check
     document.getElementById('precheck-button').addEventListener('click', function () {
+        runPrecheck();
+    });
+
+    // Xử lý sự kiện nhấn nút Clear
+    document.getElementById('clear-button').addEventListener('click', function () {
+        // Find the element where the output is displayed
+        document.getElementById('output').innerHTML = '';
+        console.log("Output cleared.");
+
+        // Optionally, display a message indicating that the output has been cleared
+        console.log("Output cleared.");
+    });
+
+    document.getElementById('confirm-submit').addEventListener('click', function() {
+        // Save the content of the editor into the form's textarea
+        editor.save();
+
+        // Get the form element
+        const form = document.getElementById('code-form');
+        const formData = new FormData(form);
+
+        // Make an Ajax POST request to submit the code
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                $('#confirmModal').modal('hide'); // Close modal if open
+                // Display error message and trigger Pre-check
+                document.getElementById('output').innerHTML = 
+                `<div class="alert alert-danger" role="alert">
+                    Error: Code is formatted and structured incorrectly.
+                </div> <div class="alert alert-warning" role="alert">Please fix the formatted and structured correctly...</div>`;
+            } else {
+                // No error - proceed with submission or success display
+                window.location.href = data.redirect_url; // Gửi form
+            }
+        })
+    });
+
+    // Xử lý sự kiện submit
+    document.getElementById('confirm-submit').addEventListener('click', function() {
+        // Lấy nội dung từ CodeMirror
+        var codeContent = editor.getValue();
+
+        // Kiểm tra nếu nội dung trống
+        if (!codeContent.trim()) {
+            event.preventDefault();  // Ngăn form gửi đi
+
+            // Hiển thị thông báo lỗi
+            $('#confirmModal').modal('hide'); // Close modal if open
+            document.getElementById('output').innerHTML = 
+            `<div class="alert alert-danger" role="alert">
+                This code field is required.
+            </div>`;
+
+        } else {
+            editor.save();  // Lưu nội dung vào textarea để form có thể gửi đi
+        }
+    });
+    
+    $(document).ready(function(){
+        // Initialize all tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+
+    // Function to run the pre-check process
+    function runPrecheck() {
         const code = editor.getValue(); // Get the code from CodeMirror
         const language = document.getElementById('language-select').value; // Get the selected language
 
@@ -102,42 +231,27 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
             },
-            body: JSON.stringify({ code: code, language: language })
+            body: JSON.stringify({code: code, language: language })
         })
-            .then(response => response.json())
-            .then(data => {
-                // Update the result section with the passed test cases
-                document.getElementById('output').innerHTML =
-                `<div class="alert alert-light" role="alert">
-                    ${data.combined_message}
-                </div>`;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('output').innerHTML = '<pre>Error: ' + 'Error during Pre-check' + '</pre>';
-            });
-    });
-
-    // Xử lý sự kiện nhấn nút Clear
-    document.getElementById('clear-button').addEventListener('click', function () {
-        // Find the element where the output is displayed
-        var outputElement = document.getElementById('output');
-
-        // Clear the contents of the output
-        outputElement.innerHTML = '';
-
-        // Optionally, display a message indicating that the output has been cleared
-        console.log("Output cleared.");
-    });
-
-    document.getElementById('confirm-submit').addEventListener('click', function() {
-        editor.save(); // Lưu giá trị từ CodeMirror vào textarea
-        document.getElementById('code-form').submit(); // Gửi form
-    });
-
-    $(document).ready(function(){
-        // Initialize all tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('output').innerHTML = 
+                `<div class="alert alert-danger" role="alert">
+                    Error: Code is formatted and structured incorrectly.
+                </div> <div class="alert alert-warning" role="alert">Please fix the formatted and structured correctly...</div>`;
+            } else {
+                // Create a new div for the new message
+                const newMessage = `<div style="background-color: #282a36 !important;">${data.combined_message}</div>`;
+                
+                // Append the new message to the existing output
+                document.getElementById('output').innerHTML = newMessage;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('output').innerHTML = '<pre>Error: ' + 'Error during Pre-check' + '</pre>';
+        });
+    }
 </script>
 {% endblock %}

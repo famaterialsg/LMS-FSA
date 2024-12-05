@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load assessment_tags %}
-{% load custom_filters %}
+<!-- {% load key_value_filters %} -->
 
 {% block content %}
 <div class="container mt-4">
@@ -90,24 +90,48 @@
                         <th>Expiration Date</th>
                         <th>Quiz Score</th>
                         <th>Assignment Score</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for candidate in invited_candidates %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ candidate.email }}</td>
-                        <td>{{ candidate.email }}</td>
-                        <td>{{ candidate.invitation_date }}</td>
-                        <td>{{ candidate.expiration_date }}</td>
-                        
-                        <!-- Use the custom filter here -->
-                     
-                    </tr>
+                    {% for attempt in registered_attempts %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {% if attempt.email in invited_candidates_emails %}
+                                    {{ attempt.email }}
+                                {% else %}
+                                    Not Invited
+                                {% endif %}
+                            </td>
+                            <td>{{ attempt.email }}</td>
+                            <td>
+                            {% for candidate in invited_candidates %}
+                                {% if candidate.email == attempt.email %}
+                                {{ candidate.invitation_date }}
+                                {% endif %}
+                            {% endfor %}</td>                        <td>
+                            {% for candidate in invited_candidates %}
+                                {% if candidate.email == attempt.email %}
+                                {{ candidate.expiration_date }}
+                                {% endif %}
+                            {% endfor %}</td>
+                            <td>{{ attempt.score_quiz|floatformat:0 }}</td>
+                            <td>
+                                {% for key, value in final_scores.items %}
+                                    {% if attempt.email == key %}
+                                         {{value|floatformat:1}}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{% url 'assessment:assessment_report' assessment.id attempt.id attempt.email %}">View</a>
+                            </td>
+                        </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">No candidates have been invited yet.</td>
-                    </tr>
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No attempts yet.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>

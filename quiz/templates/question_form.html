@@ -20,16 +20,29 @@
             {{ form.points.label_tag }}
             {{ form.points|add_class:"form-control" }}
         </div>
-        <a href="{% url 'quiz:quiz_detail' quiz.id %}" class="btn btn-secondary">Back</a>
+
+        <div id="text-response" style="display: none;">  <!-- Text response area -->
+            <!--  Add fields for text response here as needed. Example: -->
+            <div class="form-group">
+                <label for="text_answer">Correct Answer:</label>
+                <textarea class="form-control" id="text_answer" name="text_answer" rows="3"></textarea>
+            </div>
+         </div>
+
+        <a href="{% url 'quiz:quiz_question' quiz.id %}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
 </div>
 
 <script>
-    // JavaScript to show/hide the text response field based on question type selection
     document.addEventListener('DOMContentLoaded', function() {
-        const questionTypeField = document.querySelector('select[name="question_type"]');
+        const questionTypeField = document.getElementById('id_question_type'); // Use element ID
         const textResponseDiv = document.getElementById('text-response');
+
+        // Show/hide on initial load
+        if (questionTypeField.value === 'TEXT') {  // Check initial value
+            textResponseDiv.style.display = 'block';
+        }
 
         questionTypeField.addEventListener('change', function() {
             if (this.value === 'TEXT') {

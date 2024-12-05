@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Include Tab Navigation -->
+{% include "menuReport.html" %}
+<div class="mt-1">
+    <h1>Material Usage Report</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <td>#</td>
+                <th>User</th>
+                <th>Session</th>
+                <th>Material</th>
+                <th>Completed</th>
+            </tr>
+        </thead>
+    </table>
+
+    <!-- Scrollable second table (content) -->
+    <div class="overflow-auto" style="max-height: 53vh;"> <!-- Adjust height as needed -->
+        <table class="table table-striped">
+            <tbody>
+                {% for completion in completions %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ completion.user.username }}</td>
+                    <td>{{ completion.session.name }}</td>
+                    <td>{{ completion.material.title }}</td>
+                    <td>{{ completion.completed }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -21,7 +21,7 @@ def extract_code_name(text):
         return match.group(1)
     return None
 
-def txt_to_json(file_like, file_name):
+# def txt_to_json(file_like, file_name):
     lines = file_like.readlines()
     output_structure = {"mc_questions": []}
     question_text = ""
@@ -58,87 +58,87 @@ def txt_to_json(file_like, file_name):
 
     return json.dumps(output_structure, indent=4, ensure_ascii=False)
 
-# # def txt_to_json(file_like, file_name):
-#     # Read the lines from the file-like object
-#     lines = file_like.readlines()
+def txt_to_json(file_like, file_name):
+    # Read the lines from the file-like object
+    lines = file_like.readlines()
 
-#     # Initialize the data structure to store the questions and answers
-#     output_structure = {"mc_questions": []}
-#     question_text = ""
-#     answers = []
-#     started = False
-#     question_number = 0
+    # Initialize the data structure to store the questions and answers
+    output_structure = {"mc_questions": []}
+    question_text = ""
+    answers = []
+    started = False
+    question_number = 0
 
-#     # Process each line in the text file
-#     for line in lines:
-#         if not started:
-#             if line.strip().startswith('1'):
-#                 started = True
-#             else:
-#                 continue
+    # Process each line in the text file
+    for line in lines:
+        if not started:
+            if line.strip().startswith('1'):
+                started = True
+            else:
+                continue
 
-#         question_match = re.match(r'^\s*(\d+)\.?\s+(.*)', line, re.IGNORECASE)
-#         if question_match:
-#             current_number = int(question_match.group(1))
-#             if current_number == question_number + 1:
-#                 if question_text:
-#                     adjusted_answers = [answer.replace("-- THE END --", "").strip()
+        question_match = re.match(r'^\s*(\d+)\.?\s+(.*)', line, re.IGNORECASE)
+        if question_match:
+            current_number = int(question_match.group(1))
+            if current_number == question_number + 1:
+                if question_text:
+                    adjusted_answers = [answer.replace("-- THE END --", "").strip()
 
-#                         for answer in answers
+                        for answer in answers
 
-#                     ]
-#                     output_structure["mc_questions"].append({
-#                         "question": question_text,
-#                         "answers": adjusted_answers
-#                     })
-#                 question_number = current_number
-#                 question_text = question_match.group(2)
-#                 answers = []
-#             else:
-#                 question_text += ' ' + line.strip()
-#         elif re.match(r'^\s*[A-M]\.\s+.*', line):
+                    ]
+                    output_structure["mc_questions"].append({
+                        "question": question_text,
+                        "answers": adjusted_answers
+                    })
+                question_number = current_number
+                question_text = question_match.group(2)
+                answers = []
+            else:
+                question_text += ' ' + line.strip()
+        elif re.match(r'^\s*[A-M]\.\s+.*', line):
 
-#             answer = re.sub(r'^\s*[A-M]\.\s+', '', line).strip()
+            answer = re.sub(r'^\s*[A-M]\.\s+', '', line).strip()
 
-#             answers.append(escape_special_characters(answer))
+            answers.append(escape_special_characters(answer))
 
-#         elif re.match(r'^\s*[a-m]\.\s+.*', line):
+        elif re.match(r'^\s*[a-m]\.\s+.*', line):
 
-#             answer = re.sub(r'^\s*[a-m]\.\s+', '', line).strip()
+            answer = re.sub(r'^\s*[a-m]\.\s+', '', line).strip()
 
-#             answers.append(escape_special_characters(answer))
-#         else:
-#             if answers:
-#                 answers[-1] += '<br>' + escape_special_characters(line.strip())
-#             else:
-#                 question_text += '<br>' + '<br>'+ escape_special_characters(line.strip())
+            answers.append(escape_special_characters(answer))
+        else:
+            if answers:
+                answers[-1] += '<br>' + escape_special_characters(line.strip())
+            else:
+                question_text += '<br>' + '<br>'+ escape_special_characters(line.strip())
 
 
-#     if question_text:
-#         adjusted_answers = [
+    if question_text:
+        adjusted_answers = [
 
-#             answer.replace("-- THE END --", "").strip()
+            answer.replace("-- THE END --", "").strip()
 
-#             for answer in answers
+            for answer in answers
 
-#         ]
-#         output_structure["mc_questions"].append({
-#             "question": question_text,
-#             "answers": adjusted_answers
-#         })
+        ]
+        output_structure["mc_questions"].append({
+            "question": question_text,
+            "answers": adjusted_answers
+        })
 
-#     output_structured = reorder_answers(output_structure)
+    output_structured = reorder_answers(output_structure)
 
-#     for question_info in output_structured["mc_questions"]:
-#         question_info["question"] = clean_text(question_info["question"].lstrip('<br>'))
+    for question_info in output_structured["mc_questions"]:
+        question_info["question"] = clean_text(question_info["question"].lstrip('<br>'))
 
-#         question_info["answers"] = [answer for answer in question_info["answers"]]
+        question_info["answers"] = [answer for answer in question_info["answers"]]
 
-#         question_info["answers"] =  [re.sub(r'(?:<br>)+$', '', answer) for answer in  question_info["answers"]]
+        question_info["answers"] =  [re.sub(r'(?:<br>)+$', '', answer) for answer in  question_info["answers"]]
 
-#         question_info["answers"] =  [clean_text(answer) for answer in  question_info["answers"]]
+        question_info["answers"] =  [clean_text(answer) for answer in  question_info["answers"]]
 
-#     return json.dumps(output_structured, indent=4, ensure_ascii=False)
+    return json.dumps(output_structured, indent=4, ensure_ascii=False)
 def reorder_answers(output_structure):
     for question_info in output_structure.values():
         for question in question_info:

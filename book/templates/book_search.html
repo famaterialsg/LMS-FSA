@@ -1,147 +1,477 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<script>
-    function toggleDescription(button) {
-        const cardBody = button.closest('.card-body');
-        const shortDescription = cardBody.querySelector('.short-description');
-        const fullDescription = cardBody.querySelector('.full-description');
-    
-        // Toggle display of short and full descriptions
-        if (fullDescription.style.display === "none") {
-            fullDescription.style.display = "block";
-            shortDescription.style.display = "none";
-            button.innerText = "See less"; // Change button text to "See less"
-        } else {
-            fullDescription.style.display = "none";
-            shortDescription.style.display = "block";
-            button.innerText = "See more"; // Change button text back to "See more"
-        }
-    }
-    </script>
- 
 <!-- Book Search Section -->
-<div class="text-center my-5 p-4 bg-success rounded shadow">
-    <h1 class="text-white mb-4">Book Search</h1>
+<div class="search-section text-center py-4" style="background-color: #3498db; border-radius: 10px; margin-top: 0rem;">
+    <h1 style="color:#ebf1ee;">Book Search</h1>
 
-    <form method="GET" action="{% url 'book:book_search' %}" class="d-inline-block">
-        <div class="input-group mb-3 justify-content-center">
-            <input type="text" name="q" placeholder="Search for books..." required class="form-control" aria-label="Book search input" style="max-width: 400px;">
-            <button type="submit" class="btn btn-light">Search</button>
+    <form method="GET" action="{% url 'book:book_search' %}" style="display: inline-block; margin-top: 10px;" id="search-form">
+        <div style="display: inline-block; position: relative;">
+            <input type="text" name="q" placeholder="Search for books..." value="{{ query }}" required style="padding: 10px 15px; width: 300px; border: 1px solid #3498db; border-radius: 25px; font-size: 1rem;">
+            <button type="submit" style="padding: 10px 20px; position: absolute; right: -90px; top: 0; background-color: #35DBB2; color: #ebf1ee; border: none; border-radius: 25px; cursor: pointer; font-size: 1rem;">Search</button>
         </div>
-
+        
         <!-- Radio buttons for selecting book type -->
-        <div class="d-flex justify-content-center mb-3">
-            <div class="form-check me-3">
-                <input type="radio" id="free" name="book_type" value="free" class="form-check-input" {% if request.GET.book_type == "free" or not request.GET.book_type %}checked{% endif %}>
-                <label for="free" class="form-check-label text-white">Free Books</label>
-            </div>
+        <div style="margin-top: 10px;">
+            <input type="radio" id="free" name="book_type" value="free" {% if request.GET.book_type == "free" or not request.GET.book_type %}checked{% endif %}>
+            <label for="free" style="color:#ebf1ee;">Free Books</label>
 
-            <div class="form-check">
-                <input type="radio" id="paid" name="book_type" value="paid" class="form-check-input" {% if request.GET.book_type == "paid" %}checked{% endif %}>
-                <label for="paid" class="form-check-label text-white">Paid Books</label>
-            </div>
+            <input type="radio" id="paid" name="book_type" value="paid" {% if request.GET.book_type == "paid" %}checked{% endif %}>
+            <label for="paid" style="color:#ebf1ee;">Paid Books</label>
         </div>
-    </form>
+    </form> 
+
+    <!-- Loading Spinner (moved inside search-section) -->
+    <div id="loading-spinner" style="display:none; margin-top: 20px;">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="spinner-text">Loading</div>
+        </div>
+    </div>
 </div>
 
-
-
 <!-- Book Results Section -->
-<div class="container mt-4">
+<div id="book-results" class="mt-4">
     {% if query %}
-        <h2>Book Search Results for "{{ query }}"</h2>
+        <h2 style="text-align: center;">Book Search Results for "{{ query }}"</h2>
     {% endif %}
 
-    <div class="row">
+    {% if books %}
+        <div class="book-grid">
         {% for book in books %}
-        <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-            <div class="card" style="border-radius: 10px; height: 400px;">
-                <img src="{{ book.thumbnail }}" class="card-img-top" alt="Book cover of {{ book.title }}" style="height: 200px; object-fit: cover;">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">{{ book.title }}</h5>
-            
-                    <!-- Short Description -->
-                    <p class="card-text short-description" style="max-height: 100px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
-                        <!-- Add your short description here -->
-                    </p>
-            
-                    <strong>Published Date:</strong> {{ book.publishedDate }}
-                    <!-- Button Container -->
-                    <div class="d-flex justify-content-between mt-auto">
-                        <!-- See more button -->
-                        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#bookModal{{ book.id }}">
-                            See more
-                        </button>
-
-                        <a href="{{ book.infoLink }}" target="_blank" class="btn btn-secondary">Read more</a>
-
+            <div class="book-card">
+                <div class="book-cover">
+                    {% if book.thumbnail %}
+                        <img src="{{ book.thumbnail }}" alt="Book cover of {{ book.title }}" />
+                    {% else %}
+                        <div class="no-image">No image available</div>
+                    {% endif %}
+                </div>
+                <div class="book-info">
+                    <h3 class="book-title">{{ book.title }}</h3>
+                    <div class="book-details">
+                        <p class="author"><strong>Author(s):</strong> {{ book.authors|join:", " }}</p>
+                        <p class="publisher"><strong>Publisher:</strong> {{ book.publisher }}</p>
+                        <p class="published-date"><strong>Published:</strong> {{ book.publishedDate }}</p>
+                    </div>
+                    <div class="book-description">
+                        <p>{{ book.description|truncatechars:150 }}</p>
+                    </div>
+                    <div class="book-links">
+                        <a href="{{ book.infoLink }}" target="_blank" class="btn btn-info">More Info</a>
                         {% if book.previewLink %}
-                            <a href="{{ book.previewLink }}" target="_blank" class="btn btn-secondary">Read Preview</a>
+                            <a href="{{ book.previewLink }}" target="_blank" class="btn btn-preview">Preview</a>
+                        {% endif %}
+                        {% if book.description|length > 150 %}
+                            <a href="#" class="btn read-more" data-title="{{ book.title }}" data-description="{{ book.description }}">Read More</a>
                         {% endif %}
                     </div>
-
                 </div>
             </div>
-            
-            <!-- Modal for Book Details -->
-            <div class="modal fade" id="bookModal{{ book.id }}" tabindex="-1" aria-labelledby="bookModalLabel{{ book.id }}" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="bookModalLabel{{ book.id }}">{{ book.title }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <strong>Author(s):</strong> {{ book.authors|join:", " }}<br>
-                            <strong>Description:</strong> {{ book.description }}<br>
-                            <strong>Publisher:</strong> {{ book.publisher }}<br>
-                            <strong>Published Date:</strong> {{ book.publishedDate }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
         {% endfor %}
+        </div>
+    {% else %}
+        <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+            <h3 style="margin: 0 0 10px 0;">No books found for "{{ query }}"</h3>
+            <p>Please try a different search term.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal Structure -->
+<div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">Book Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-description">Book Description</p>
+            </div>
+        </div>
     </div>
-    
-    
 </div>
 
 <!-- Pagination Controls -->
-<div class="text-center mt-4">
-    <div>
+<div style="text-align: center; margin-top: 20px;">
+    <div class="pagination">
         {% if books.has_previous %}
-            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page=1" class="btn btn-outline-primary">&laquo; First</a>
-            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ books.previous_page_number }}" class="btn btn-outline-primary">Previous</a>
+            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page=1" class="page-link">&laquo; First</a>
+            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ books.previous_page_number }}" class="page-link">Previous</a>
         {% else %}
-            <span class="btn btn-outline-secondary disabled">&laquo; First</span>
-            <span class="btn btn-outline-secondary disabled">Previous</span>
+            <span class="page-link disabled">&laquo; First</span>
+            <span class="page-link disabled">Previous</span>
         {% endif %}
 
-        {% comment %} Dynamic pagination range {% endcomment %}
         {% for page_num in paginator.page_range %}
             {% if page_num >= books.number|add:-5 and page_num <= books.number|add:5 %}
                 {% if page_num == books.number %}
-                    <strong class="btn btn-outline-secondary disabled">{{ page_num }}</strong>  <!-- Highlight current page -->
+                    <span class="page-link active">{{ page_num }}</span>
                 {% else %}
-                    <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ page_num }}" class="btn btn-outline-primary">{{ page_num }}</a>
+                    <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ page_num }}" class="page-link">{{ page_num }}</a>
                 {% endif %}
             {% endif %}
         {% endfor %}
 
         {% if books.has_next %}
-            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ books.next_page_number }}" class="btn btn-outline-primary">Next</a>
-            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ paginator.num_pages }}" class="btn btn-outline-primary">Last &raquo;</a>
+            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ books.next_page_number }}" class="page-link">Next</a>
+            <a href="?q={{ query|urlencode }}&book_type={{ book_type }}&page={{ paginator.num_pages }}" class="page-link">Last &raquo;</a>
         {% else %}
-            <span class="btn btn-outline-secondary disabled">Next</span>
-            <span class="btn btn-outline-secondary disabled">Last &raquo;</span>
+            <span class="page-link disabled">Next</span>
+            <span class="page-link disabled">Last &raquo;</span>
         {% endif %}
     </div>
 </div>
 
-    
+<!-- JavaScript -->
+<script>
+    // Show loading spinner on form submit
+    document.getElementById('search-form').addEventListener('submit', function(event) {
+        document.getElementById('loading-spinner').style.display = 'block';
+        document.querySelector('.search-section').classList.add('loading');
+    });
 
+    // Show loading spinner on pagination link clicks
+    const paginationLinks = document.querySelectorAll('.page-link:not(.disabled)');
+    paginationLinks.forEach(function(link) {
+        link.addEventListener('click', function(event) {
+            document.getElementById('loading-spinner').style.display = 'block';
+            document.querySelector('.search-section').classList.add('loading');
+        });
+    });
+
+    // Show loading spinner on radio button change
+    document.querySelectorAll('input[name="book_type"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            document.getElementById('loading-spinner').style.display = 'block';
+            document.querySelector('.search-section').classList.add('loading');
+            this.form.submit();
+        });
+    });
+
+    // Hide loading spinner and remove 'loading' class when page is fully loaded
+    window.addEventListener('load', function() {
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.querySelector('.search-section').classList.remove('loading');
+    });
+
+    // Function to open the modal and set the book title and description
+    function openModal(title, description) {
+        const modal = new bootstrap.Modal(document.getElementById('bookModal'));
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-description').textContent = description;
+        modal.show();
+    }
+
+    // Event listener for each "Read More" button
+    document.querySelectorAll('.read-more').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const bookTitle = this.getAttribute('data-title');
+            const bookDescription = this.getAttribute('data-description');
+            openModal(bookTitle, bookDescription);
+        });
+    });
+
+    document.querySelectorAll('.book-card h3').forEach(function(title) {
+        let words = title.innerText.split(' ');
+        if (words.length > 5) {
+            title.innerText = words.slice(0, 5).join(' ') + '...';
+        }
+    });
+</script>
+
+<!-- CSS for Spinner, Book Grid, and overall styling -->
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+    }
+
+    .search-section {
+        margin: 0 -15px;
+        padding: 2rem;
+        background-color: #3498db; /* Change this to your desired color */
+        border-radius: 0;
+        height: 205px; /* Adjust this value to change the height */
+        width: 130%;
+        max-width: 2200px; /* Adjust this value to change the maximum width */
+        margin-left: -15%;
+    }
+
+    .spinner-container {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+    }
+
+    .spinner {
+        position: absolute;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #FF5733;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+    }
+
+    .spinner-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        font-weight: bold;
+        color: #333;
+        animation: spin 1s linear infinite reverse;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .book-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        padding: 1rem;
+        margin: 0 auto;
+        max-width: 1200px;
+    }
+
+    .book-card {
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .book-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .book-cover {
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        background: #f5f5f5;
+    }
+
+    .book-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .no-image {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        color: #666;
+        font-style: italic;
+    }
+
+    .book-info {
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        flex-grow: 1;
+    }
+
+    .book-title {
+        font-size: 1.25rem;
+        margin: 0 0 1rem 0;
+        line-height: 1.4;
+        height: 2.5em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .book-details {
+        height: 7.8em;
+        overflow: hidden;
+    }
+
+    .book-info h3 {
+        margin-top: 0;
+        font-size: 1.2em;
+        color: #2c3e50;
+    }
+
+    .book-info p {
+        margin: 5px 0;
+        font-size: 0.9em;
+    }
+
+    .book-description {
+        flex: 1;
+        margin: 0 0 1rem 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        height: 4.5em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical; 
+    }
+
+    .book-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .read-more:hover {
+        background-color: #0056b3;
+    }
+
+    .book-links {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: auto;
+    }
+
+    .book-links .btn {
+        flex: 1;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 0.9em;
+        text-align: center;
+        transition: background-color 0.3s, opacity 0.2s;
+    }
+
+    .btn {
+        padding: 0.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .btn-info {
+        background-color: #3498db;
+        color: #fff;
+    }
+
+    .btn-preview {
+        background-color: #2ecc71;
+        color: #fff;
+    }
+
+    .read-more {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn:hover {
+        opacity: 0.8;
+    }
+
+    .book-links .btn:hover, .book-links .read-more:hover {
+        opacity: 0.8;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .page-link {
+        padding: 5px 10px;
+        margin: 0 5px;
+        border: 1px solid #3498db;
+        color: #3498db;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .page-link.active {
+        background-color: #3498db;
+        color: #fff;
+    }
+
+    .page-link.disabled {
+        color: #ccc;
+        border-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+        .book-grid {
+            grid-template-columns: 1fr;
+            padding: 1rem;
+        }
+        
+        .book-content {
+            padding: 1rem;
+        }
+    }
+
+    .modal-content {
+        animation: unfold 0.8s ease-out;
+    }
+
+    @keyframes unfold {
+        0% {
+            transform: scaleY(0.005) scaleX(0);
+        }
+        50% {
+            transform: scaleY(0.005) scaleX(1);
+        }
+        100% {
+            transform: scaleY(1) scaleX(1);
+        }
+    }
+
+
+    @keyframes unfoldOut {
+        0% {
+        transform:scaleY(1) scaleX(1);
+        }
+        50% {
+        transform:scaleY(.005) scaleX(1);
+        }
+        100% {
+        transform:scaleY(.005) scaleX(0);
+        }
+    }
+
+    @keyframes zoomOut {
+        0% {
+        transform:scale(1);
+        }
+        100% {
+        transform:scale(0);
+        }
+    }
+
+    #loading-spinner {
+        margin-top: 20px;
+        padding-bottom: 2rem; /* Add padding to extend the background */
+    }
+
+    .search-section.loading {
+        min-height: 300px; /* Increased height when loading */
+    }
+</style>
 {% endblock %}

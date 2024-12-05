@@ -11,78 +11,125 @@
     
 </head>
 <body>
-    <div class="container">
-        {% include "achievement_tab.html" %}
-            {% if page_ai_insights %}
-            <div class="container mt-3">
+    <div class="container bg-white py-4">
+        <!-- Sticky Header -->
+        <div class="sticky-top bg-white py-2 border-bottom">
+            {% include "achievement_tab.html" %}
+        </div>
+    
+        {% if page_obj %}
+
+        <div class="row my-3">
+            <div id="filter-container">
+                <div id="filter-header">
+                    <button id="show-filter-btn" class="btn card-header bg-primary text-white text-center d-flex align-items-center justify-content-center w-auto py-2 px-4">
+                        Show Filter
+                    </button>
+                </div>
                 
-                <form method="post" enctype="multipart/form-data">  <!-- Added enctype for file uploads -->
-                    
+                <form method="get" id="filter-form" style="display: none;background-color: #f9f9f9; position: fixed; z-index: 1000; padding: 20px;">
                     {% csrf_token %}
-                        <div class="form-group">
-                            {{ filter_form.course.label_tag }}
-                            {{ filter_form.course|add_class:"form-control" }}                                        
-                        </div>
-                        <p>
-                        <button type="submit" class="btn btn-primary" title="View Filtered Insights">
-                            Show Insights
-                        </button>  
-                        {% if not is_valid %}
-                        <span style="color: red;">Invalid Input</span>
-                        {% endif %}
-                        </p>  
+                    <div class="filter-form-grid">
+                        {{ form.as_p }}
+                    </div>
+                    <button type="submit" id="filter-btn" class="btn card-header bg-primary text-white text-center d-flex align-items-center justify-content-center w-auto py-2 px-4">
+                        Filter
+                    </button>
                 </form>
                 
             </div>
-            <div class="container mt-3 grid" style="margin-top: 10px; padding-bottom: 20px;">
-                {% for ai_insight in page_ai_insights %}
-                    <div class="card">
-                        <h3>{{ ai_insight.course }}</h3>
-                        <ul>
-                            {% if ai_insight.insight_type == 'Warning' %}
-                            <li>Insight Type: <span class="badge-warning">{{ ai_insight.insight_type }}</span></li>
-                            {% elif ai_insight.insight_type == 'Compliment' %}
-                            <li>Insight Type: <span class="badge-comliment">{{ ai_insight.insight_type }}</span></li>
-                            {% elif ai_insight.insight_type == 'Info' %}
-                            <li>Insight Type: <span class="badge-info">{{ ai_insight.insight_type }}</span></li>
-                            {% else %}
-                            <li>Insight Type: <span class="badge-undefined">{{ ai_insight.insight_type }}</span></li>
-                            {% endif %}
-                            <li>Insight Text: {{ ai_insight.insight_text }}</li>
-                            <li>Created At: {{ ai_insight.created_at }}</li>
-                        </ul>
-                        <a href="{% url 'course:course_detail' ai_insight.course.id %}" class="btn btn-primary">Go to course {{ ai_insight.course }}</a>
+            <div class="container py-4">
+                <!-- Grid Layout -->
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    {% for ai_insight in page_obj %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white text-center d-flex align-items-center justify-content-center">
+                                <a href="{% url 'course:course_detail' ai_insight.course.id %}" class="text-white text-decoration-none text-nowrap">
+                                    {{ ai_insight.course }}
+                                </a>
+                            </div>
+                            
+                            
+                            <div class="card-body">
+                                <!-- Badge -->
+                                <div class="mb-2 text-center">
+                                    {% for label, color in dict_color.items %}
+                                        {% if ai_insight.insight_type|lower == label|lower %}
+                                        <span class="badge" style="font-size: 20px; background-color: {{ color }}; color: white;">
+                                            {{ ai_insight.insight_type|truncatechars:25 }}
+                                        </span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <!-- Insight Text -->
+                                <div>
+                                    <span class="insight-text">
+                                        {{ ai_insight.insight_text|truncatechars:400 }}
+                                    </span>
+                                    <span class="full-text">
+                                        {{ ai_insight.insight_text }}
+                                    </span>
+                                    {% if ai_insight.insight_text|length > 400 %}
+                                        <a href="#" class="toggle-text">Show More</a>
+                                    {% endif %}
+                                </div>
+                                <!-- Timestamp -->
+                                <p class="text-muted small mb-0">
+                                    {{ ai_insight.created_at }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                {% endfor %}
+                    {% endfor %}
                 </div>
-            <div class="pagination">
-                <span class="step-links">
-                    <a href="?page=1">&laquo; First</a>
-                    {% if page_ai_insights.has_previous %}
-                        <a href="?page={{ page_ai_insights.previous_page_number }}">Previous</a>
-                    {% endif %}
-
-                    <span class="current">
-                        Page {{ page_ai_insights.number }} of {{ page_ai_insights.paginator.num_pages }}
-                    </span>
-
-                    {% if page_ai_insights.has_next %}
-                        <a href="?page={{ page_ai_insights.next_page_number }}">Next</a>
-                    {% endif %}
-                    <a href="?page={{ page_ai_insights.paginator.num_pages }}">Last &raquo;</a>
-                </span>
             </div>
-            <div class="container mt-3" style="padding-bottom: 10px;">
+            
+
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Page: {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            
+                <!-- Pagination Controls -->
+                <nav>
+                    <ul class="pagination">
+                        <!-- Previous Page Link -->
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ query_params.urlencode }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&laquo;</span>
+                            </li>
+                        {% endif %}
+            
+                        <!-- Next Page Link -->
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ query_params.urlencode }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            
+
+            <div class="container mt-3">
                 <h5>Overall Chart and Information</h5>
                 <div class="grid-chart">
-                <div class="card">
-                    <canvas id="myChart" width="400" height="100" style="max-height: 30vh;"></canvas>
-                </div>
-                <div class="card">
-                    <span>hello</span>
+                    <div class="card">
+                        <canvas id="myChart" width="400" height="100" style="max-height: 30vh;"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
         {% else %}
             <div class="container mt-3">
                 <center>There is none of your insights to show here. If you think there is an error, contact: ...</center>
@@ -93,11 +140,27 @@
 
 </body>
 <script>
-const labels = {{ labels|safe }};
-const data = {{ data|safe }};
-const chart_name = '{{ chart_name }}';
+    // Pass in the variables from your template
+    const labels = {{labels|safe}}
+    const data = {{data|safe}};
+    const color = {{color|safe}};
+    const chart_name = "{{ chart_name }}";
 </script>
 <script src="{% static 'js/achievement.js' %}"></script>
+<script>
+    document.getElementById('show-filter-btn').addEventListener('click', function() {
+        var filterForm = document.getElementById('filter-form');
+        var filterButton = document.getElementById('filter-btn');
+        if (filterForm.style.display === 'none' || filterForm.style.display === '') {
+            filterForm.style.display = 'block';  // Show the form
+            filterButton.style.display = 'inline-block';  // Show the filter button
+        } else {
+            filterForm.style.display = 'none';  // Hide the form
+            filterButton.style.display = 'none';  // Hide the filter button again
+        }
+    });
+</script>
+
 
 
 {% endblock %}

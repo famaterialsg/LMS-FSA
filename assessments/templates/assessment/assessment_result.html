@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'basePortal.html' %}
 {% load static %}  <!-- Load static files -->
 {% block title %}{{ assessment.assessment_title }}{% endblock %}
 
@@ -66,10 +66,10 @@
         </div>
         <div class="card-body" style="max-height: 300px; overflow-y: auto;">
             <ul class="list-group">
-                {% for submission in user_submissions %}
+                {% for submission in submission_attempt %}
                     <li class="list-group-item">
                         <strong>Exercise:</strong> {{ submission.exercise.title }}<br>
-                        <strong>Code Submitted:</strong>
+                        <strong>Code Submitted: {{submission.score}}</strong>
                         <pre class="bg-light p-2">{{ submission.code }}</pre>
                     </li>
                 {% empty %}
@@ -80,7 +80,7 @@
     </div>
 
     <div class="alert alert-primary" role="alert">
-        <h4 class="alert-heading">Total Assessment Score: {{ score_ass }}</h4>
+        <h4 class="alert-heading">Total Assessment Score: {{ submission_score|floatformat:1 }}</h4>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Application Management</h1>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'Application:application_submit' %}">Submit Application</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'Application:user_application_list' %}">My Applications</a>
+        </li>
+        {% if user.is_superuser %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'Application:application_add' %}">Add Applications</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'Application:manage_applications' %}">Manage Applications</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <!-- Card for form container -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <!-- Display the form fields -->
+                        {{ form.as_p }}
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary mt-3">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="{% url 'Application:user_application_list' %}" class="btn btn-secondary mt-3 ml-2">
+                                <i class="fas fa-arrow-left"></i> Back to My Applications
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

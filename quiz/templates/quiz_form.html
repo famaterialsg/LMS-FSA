@@ -4,7 +4,7 @@
 {% block title %}{{ form.instance.pk|yesno:"Edit Quiz,Add New Quiz" }}{% endblock %}
 
 {% block content %}
-{% include 'nav_bar.html' %}
+
 <div class="container mt-4">
     <h2>{{ form.instance.pk|yesno:"Edit Quiz,Add New Quiz" }}</h2>
     <form method="post">

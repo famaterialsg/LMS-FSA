@@ -9,7 +9,7 @@ class Quiz(models.Model):
     quiz_title = models.CharField(max_length=255)
     quiz_description = models.TextField(blank=True, null=True)
     total_marks = models.IntegerField()
-    time_limit = models.IntegerField(default=0)
+    time_limit = models.IntegerField(default=60, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -21,6 +21,8 @@ class Quiz(models.Model):
 
     def __str__(self):
         return self.quiz_title
+
+
 
 # Model for Question
 class Question(models.Model):
@@ -37,7 +39,7 @@ class Question(models.Model):
 
     def __str__(self):
         return self.question_text
-
+    
 # Model for Answer Option
 class AnswerOption(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answer_options')
@@ -60,7 +62,7 @@ class StudentQuizAttempt(models.Model):
 class StudentAnswer(models.Model):
     attempt = models.ForeignKey(StudentQuizAttempt, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    selected_options = models.ManyToManyField(AnswerOption, blank=True) 
+    selected_options = models.ManyToManyField(AnswerOption, blank=True)
     text_response = models.TextField(null=True, blank=True)
 
 # Model for AI Grading

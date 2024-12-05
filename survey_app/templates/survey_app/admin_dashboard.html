@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Admin Dashboard</h2>
+
+<!-- Summary Section -->
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h4>Survey Submissions</h4>
+        </div>
+        <div class="col-md-6 text-right">
+            <!-- Navigation buttons for adding new surveys and feedback -->
+            <a href="{% url 'survey_app:submit_survey' %}" class="btn btn-primary">Submit New Survey</a>
+            <a href="{% url 'survey_app:submit_training_feedback' %}" class="btn btn-secondary">Submit Feedback</a>
+        </div>
+    </div>
+
+    <!-- Survey Table -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Department</th>
+                <th>Submitted By</th>
+                <th>Staffing Needs</th>
+                <th>Skills Needed</th>
+                <th>Training Feedback</th>
+                <th>Submitted At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for survey in surveys %}
+            <tr>
+                <td>{{ survey.department.name }}</td>
+                <td>{{ survey.submitted_by.username }}</td>
+                <td>{{ survey.staffing_needs }}</td>
+                <td>{{ survey.skill_needs }}</td>
+                <td>{{ survey.training_feedback|truncatewords:10 }}</td>
+                <td>{{ survey.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <!-- View and Delete actions for each survey entry -->
+                    <a href="{% url 'survey_app:view_survey' survey.id %}" class="btn btn-info btn-sm">View</a>
+                    <a href="{% url 'survey_app:delete_survey' survey.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this survey?');">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No surveys submitted yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

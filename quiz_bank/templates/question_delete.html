@@ -22,7 +22,7 @@
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Yes, delete</button>
-        <a href="{% url 'quiz_bank:quiz_bank_course' course_id=course_id%}" class="btn btn-secondary">Cancel</a>
+        <a href="{% url 'quiz_bank:quiz_bank_course_refresh' course_id=course_id%}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}

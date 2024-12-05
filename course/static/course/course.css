@@ -24,6 +24,12 @@
     display: flex;
     margin-top: 20px;
 }
+.sidebar {
+    width: 250px;
+    background-color: white;
+    padding: 20px;
+    box-sizing: border-box;
+}
 #course-content .course-title {
     font-size: 24px;
     font-weight: bold;
@@ -216,6 +222,9 @@ margin-bottom: 20px;
 }
 .carousel-control {
     width: 5%;
+}
+.carousel-item-active{
+
 }
 
 .carousel-control-prev-icon,

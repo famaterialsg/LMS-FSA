@@ -27,7 +27,12 @@
         <div class="course-container">
             <div class="course-info">
                 <div class="course-icon">
-                    <img src='https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d2j5ihb19pt1hq.cloudfront.net/certificates/cert-course.png?auto=format%2Ccompress&dpr=2&h=72'>
+                    {% if course.course.image %} 
+                        <img src="{{ course.course.image.url}}">
+                    {% else %}
+                        <img src="{% static 'course/images/chotbg.png' %}" alt="Picture">
+                    {% endif %}
+                    
                 </div>
                 <div class="course-details">
                     <p class="course-title" style="padding-right: 0px;">{{ course.course.course_name }}</p>

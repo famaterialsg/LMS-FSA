@@ -24,8 +24,11 @@
         <form method="post">
             {% csrf_token %}
             <p>
+            <a class="btn btn-secondary" title="Randomized Again" href="{% url 'quiz_bank:quiz_bank_course_refresh' course.id %}">
+                <i class="fas fa-file-export"></i> Back to Quiz Bank - {{course.course_code}}
+            </a>
             <button type="submit" class="btn btn-primary" name="reload">
-                <a method="post" title="Randomized Again" data-toggle="tooltip">
+                <a title="Randomized Again" data-toggle="tooltip">
                     <i class="fas fa-file-export"></i> Randomize Questions Again
                 </a>
             </button>
@@ -68,7 +71,7 @@
                     <td>{{ question.question_type }}</td>
                     <td>
                         <ul>
-                            {% for option in question.options %}
+                            {% for option in question.answer %}
                             <li>
                                 {{ option }}
                             </li>
@@ -76,7 +79,7 @@
                         </ul>
                     </td>
                     <td>
-                        {% for key in question.correct %}
+                        {% for key in question.key %}
                         <ul>
                             <li>
                                 {{key}}

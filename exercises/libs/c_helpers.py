@@ -14,18 +14,19 @@ def precheck_c(language, code, precheck_test_cases, passed_tests, numHiddenTestC
     try:
         temp_file = os.path.join(get_dir(language), 'temp_script.c')
         compiled_executable = os.path.join(get_dir(language), 'temp_script.exe')
-
+        
         write_to_file(temp_file, code)
 
         compile_C_code(temp_file, compiled_executable)
         
         combined_message = run_and_combine_messsages(language, temp_file, compiled_executable, None, precheck_test_cases, numHiddenTestCases, passed_tests)
-        
-        cleanup_files([compiled_executable, temp_file])
+
+        cleanup_files([temp_file, compiled_executable])
 
     except Exception as e:
+        print(e)
         return {'error': str(e), 'passed_tests': passed_tests, 'numHiddenTestCases': numHiddenTestCases}
-    
+        
     return combined_message
 
 def grade_C_submission(language, student_code_file, compiled_executable, test_cases, passed_tests):

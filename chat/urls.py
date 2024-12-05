@@ -1,10 +1,10 @@
 from django.urls import path
 from . import views
-
+from django.conf.urls.i18n import i18n_patterns
 app_name = 'chat'
 
 urlpatterns = [
-    path('users/', views.chat_view, name='user_list'),  # User list view
+    path('', views.chat_view, name='user_list'),  # User list view
     path('messages/<str:username>/', views.chat_view, name='chat_view'),  # One-on-one chat view
 
     # Group chat paths

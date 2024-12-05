@@ -1,0 +1,281 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    /* padding: 20px; */
+    background-color: #f0f0f0;
+}
+.container {
+    width:100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1 {
+    color: #333;
+}
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+.tab {
+    padding: 10px 20px;
+    background-color: #e0e0e0;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.tab:hover {
+    background-color: #d0d0d0;
+}
+.tab.active {
+    background-color: #4CAF50;
+    color: white;
+}
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+.card {
+    background-color: #ffffff;
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    padding: 20px; /* Padding inside the card */
+    margin: 20px 0; /* Margin outside the card */
+    transition: transform 0.3s,box-shadow 0.3s; /* Smooth transition for hover effect */
+}
+
+.card:hover {
+    transform: scale(1.05); /* Slightly enlarge the card on hover */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* Darker shadow on hover */
+}
+.badge {
+    display: inline-block;
+    padding: 3px 7px;
+    background-color: #2196F3;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+/* New styles for progress bar */
+.progress-container {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin: 10px 0;
+    height: 25px;
+}
+.progress-bar-performance {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 0%; /* Initial width; will be set dynamically */
+    border-radius: 5px;
+    transition: width 0.4s ease;
+}
+
+/* Existing "My Courses" styles */
+.course-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+.course-info {
+    display: flex;
+    align-items: center;
+}
+.course-icon {
+    width: 50px;
+    height: 50px;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+    margin-right: 15px;
+}
+.course-icon img {
+max-width: 100%;  /* Giới hạn chiều rộng của ảnh không vượt quá phần tử cha */
+height: 100%;     /* Chiều cao tự động điều chỉnh theo tỷ lệ */
+object-fit: fill; /* Đảm bảo ảnh vừa khít với phần tử cha */
+display: block;   /* Loại bỏ khoảng trống dưới ảnh do inline elements */
+}
+.course-details {
+    margin-left: 10px;
+}
+.course-title {
+    font-size: 18px;
+    color: #0056b3;
+}
+.course-title:hover {
+    text-decoration: underline;
+}
+.institution {
+    font-size: 14px;
+    color: #888;
+}
+.grade {
+    font-size: 14px;
+    color: #000;
+}
+.add-linkedin {
+    background-color: #0077b5;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.add-linkedin:hover {
+    background-color: #005a87;
+}
+
+
+
+/* Table Styles */
+.assessment-table {
+    margin-top: 20px;
+    width: 100%; /* Ensure the table takes up the full width */
+    border-collapse: separate; /* Separate borders for bubble effect */
+    border-spacing: 0 10px; /* Space between rows for bubble effect */
+}
+
+.assessment-table th,
+.assessment-table td {
+    background-color: #ffffff;
+    border-radius: 10px; /* Rounded corners for table cells */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for table cells */
+    padding: 10px 15px; /* Padding inside table cells */
+    text-align: center; /* Align text to the left */
+    transition: transform 0.3s, box-shadow 0.3s; /* Smooth transition for hover effect */
+}
+
+.assessment-table th {
+    background-color: #f0f0f0; /* Slightly different background for headers */
+    font-weight: bold; /* Bold text for headers */
+}
+
+.assessment-table th:hover,
+.assessment-table td:hover {
+    transform: scale(1.02); /* Slightly enlarge the cell on hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Darker shadow on hover */
+}
+
+.assessment-table tr {
+    margin-bottom: 10px; /* Space between rows */
+}
+.assessment-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+
+.expanded-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px 0;
+    transition: transform 0.3s, opacity 0.3s;
+    transform: scale(1);
+    opacity: 1;
+}
+
+.expanded-card.hidden {
+    transform: scale(0.95);
+    opacity: 0;
+}
+
+/* RollBack Button Styles */
+.rollback-button {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s, transform 0.3s; /* Smooth transition for hover effect */;
+}
+
+
+.rollback-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    color: #0561ab;
+}
+.step-links a {
+    color: #333;
+    padding: 5px 10px;
+    margin: 0 5px;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: background-color 0.3s, transform 0.3s; /* Smooth transition for hover effect */;
+}
+.step-links a:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1); /* Slightly enlarge the link on hover */
+}
+
+.step-links .disabled {
+    color: #aaa;
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: not-allowed;
+}
+.current {
+    font-weight: bold;
+}
+
+/* Responsive table */
+@media screen and (max-width: 600px) {
+    .assessment-table table, .assessment-table thead, .assessment-table tbody, .assessment-table th, .assessment-table td, .assessment-table tr {
+        display: block;
+    }
+
+    .assessment-table th {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .assessment-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+    }
+
+    .assessment-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: calc(50% - 20px);
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+    }
+}
+

@@ -329,12 +329,15 @@
                             {% else %}
                                 <span class="text-muted" style="font-size: 0.7rem;">No Attempts</span>
                             {% endif %}
+
+                            <a href="{% url 'quiz:quiz_question' quiz.id %}" class="btn btn-success btn-sm small-text" title="Add Q&A">
+                                <i class="fas fa-plus"></i> Add Q&A
+                            </a>
                         
                             <div class="copy-preview-duplicate" style="display: inline-block; margin-left: 10px;">
-                                <a href="#" onclick="copyInviteLink(event, '{{ quiz.invite_link }}')" title="Copy invite link">
-                                    <i class="small-text"></i> Copy invite link
-                                </a>
+                                <button id="copyInviteLinkButton" class="btn btn-outline-primary">Copy public invite link</button>
                             </div>
+                            
                         </div>
                         
                     </div>
@@ -381,6 +384,9 @@
     </div>
 </div>
 
+<script id="quiz-data">
+    const quizId = {{ quiz.id }}; // Gán quizId tại đây
+</script>
 
 <script>
     function searchQuizzes() {
@@ -417,12 +423,31 @@
         });
     });
     
-    // Hàm copy link
-    function copyInviteLink(event, link) {
-        event.preventDefault();
-        navigator.clipboard.writeText(link);
-        // Có thể thêm thông báo copy thành công ở đây
-    }
+    // Thêm chức năng sao chép link
+    const copyLinkButton = document.getElementById('copyInviteLinkButton'); // Nút Copy Link
+
+    copyLinkButton.addEventListener('click', () => {
+        fetch(`/quiz/${quizId}/copy_public_link/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                navigator.clipboard.writeText(data.link)
+                    .then(() => {
+                        alert("Link copied to clipboard!"); // Thông báo thành công
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err); // Xử lý lỗi sao chép
+                    });
+            })
+            .catch(error => {
+                console.error('Error:', error); // Xử lý lỗi nếu API lỗi
+                alert("Error copying link. Please try again."); // Thông báo lỗi cho người dùng
+            });
+    });
     
 </script>
 

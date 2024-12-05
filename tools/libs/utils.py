@@ -5,7 +5,6 @@ import re
 
 from io import BytesIO
 
-from docx import Document
 
 # Function to generate exams
 def generator(excel_file, number_of_questions):

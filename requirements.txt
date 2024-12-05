@@ -95,7 +95,7 @@ mistune==3.0.2
 mitosheet==0.2.2
 monotonic==1.6
 mysql-connector-python==9.1.0
-mysqlclient==2.2.5
+# mysqlclient==2.2.5
 narwhals==1.12.1
 nbclient==0.10.0
 nbconvert==7.16.4
@@ -195,3 +195,5 @@ streamlit_option_menu==0.4.0
 torch==2.5.1
 transformers==4.46.1
 cryptography==43.0.3
+dnspython==2.7.0
+googletrans==4.0.0-rc1

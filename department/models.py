@@ -3,7 +3,7 @@ from user.models import User
 from course.models import Course
 
 class Location(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     address = models.TextField()
 
     def __str__(self):

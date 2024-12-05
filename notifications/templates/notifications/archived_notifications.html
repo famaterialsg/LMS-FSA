@@ -1,0 +1,170 @@
+<h2 class="text-center mb-4 title-header">Archived Notifications</h2>
+
+{% if notifications %}
+    <div class="container">
+        <div class="notification-list">
+            {% for notification in notifications %}
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <h5 class="notification-title">{{ notification.title|truncatechars:40 }}</h5>
+                        <p class="notification-message">{{ notification.message }}</p>
+                        <p class="text-muted small">Archived at: {{ notification.created_at|date:"M d, Y H:i" }}</p>
+                        <form action="{% url 'unarchive_notification' notification.id %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-retrieve">Unarchive</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <p class="text-center text-danger">No archived notifications.</p>
+{% endif %}
+
+<!-- Fixed "Back to Notifications" button at the bottom -->
+<div class="footer-btn text-center">
+    <a href="{% url 'notifications_list' %}" class="btn btn-back">Back to Notifications</a>
+</div>
+
+<style>
+    /* General Styling */
+    body {
+        background-color: #f9fafe;
+        font-family: 'Roboto', sans-serif;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .title-header {
+        font-size: 1.8em;
+        color: #343a40;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-align: center;
+        margin-bottom: 25px;
+        position: relative;
+        opacity: 0;
+        animation: fadeIn 1s forwards, slideIn 1s forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { transform: translateY(-20px); }
+        to { transform: translateY(0); }
+    }
+
+    /* Notification List Styling */
+    .notification-list {
+        max-width: 600px;
+        margin: 15px auto;
+        padding: 0 15px;
+        opacity: 0;
+        animation: fadeIn 1s 0.5s forwards;
+    }
+
+    .notification-item {
+        background-color: #fff;
+        padding: 15px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        opacity: 0;
+        animation: fadeInScale 0.8s forwards;
+        transform: scale(0.95);
+    }
+
+    .notification-item:hover {
+        transform: scale(1.03);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    }
+
+    .notification-content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .notification-title {
+        font-size: 1.1em;
+        color: #007bff;
+        font-weight: 600;
+        position: relative;
+        animation: colorChange 1.5s infinite;
+    }
+
+    @keyframes colorChange {
+        0%, 100% { color: #007bff; }
+        50% { color: #0056b3; }
+    }
+
+    .notification-message {
+        font-size: 0.9em;
+        color: #6c757d;
+        line-height: 1.4;
+        transition: color 0.3s ease;
+    }
+
+    .notification-message:hover {
+        color: #343a40;
+    }
+
+    /* Retrieve Button Styling */
+    .btn-retrieve {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 15px;
+        font-size: 0.85em;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-retrieve:hover {
+        background-color: #0056b3;
+        box-shadow: 0 6px 15px rgba(0, 86, 179, 0.3);
+        transform: translateY(-2px);
+    }
+
+    /* Back Button Styling */
+    .footer-btn {
+        margin-top: auto;
+        padding: 15px;
+        background: #f1f3f5;
+    }
+
+    .btn-back {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-size: 0.95em;
+        font-weight: bold;
+        text-decoration: none;
+        box-shadow: 0 5px 12px rgba(108, 117, 125, 0.2);
+        transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background-color: #5a6268;
+        box-shadow: 0 7px 18px rgba(90, 98, 104, 0.3);
+        transform: translateY(-2px);
+    }
+
+    /* Animations */
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+</style>

@@ -7,6 +7,12 @@
     <div class="card shadow-sm p-4">
         <h2 class="text-center text-danger">Are you sure you want to delete the role "<strong>{{ role.role_name }}</strong>"?</h2>
 
+        {% if error_message %}
+            <div class="alert alert-danger mt-3">
+                {{ error_message }}
+            </div>
+        {% endif %}
+
         {% if users_with_role %}
             <h4 class="mt-4">Users with this role:</h4>
             <ul class="list-group" style="max-height: 30vh; overflow-y: auto;">
@@ -30,7 +36,9 @@
         <div class="d-flex justify-content-between mt-4">
             <form method="post" class="d-inline">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger btn-lg">Delete</button>
+                <button type="submit" class="btn btn-danger btn-lg">
+                    Delete
+                </button>
             </form>
             <a href="{% url 'role:role_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
         </div>

@@ -10,6 +10,7 @@ from import_export.formats.base_formats import XLSX, JSON, YAML, CSV, TSV
 from django.http import HttpResponse
 from tablib import Dataset
 from main.module_utils import get_grouped_modules
+
 @login_required
 def department_list(request):
     query = request.GET.get('search', '')  # Sửa đổi ở đây nếu cần

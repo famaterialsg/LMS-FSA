@@ -33,30 +33,38 @@ class DepartmentResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = True
         fields = ('name', 'location', 'address', 'users', 'courses')
-        import_id_fields = ('name',)
+        import_id_fields = ()  # Không yêu cầu `name` là khóa duy nhất
         export_order = ('name', 'location', 'address', 'users', 'courses')
-        
 
     def before_import_row(self, row, **kwargs):
         location_name = row['location__name']
         address = row.get('address', '')
-        location, created = Location.objects.get_or_create(name=location_name)
-        
-        if created or (address and location.address != address):
-            location.address = address
-            location.save()
 
-        row['location'] = location.id
+        # Kiểm tra nếu location_name có tồn tại
+        if not location_name:
+            raise ValueError("Location name is required in the import file.")  # Nếu thiếu tên location
+
+        # Sử dụng filter() thay vì get() để tránh lỗi nếu có nhiều địa điểm trùng tên
+        locations = Location.objects.filter(name=location_name)
+
+        if locations.exists():
+            location = locations.first()  # Lấy đối tượng đầu tiên nếu có nhiều kết quả trùng tên
+            if address and location.address != address:
+                location.address = address
+                location.save()
+        else:
+            # Nếu không tìm thấy, tạo mới Location
+            location = Location.objects.create(name=location_name, address=address)
+
+        row['location'] = location.id  # Cập nhật ID của Location vào row
 
     def skip_row(self, instance, original, row, import_validation, **kwargs):
         """
-        So sánh dữ liệu mới và dữ liệu cũ, nếu không có sự thay đổi thì bỏ qua dòng này.
+        So sánh dữ liệu mới và dữ liệu cũ, nếu tên Department và Location trùng nhau, bỏ qua dòng này.
         """
-        if instance.name == original.name and \
-           instance.location == original.location and \
-           instance.users == original.users and \
-           instance.courses == original.courses:
-            return True 
+        # Kiểm tra nếu có một Department đã tồn tại với cùng tên và location
+        if Department.objects.filter(name=instance.name, location=instance.location).exists():
+            return True  # Bỏ qua dòng này nếu Department và Location trùng nhau
 
         return False
 
@@ -64,7 +72,7 @@ class DepartmentResource(resources.ModelResource):
 class DepartmentAdmin(ImportExportModelAdmin):
     resource_class = DepartmentResource
     form = DepartmentForm
-    list_display = ('name', 'get_location_name')  # Thay đổi để sử dụng phương thức
+    list_display = ('name', 'get_location_name')
 
     def get_location_name(self, obj):
         return obj.location.name if obj.location else 'N/A'

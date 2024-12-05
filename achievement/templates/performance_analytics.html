@@ -5,246 +5,7 @@
 
 {% block content %}
 
-    
-<style>
-        /* Existing styles remain unchanged */
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            /* padding: 20px; */
-            background-color: #f0f0f0;
-        }
-        .container {
-            width:100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        .tab {
-            padding: 10px 20px;
-            background-color: #e0e0e0;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .tab:hover {
-            background-color: #d0d0d0;
-        }
-        .tab.active {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .card {
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .badge {
-            display: inline-block;
-            padding: 3px 7px;
-            background-color: #2196F3;
-            color: white;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        
-        /* New styles for progress bar */
-        .progress-container {
-            width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            margin: 10px 0;
-            height: 25px;
-        }
-        .progress-bar-performance {
-            height: 100%;
-            background-color: #4CAF50;
-            width: 0%; /* Initial width; will be set dynamically */
-            border-radius: 5px;
-            transition: width 0.4s ease;
-        }
-    
-        /* Existing "My Courses" styles */
-        .course-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-        }
-        .course-info {
-            display: flex;
-            align-items: center;
-        }
-        .course-icon {
-            width: 50px;
-            height: 50px;
-            background-color: #f2f2f2;
-            border-radius: 5px;
-            margin-right: 15px;
-        }
-        .course-icon img {
-        max-width: 100%;  /* Giới hạn chiều rộng của ảnh không vượt quá phần tử cha */
-        height: 100%;     /* Chiều cao tự động điều chỉnh theo tỷ lệ */
-        object-fit: fill; /* Đảm bảo ảnh vừa khít với phần tử cha */
-        display: block;   /* Loại bỏ khoảng trống dưới ảnh do inline elements */
-        }
-        .course-details {
-            margin-left: 10px;
-        }
-        .course-title {
-            font-size: 18px;
-            color: #0056b3;
-        }
-        .course-title:hover {
-            text-decoration: underline;
-        }
-        .institution {
-            font-size: 14px;
-            color: #888;
-        }
-        .grade {
-            font-size: 14px;
-            color: #000;
-        }
-        .add-linkedin {
-            background-color: #0077b5;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .add-linkedin:hover {
-            background-color: #005a87;
-        }
-    
-        
-    
-        .toggle-section {
-            color: #0056b3;
-            cursor: pointer; /* Thay đổi con trỏ thành hình bàn tay khi hover */
-        }
-    
-        /* Hiệu ứng gạch chân khi di chuột */
-        .toggle-section:hover {
-            text-decoration: underline;
-        }
-        .assessment-table {
-            margin-top: 20px;
-            width: 100%; /* Ensure the table takes up the full width */
-        }
-    
-        .assessment-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-    
-        .assessment-table th, .assessment-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-    
-        .assessment-table th {
-            background-color: #f2f2f2;
-        }
-    
-        .expanded-card {
-            grid-column: 1 / -1; /* Make the card span the full width of the grid */
-            margin-top: 20px;
-        }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-            color: #0561ab;
-        }
-        .step-links a {
-            color: #333;
-            padding: 5px 10px;
-            margin: 0 5px;
-            text-decoration: none;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        .step-links a:hover {
-            background-color: #f0f0f0;
-        }
-
-        .step-links .disabled {
-            color: #aaa;
-            padding: 5px 10px;
-            margin: 0 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: not-allowed;
-        }
-        .current {
-            font-weight: bold;
-        }
-        @media screen and (max-width: 600px) {
-            .assessment-table table, .assessment-table thead, .assessment-table tbody, .assessment-table th, .assessment-table td, .assessment-table tr {
-                display: block;
-            }
-    
-            .assessment-table th {
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-            }
-    
-            .assessment-table td {
-                border: none;
-                position: relative;
-                padding-left: 50%;
-                text-align: right;
-            }
-    
-            .assessment-table td:before {
-                content: attr(data-label);
-                position: absolute;
-                left: 10px;
-                width: calc(50% - 20px);
-                white-space: nowrap;
-                text-align: left;
-                font-weight: bold;
-            }
-        }
-        
-        
-    
-</style>
+<link rel="stylesheet" href="{% static 'css/performance.css' %}">
 <body>
     <div class="container">
         {% include "achievement_tab.html" %}
@@ -285,6 +46,14 @@
                                     <strong>Completed: 0 </strong> 
                                     {% endif %}
                                 </a>
+                                <span style="margin-left: 25px;">    
+                                <a href="javascript:void(0);" onclick="toggleTable('table-{{ forloop.counter }}', 'card-{{ forloop.counter }}')">
+                                    {% if data.total_attempts > 0 %}
+                                    <strong>Attempted: {{ data.total_attempts }}</strong>
+                                    {% else %}
+                                    <strong>Attempted: 0</strong>
+                                    {% endif %}
+                                </a>
                             </span>
                         </p>
                         <div id="table-{{ forloop.counter }}" class="assessment-table" style="display: none;">
@@ -292,7 +61,8 @@
                                 <thead>
                                     <tr>
                                         <th>Assessment Title</th>
-                                        <th>Score</th>
+                                        <th>Assignment Score</th>
+                                        <th>Quiz Score</th>
                                         <th>Attempted Date</th>
                                     </tr>
                                 </thead>
@@ -301,11 +71,13 @@
                                     <tr>
                                         <td>{{ attempt.assessment.title }}</td>
                                         <td>{{ attempt.score_ass }}</td>
+                                        <td>{{attempt.score_quiz}}</td>
                                         <td>{{ attempt.attempt_date }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
+                            
                         </div>
                 </div>   
                 {% endfor %}       
@@ -337,10 +109,15 @@
             {% else %}
                 <center> <p>No performances found.</p> </center>
             {% endif %}
+            
         </div>
         </div>
     </div>
     <script>
+        // Function to go back to the previous view
+        function goBack() {
+            window.history.back();
+        }
         // Function to store the active tab in localStorage
         function setTab(tabName) {
             localStorage.setItem('activeTab', tabName);
@@ -369,7 +146,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', loadActiveTab);
+        
         let currentlyExpandedCardId = null;
+        let previousScrollPosition = 0;
         function toggleTable(tableId, cardId) {
             var table = document.getElementById(tableId);
             var card = document.getElementById(cardId);
@@ -382,11 +161,19 @@
             if (table && card && expandedCardContainer) {
                 if (currentlyExpandedCardId === cardId) {
                     // Hide the expanded card if it's already displayed
-                    expandedCardContainer.innerHTML = '';
+                    const expandedCard = expandedCardContainer.querySelector('.expanded-card');
+                    if (expandedCard) {
+                        expandedCard.classList.add('hidden');
+                        setTimeout(() => {
+                            expandedCardContainer.innerHTML = '';
+                            window.scrollTo({ top: previousScrollPosition, behavior: 'smooth' });
+                        }, 300); // Match the duration of the CSS transition
+                    };
                     currentlyExpandedCardId = null;
                 } else {
-                    // Hide any previously expanded card
-                    expandedCardContainer.innerHTML = '';
+                    // Save the current scroll position
+                    previousScrollPosition = window.scrollY;
+                    
         
                     // Create a new card element
                     var newCard = document.createElement('div');
@@ -397,17 +184,35 @@
                             ${card.querySelector('.progress-container').innerHTML}
                         </div>
                         <p><strong>Average Score:</strong> ${card.querySelector('p').innerHTML}</p>
-                        <div class="assessment-table">
+                        <div class="assessment-table expanded">
                             ${table.innerHTML}
                         </div>
+                        <button class="rollback-button" onclick="rollback()">Back</button>
                     `;
                     expandedCardContainer.appendChild(newCard);
                     currentlyExpandedCardId = cardId;
+                    // Scroll to the expanded card smoothly
+                    expandedCardContainer.scrollIntoView({ behavior: 'smooth' });
                 }
-        } else {
-            console.error("One or more elements not found.");
+            } else {
+                console.error("One or more elements not found.");
+            }
         }
-    }
+    
+
+
+
+        function rollback() {
+            const expandedCardContainer = document.getElementById('expanded-card-container');
+            const expandedCard = expandedCardContainer.querySelector('.expanded-card');
+            if (expandedCard) {
+                expandedCard.classList.add('hidden');
+                setTimeout(() => {
+                    expandedCardContainer.innerHTML = '';
+                }, 300); // Match the CSS transition duration
+            }
+            currentlyExpandedCardId = null;
+        }
     </script>
 
 </body>

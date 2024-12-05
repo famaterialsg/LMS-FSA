@@ -34,3 +34,6 @@ WHERE content LIKE '%<iframe%';
 {{ forloop.counter }}
 
 python3 manage.py startapp student_portal
+
+python -m venv venv --create 
+.\venv\Scripts\activate

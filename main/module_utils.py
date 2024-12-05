@@ -1,5 +1,5 @@
 from module_group.models import Module, ModuleGroup
-from role.models import Role, RoleModule
+from role.models import Role
 
 def get_grouped_modules(user, temporary_role_id=None):
     """
@@ -9,7 +9,7 @@ def get_grouped_modules(user, temporary_role_id=None):
     user_modules = Module.objects.all()  # Mặc định không có modules nào
 
     if user.is_authenticated:
-        if user.is_superuser:
+        if user.is_superuser or (user.profile.role and user.profile.role.role_name == "Manager"):
             # Nếu là superuser, kiểm tra role tạm thời
             if temporary_role_id:
                 try:

@@ -1,0 +1,35 @@
+{
+    "mc_questions": [
+        {
+            "question": "Which of the following statements is GENERALLY true of testing?",
+            "answers": [
+                "A. Testing can show the presence of defects.",
+                "B. Testing reduces the probability of uncovered defects.",
+                "C. Testing can show that a previously present defect has been removed.",
+                "D. Testing can prove that software is defect free."
+            ],
+            "correct": "A, B"
+        },
+        
+        {
+            "question": "A manifestation of an ‘error’ in software is:",
+            "answers": [
+                "A. A Defect",
+                "B. An Error",
+                "C. A Failure",
+                "D. An Action"
+            ],
+            "correct": "A"
+        },
+        {
+            "question": "Which set of metrics can be used for monitoring of the test execution?",
+            "answers": [
+                "A. Number of test cases run / not run; test cases passed / failed",
+                "B. Number of detected defects, testing cost",
+                "C. Number of residual defects in the test object",
+                "D. Percentage of completed tasks in the preparation of test environment; test cases prepared"
+            ],
+            "correct": "A"
+        }
+    ]
+}

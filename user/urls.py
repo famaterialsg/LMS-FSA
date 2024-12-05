@@ -19,7 +19,7 @@ urlpatterns = [
     path('students/', views.student_list, name='student_list'),
     path('instructors/', views.instructor_list, name='instructor_list'),
     path('send_email_to_users/', views.send_email_to_users, name='send_email_to_users'),
-    path('predict_interests_api/', views.predict_interests_api, name='predict_interests_api'),
+
 ]
 
 if settings.DEBUG:

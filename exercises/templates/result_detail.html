@@ -1,7 +1,13 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<h2>Submission Result</h2>
-<p>Score: {{ submission.score }}</p>
-<p>Your code: <pre>{{ submission.code }}</pre></p>
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <div class="col-12">
+            <h2>Submission Result</h2>
+            <p>Score: {{ submission.score }}</p>
+            <p>Your code: <pre>{{ submission.code }}</pre></p>
+        </div>
+    </div>
+</div> 
 {% endblock %}

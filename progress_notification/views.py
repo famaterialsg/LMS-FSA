@@ -10,14 +10,6 @@ from django.http import HttpResponse
 # User views
 def progress_notification_list(request):
     progress_notification = ProgressNotification.objects.all()
-
-    if request.method == 'POST':
-        selected_users = request.POST.getlist('selected_users')
-
-        if selected_users:
-            ProgressNotification.objects.filter(id__in=selected_users).delete()
-            return redirect('progress_notification:progress_notification_list')  # Redirect lại trang danh sách sau khi xóa
-
     return render(request, 'progress_notification_list.html', {'progress_notification': progress_notification})
 
 def progress_notification_detail(request, id):

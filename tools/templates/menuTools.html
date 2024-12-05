@@ -1,0 +1,12 @@
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'excel_to_json_view' %}active{% endif %}" href="{% url 'tools:excel_to_json_view' %}" aria-controls="excel" aria-selected="true">Excel to JSON</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'txt_to_json_view' %}active{% endif %}" href="{% url 'tools:txt_to_json_view' %}" aria-controls="txt" aria-selected="false">TXT to JSON</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'exam_generator_view' %}active{% endif %}" href="{% url 'tools:exam_generator_view' %}" aria-controls="txt" aria-selected="false">Generate Exam</a>
+    </li>
+</ul>
+

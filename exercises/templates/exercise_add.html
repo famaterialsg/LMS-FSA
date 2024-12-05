@@ -1,17 +1,79 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<div class="card shadow">
-    <div class="card-header bg-primary text-white">
-        <h3 class="card-title">Add New Exercise</h3>
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">Add New Exercise</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Form to Add Exercise -->
+                    <form method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {{ form.as_p }}
+
+                        <!-- Container for dynamically generated test cases -->
+                        <p class="mt-4">Test Cases:</p>
+                        <div id="test-cases-container"></div>
+                        
+                        <p class="mt-4">Hidden Test Cases:</p>
+                        <div id="hidden-test-cases-container"></div>
+
+                        <button type="submit" class="btn btn-success mt-3">Save Exercise</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <!-- Form to Add Exercise -->
-        <form method="POST" class="needs-validation" novalidate>
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-success mt-3">Save Exercise</button>
-        </form>
-    </div>
-</div>
+</div> 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const numTestCasesField = document.querySelector('#id_numTestCases');
+        const numHiddenCasesField = document.querySelector('#id_numHiddenCases');
+        const testCasesContainer = document.getElementById('test-cases-container');
+        const hiddenTestCasesContainer = document.getElementById('hidden-test-cases-container');
+
+        // Function to create input fields for test cases
+        function createTestCaseFields(container, numCases, type) {
+            container.innerHTML = ''; // Clear existing fields
+
+            for (let i = 1; i <= numCases; i++) {
+                // Create input field for each test case
+                const inputField = document.createElement('input');
+                inputField.type = 'text';
+                inputField.name = `${type}_input_${i}`;
+                inputField.className = 'form-control my-2';
+                inputField.placeholder = `Input for ${type} test case ${i}`;
+
+                // Create expected output field for each test case
+                const outputField = document.createElement('input');
+                outputField.type = 'text';
+                outputField.name = `${type}_expected_output_${i}`;
+                outputField.className = 'form-control my-2';
+                outputField.placeholder = `Expected Output for ${type} test case ${i}`;
+
+                // Append fields to the container
+                container.appendChild(inputField);
+                container.appendChild(outputField);
+            }
+        }
+
+        // Event listeners for changes in numTestCases and numHiddenCases
+        numTestCasesField.addEventListener('input', function() {
+            const numTestCases = parseInt(numTestCasesField.value) || 0;
+            createTestCaseFields(testCasesContainer, numTestCases, 'visible');
+        });
+
+        numHiddenCasesField.addEventListener('input', function() {
+            const numHiddenCases = parseInt(numHiddenCasesField.value) || 0;
+            createTestCaseFields(hiddenTestCasesContainer, numHiddenCases, 'hidden');
+        });
+
+        // Initial setup
+        createTestCaseFields(testCasesContainer, numTestCasesField.value, 'visible');
+        createTestCaseFields(hiddenTestCasesContainer, numHiddenCasesField.value, 'hidden');
+    });
+</script>
 {% endblock %}

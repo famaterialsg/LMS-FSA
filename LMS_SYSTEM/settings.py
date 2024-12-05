@@ -30,10 +30,6 @@ LOGIN_REDIRECT_URL = ''
 
 # Add or update media settings for handling uploaded files
 
-#for PDF
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-XS_SHARING_ALLOWED_METHODS = ['POST','GET','OPTIONS', 'PUT', 'DELETE']
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -47,7 +43,7 @@ AUTH_USER_MODEL = 'user.User'  # Change 'user' to the name of your app
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-#Send email
+# Send email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -63,7 +59,7 @@ SECRET_KEY = 'django-insecure-h+p6t3%50m)_a15%4&i*q_ule5a_$566#wu=f_5uvlapiqq%5v
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-#ALLOWED_HOSTS = ['codinglmsfsa.pythonanywhere.com']
+# ALLOWED_HOSTS = ['codinglmsfsa.pythonanywhere.com']
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -110,7 +106,7 @@ INSTALLED_APPS = [
     'user', 'role', 'department', 'team',
 
     #group02
-    'course', 'feedback', 'forum', 
+    'course', 'feedback', 'forum', 'department_course',
 
     #group03
     'quiz', 'tools', # 'std_course', 'course_Truong', 'std_quiz', 
@@ -121,23 +117,26 @@ INSTALLED_APPS = [
     #group05 
     'activity', 'analytics_report', 'book', 'progress_notification',
     'achievement', 'quiz_bank', # -- add this app
-    'rest_framework',
-    'api',
-
+    'cheat_logger',
+    'notifications',
+    'Application',
 ]
 
 MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',  # Add this line
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'activity.activity_tracking_middleware.ActivityTrackingMiddleware',
-    'main.middleware.SiteLockMiddleware',
 
+    # caching with redis if exist
+    # 'django.middleware.cache.UpdateCacheMiddleware',
+    # 'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
+    'main.middleware.SiteLockMiddleware',
 ]
 
 ROOT_URLCONF = 'LMS_SYSTEM.urls'
@@ -161,6 +160,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'LMS_SYSTEM.wsgi.application'
 
@@ -245,6 +245,28 @@ else:
         }
     }
 
+if os.getenv("USING_REDIS"):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': 'redis://redis:6379/1',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'django_backend',
+        }
+    }
+
+    CACHE_TTL = 60 * 15
+
+    # use cache for session
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+
+    # Cache settings
+    CACHE_MIDDLEWARE_SECONDS = 60 * 15  # 15'
+    CACHE_MIDDLEWARE_KEY_PREFIX = 'lms_system'
+
 
 logging.basicConfig(
     level=logging.INFO, format='%(levelname)-4s - "%(name)s": %(message)s'
@@ -256,4 +278,15 @@ logging.basicConfig(
 # SECURE_HSTS_SECONDS = 31536000  # 1 year
 # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
-CSRF_TRUSTED_ORIGINS = ['https://lms.truong51972.id.vn']
+# SECURE_SSL_REDIRECT=False
+# SESSION_COOKIE_SECURE=False
+# CSRF_COOKIE_SECURE=False
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000/'] #https://*.truong51972.id.vn
+
+
+
+AI_API_SERVER = {
+    "HOST": os.environ.get("AI_API_SERVER_HOST"),
+    "PORT": os.environ.get("AI_API_SERVER_PORT"),
+}

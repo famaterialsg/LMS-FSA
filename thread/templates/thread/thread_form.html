@@ -4,7 +4,7 @@
 {% block title %}Thread Form{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="mt-1">
     <!-- Include the custom CSS for this form -->
     <link rel="stylesheet" href="{% static 'css/thread_form.css' %}">
 
@@ -42,7 +42,8 @@
 
                 <!-- Customize submit button -->
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-block" style="width: 100%; padding: 10px 0; font-size: 16px;">Submit</button>
+                    <button type="submit" class="btn btn-primary btn-block" >Submit</button>
+                    <a href="{% url 'thread:thread_list' %}" class="btn btn-secondary">Back to Threads</a>
                 </div>
             </form>
         </div>

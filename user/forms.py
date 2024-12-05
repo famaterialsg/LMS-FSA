@@ -42,6 +42,8 @@ class UserForm(forms.ModelForm):
             self.fields['last_name'].required = False
             self.fields['email'].required = False
             self.fields['role'].required = False
+        if 'role' in self.fields:
+            self.fields['role'].queryset = Role.objects.exclude(role_name='Super Admin')
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
@@ -106,6 +108,11 @@ class UserEditForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'role', 'profile_picture_url', 'bio', 'interests', 'learning_style', 'preferred_language', 'training_programs', 'student','student_code']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Đảm bảo role 'Super Admin' không xuất hiện
+        if 'role' in self.fields:
+            self.fields['role'].queryset = Role.objects.exclude(role_name='Super Admin')
 
 
 class ExcelImportForm(forms.Form):

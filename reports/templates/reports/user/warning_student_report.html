@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Bootstrap Icons CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+{% include 'reports/user/user_navtab.html' with active_tab='warning_student_report' %}
+
+<style>
+    .nav-link.active#dropout-tab {
+        background-color: red !important;
+        color: white !important;
+    }
+
+    .nav-link.active#no-update-tab {
+        background-color: #0d6efd !important;
+        color: white !important;
+    }
+</style>
+
+<div class="mt-5">
+    <div class="text-center">
+        <h1 class="display-5 fw-bold mb-4">
+            🚨 <span class="text-primary">Progress Report</span> & <span class="text-danger">Student Dropout</span>
+        </h1>            
+    </div>
+    <!-- Tab Navigation -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+            <ul class="nav nav-tabs card-header-tabs justify-content-center" id="reportTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active text-primary fw-bold" id="no-update-tab" data-bs-toggle="tab" href="#no-update" role="tab">
+                        <i class="bi bi-clock-history me-1"></i> No Progress Update
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <!-- Thêm lớp text-danger cho chữ đỏ khi tab này được chọn -->
+                    <a class="nav-link text-danger fw-bold" id="dropout-tab" data-bs-toggle="tab" href="#dropout" role="tab" style=>
+                        <i class="bi bi-person-x me-1"></i> Dropout Students
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body tab-content" id="reportTabsContent">
+            <!-- No Progress Update Tab -->
+            <div class="tab-pane fade show active" id="no-update" role="tabpanel">
+                <h3 class="text-primary mb-4">
+                    <i class="bi bi-clock me-1"></i> Students with No Progress Update (2 days)
+                </h3>
+                <form method="post" id="noUpdateForm">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-info">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAllNoUpdate" onclick="toggleAllCheckboxes('no-update')">
+                                    </th>
+                                    <th>Student Name</th>
+                                    <th>Course</th>
+                                    <th>Last Accessed</th>
+                                    <th>Progress</th>
+                                    <th>Time Since Last Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student_info in no_update_students %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="no_update_students" value="{{ student_info.student.id }}_{{ student_info.course.id }}">
+                                        </td>
+                                        <td>{{ student_info.student.username }}</td>
+                                        <td>{{ student_info.course.course_name }}</td>
+                                        <td>{{ student_info.last_accessed }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center" style="height: 2vh;">
+                                                <div class="progress" style="flex-grow: 1;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ student_info.progress_percentage }}%;" aria-valuenow="{{ student_info.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                        {{ student_info.progress_percentage }}%
+                                                    </div>
+                                                </div>
+                                                <i class="bi bi-exclamation-circle-fill text-danger ms-2" title="No progress update for 2 days"></i>
+                                            </div>                                            
+                                        </td>
+                                        <td>{{ student_info.time_since_last_update }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" name="send_update_emails" value="1" class="btn btn-outline-primary mt-3">
+                        <i class="bi bi-envelope me-1"></i> Send Reminder Emails
+                    </button>
+                </form>
+            </div>
+
+            <!-- Dropout Students Tab -->
+            <div class="tab-pane fade" id="dropout" role="tabpanel">
+                <h3 class="text-danger mb-4">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Students at Risk of Dropping Out (5 days)
+                </h3>
+                <form method="post" id="dropoutForm">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-danger">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAllDropout" onclick="toggleAllCheckboxes('dropout')">
+                                    </th>
+                                    <th>Student Name</th>
+                                    <th>Course</th>
+                                    <th>Completion</th>
+                                    <th>Time Elapsed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student_info in dropout_students %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="dropout_students" value="{{ student_info.student.id }}_{{ student_info.course.id }}">
+                                        </td>
+                                        <td>{{ student_info.student.username }}</td>
+                                        <td>{{ student_info.course.course_name }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center" style="height: 2vh;">
+                                                <div class="progress" style="flex-grow: 1;">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ student_info.completion_percent }}%;" aria-valuenow="{{ student_info.completion_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                                        {{ student_info.completion_percent }}%
+                                                    </div>
+                                                </div>
+                                                <i class="bi bi-exclamation-triangle-fill text-danger ms-2" title="At risk of dropping out"></i>
+                                            </div>
+                                        </td>
+                                        <td>{{ student_info.time_elapsed }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" name="send_dropout_emails" value="1" class="btn btn-outline-danger mt-3">
+                        <i class="bi bi-envelope-exclamation me-1"></i> Send Reminder Emails
+                    </button>                    
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JavaScript for Select All checkboxes
+    function toggleAllCheckboxes(tab) {
+        const selectAllCheckbox = document.getElementById('selectAll' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        const checkboxesInTab = document.querySelectorAll(`input[name="${tab}_students"]`);
+        
+        checkboxesInTab.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Toggle Select All for No Progress Update Tab
+      document.getElementById('selectAllNoUpdate').addEventListener('change', function() {
+          const isChecked = this.checked;
+          const checkboxes = document.querySelectorAll('input[name="no_update_students"]');
+          
+          checkboxes.forEach(checkbox => {
+              checkbox.checked = isChecked;
+          });
+  
+          // Cập nhật trạng thái cho 'select_all_update' khi 'Select All' được nhấn
+          if (isChecked) {
+              document.querySelector('input[name="select_all_update"]').value = 'true';
+          } else {
+              document.querySelector('input[name="select_all_update"]').value = 'false';
+          }
+      });
+    });
+  </script>
+  
+{% endblock %}

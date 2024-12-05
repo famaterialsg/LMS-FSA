@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Include Tab Navigation -->
+{% include "menuReport.html" %}
+<style>
+    /* Define specific widths for each column */
+    .table th:nth-child(1), .table td:nth-child(1) { width: 10%; } /* First column */
+    .table th:nth-child(2), .table td:nth-child(2) { width: 30%; } /* Second column */
+    .table th:nth-child(3), .table td:nth-child(3) { width: 40%; } /* Third column */
+    .table th:nth-child(4), .table td:nth-child(4) { width: 20%; } /* Fourth column */
+</style>
+<div class="mt-1">
+    <h1>Student Enrollment Report</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <td>#</td>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Date Enrolled</th>
+            </tr>
+        </thead>
+    </table>
+
+    <!-- Scrollable second table (content) -->
+    <div class="overflow-auto" style="max-height: 53vh;"> <!-- Adjust height as needed -->
+        <table class="table table-striped">
+            <tbody>
+                {% for enrollment in enrollments %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ enrollment.student.username }}</td>
+                    <td>{{ enrollment.course.course_name }}</td>
+                    <td>{{ enrollment.date_enrolled }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,15 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import DiscussionThread, ThreadComments, ThreadReaction, CommentReaction
-from .forms import ThreadForm, CommentForm
+from .models import DiscussionThread, ThreadComments, ThreadReaction, CommentReaction,ReportThread
+from .forms import ThreadForm, CommentForm,ThreadReportForm
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Count, Case, When, IntegerField
+from django.db.models import Count, Case, When, IntegerField, F, Q, OuterRef, Subquery
 from course.models import Course
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Count
-
+from django.db.models.functions import Coalesce
+from django.contrib import messages
+from module_group.models import ModuleGroup
 from django.http import HttpResponseBadRequest
+from django.db.models import F
 
 @login_required
 def thread_list(request, course_id=None):
@@ -28,16 +31,23 @@ def thread_list(request, course_id=None):
             Q(thread_content__icontains=q) |
             Q(created_by__username__icontains=q)
         )
-    
+    comments_subquery = ThreadComments.objects.filter(
+    thread_id=OuterRef('pk')
+    ).values('thread_id').annotate(count=Count('comment_id')).values('count')
+
     # Apply annotations for likes, loves, comments, and interactions
     threads = threads.annotate(
-        total_likes=Count(Case(When(reactions__reaction_type='like', then=1), output_field=IntegerField())),
-        total_loves=Count(Case(When(reactions__reaction_type='love', then=1), output_field=IntegerField())),
-        total_comments=Count('comments'),
-        total_interactions=Count('reactions') + Count('comments')
+        total_likes=Count('reactions', filter=Q(reactions__reaction_type='like')),
+        total_loves=Count('reactions', filter=Q(reactions__reaction_type='love')),
+        total_comments=Coalesce(Subquery(comments_subquery, output_field=IntegerField()), 0)
+    )
+    threads= threads.annotate(
+    total_interactions=F('total_likes') + F('total_loves') + F('total_comments')
     ).order_by('-total_interactions', '-created')
+
     
     recent_activities = threads.order_by('-created')
+    module_groups = ModuleGroup.objects.all()
     # Featured threads (do not slice the main queryset)
     featured_threads = threads[:3]
     
@@ -65,6 +75,9 @@ def thread_list(request, course_id=None):
         'query': q,
         'recent_activities': recent_activities,
         'featured_threads': featured_threads,
+        'module_groups' : module_groups,
+        
+
     }
     context1 = {
         'threads': page_obj1,  # Use the paginated threads
@@ -72,6 +85,7 @@ def thread_list(request, course_id=None):
         'query': q,
         'recent_activities': recent_activities,
         'featured_threads': featured_threads,
+        'module_groups' : module_groups,
     }
 
     # Render different templates based on user role
@@ -139,9 +153,9 @@ def thread_detail(request, pk):
     thread = get_object_or_404(DiscussionThread, pk=pk)
     
     # Get the likes and loves counts for the thread
-    likes_count = ThreadReaction.objects.filter(thread=thread, reaction_type='like').count()
-    loves_count = ThreadReaction.objects.filter(thread=thread, reaction_type='love').count()
-    
+    likes_count = thread.likes_count
+    loves_count = thread.loves_count
+    module_groups = ModuleGroup.objects.all()
     # Prepare a list to hold comments with their reaction counts
     comments_with_reactions = []
     for comment in thread.comments.all():
@@ -152,8 +166,8 @@ def thread_detail(request, pk):
         # Append the comment and its reaction counts to the list
         comments_with_reactions.append({
             'comment': comment,
-            'likes_count': comment_likes_count,
-            'loves_count': comment_loves_count,
+            'comment_likes_count': comment_likes_count,
+            'comment_loves_count': comment_loves_count,
         })
     
     # Prepare context data for the template
@@ -162,6 +176,7 @@ def thread_detail(request, pk):
         'likes_count': likes_count,
         'loves_count': loves_count,
         'comments_with_reactions': comments_with_reactions,
+        'module_groups': module_groups,
     }
     
     # Render the template with the context data
@@ -234,7 +249,7 @@ def add_reaction_to_thread(request, pk, reaction_type):
         defaults={'reaction_type': reaction_type}
     )
 
-    if not created:
+    if not created and reaction.reaction_type != reaction_type:
         reaction.reaction_type = reaction_type
         reaction.save()
 
@@ -284,13 +299,20 @@ def react_to_thread(request, thread_id):
         )
 
         # If the reaction already exists but is different, update it
-        if not created and reaction.reaction_type != reaction_type:
+        if not created :
             reaction.reaction_type = reaction_type
             reaction.save()
 
         # Calculate new counts
-        likes_count = ThreadReaction.objects.filter(thread=thread, reaction_type='like').count()
-        loves_count = ThreadReaction.objects.filter(thread=thread, reaction_type='love').count()
+        likes_count = thread.likes_count  # This will dynamically calculate likes
+        loves_count = thread.loves_count  # This will dynamically calculate loves
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'likes_count': likes_count,
+                'loves_count': loves_count,
+                'message': "Reaction updated successfully."
+            })
 
         # Determine the referrer to decide where to redirect
         referrer = request.META.get('HTTP_REFERER', '')
@@ -298,6 +320,7 @@ def react_to_thread(request, thread_id):
             return redirect('thread:thread_detail', pk=thread.pk)
         else:
             return redirect('thread:thread_list')
+        
         
     return HttpResponseBadRequest("Invalid request method.")
 
@@ -348,3 +371,69 @@ def report_dashboard(request):
 
     return render(request, 'thread/report_dashboard.html', context)
 
+
+def report_thread(request, thread_id):
+    thread = get_object_or_404(DiscussionThread, id=thread_id)
+    
+    if request.method == 'POST':
+        form = ThreadReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.thread = thread
+            report.reported_by = request.user  # Ensure this field exists in your report model
+            report.save()
+            messages.success(request, 'Your report has been submitted.')
+            return redirect('thread:thread_list')  # Redirect after successful submission
+    else:
+        # For GET request, instantiate the form
+        form = ThreadReportForm()
+    
+    # Render the template with the thread and form
+    return render(request, 'thread/report_thread.html', {'thread': thread, 'form': form})
+
+
+def view_reports(request):
+    # Get the search query from the request
+    query = request.GET.get('q', '')
+
+    # Filter reports based on the search query if provided
+    if query:
+        reports = ReportThread.objects.filter(
+            Q(thread__thread_title__icontains=query) |  # Adjust based on your thread model
+            Q(reported_by__username__icontains=query) |  # Assuming 'reported_by' is a user field
+            Q(reason__icontains=query)  # Assuming there is a reason field
+        )
+    else:
+        reports = ReportThread.objects.all()
+    
+    paginator = Paginator(reports, 10)  # 10 threads per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    module_groups = ModuleGroup.objects.all()
+    return render(request, 'thread/view_reports.html', {'reports': page_obj, 'query': query,'module_groups': module_groups})
+
+
+def recent_activity(request):
+    module_groups = ModuleGroup.objects.all()
+    query = request.GET.get('q', '')
+    # Filter reports based on the search query if provided
+    if query:
+        recent_activities = DiscussionThread.objects.filter(
+            Q(thread_title__icontains=query) |  # Adjust based on your thread model
+            Q(created_by__username__icontains=query) |# Assuming 'reported_by' is a user field
+            Q(course__course_name__icontains = query)
+        )
+    else:
+        recent_activities = DiscussionThread.objects.all()
+    
+    
+    
+    paginator = Paginator(recent_activities,10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'recent_activities':page_obj,
+        'module_groups':module_groups,
+        'query':query
+    }
+    return render(request,'thread/recent_activity.html',context)

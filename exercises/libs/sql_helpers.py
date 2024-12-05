@@ -232,7 +232,7 @@ def execute_sql(code, test_cases):
                         )
         header_msg = f"""
         <div style="text-align: center;">
-        <h5> <span style="color: black;"> &lt;&lt;&lt;&lt;&lt;&lt;RUNNING TEST CASES&gt;&gt;&gt;&gt;&gt;&gt;</span></h5>
+        <h5> <span style="color: white;"> &lt;&lt;&lt;RUNNING TEST CASES&gt;&gt;&gt;</span></h5>
         <h6> <span style="color: red;">You have passed {passed_tests} out of 
         {total_tests} total test cases. </span></h6></div><br>
         

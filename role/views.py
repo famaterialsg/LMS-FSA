@@ -6,18 +6,23 @@ from django.http import HttpResponse
 from module_group.models import Module
 from django.contrib.auth.models import Permission
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from user.models import Profile
 from .admin import RoleResource
 from tablib import Dataset
 from user.models import User
 
 def role_list(request):
-    roles = Role.objects.all()  # Lấy danh sách tất cả các role
-    role_modules = RoleModule.objects.all()  # Lấy tất cả RoleModule (Role - Module liên kết)
+    # Lấy danh sách tất cả các role ngoại trừ "Super Admin"
+    roles = Role.objects.exclude(role_name="Super Admin")  # Loại bỏ Super Admin khỏi danh sách roles
 
-    form = ExcelImportForm()  # Form nhập liệu Excel (nếu có)
+    # Lấy tất cả RoleModule (Role - Module liên kết)
+    role_modules = RoleModule.objects.all()
 
+    # Form nhập liệu Excel (nếu có)
+    form = ExcelImportForm()
+
+    # Trả lại template với các biến đã được cung cấp
     return render(request, 'role_list.html', {
         'roles': roles,
         'form': form,
@@ -95,23 +100,27 @@ def role_edit(request, pk):
     }
     return render(request, 'role_form.html', context)
 
-
 def role_delete(request, pk):
-    # Get the role object by primary key
+    # Lấy đối tượng role theo primary key
     role = get_object_or_404(Role, pk=pk)
     
-    # Retrieve users associated with this role
-    users_with_role = User.objects.filter(profile__role=role)  # Adjust based on your relation between User and Role
+    # Kiểm tra xem có người dùng nào đang mang role này hay không
+    users_with_role = User.objects.filter(profile__role=role)
+    error_message = None  # Biến lưu thông báo lỗi nếu cần
 
-    # Handle POST request for deleting the role
     if request.method == 'POST':
-        role.delete()
-        return redirect('role:role_list')  # Redirect to the role list after deletion
+        if users_with_role.exists():
+            error_message = "Không thể xóa role này vì có người dùng đang mang role này."
+        else:
+            role.delete()
+            messages.success(request, "Role đã được xóa thành công.")
+            return redirect('role:role_list')  # Quay lại danh sách role
 
-    # Render the delete confirmation page with the role and users with that role
+    # Render trang xác nhận xóa với role, danh sách người dùng và thông báo lỗi
     return render(request, 'role_confirm_delete.html', {
         'role': role,
-        'users_with_role': users_with_role,  # Pass the users to the template
+        'users_with_role': users_with_role,  # Truyền danh sách người dùng mang role này
+        'error_message': error_message,      # Truyền thông báo lỗi nếu có
     })
 
 
@@ -191,30 +200,32 @@ def import_roles(request):
 @login_required
 def select_role(request):
     if request.method == 'POST':
-        selected_role_name = request.POST.get('role')  # Lấy role_name thay vì id
+        selected_role_name = request.POST.get('role')  # Get role_name instead of id
         if selected_role_name:
             try:
                 role = Role.objects.get(role_name=selected_role_name)
-                if request.user.is_superuser:
+                if request.user.is_superuser or request.user.profile.role.role_name == "Manager":
                     request.session['temporary_role'] = role.role_name
-                    messages.success(request, "Vai trò tạm thời đã được lưu.")
+                    messages.success(request, "Temporary role has been saved.")
+                    
+                    # If the selected role is "Student", redirect to the Student Portal
+                    if role.role_name == "Student":
+                        return redirect('student_portal:course_list')
                 else:
                     profile = Profile.objects.get(user=request.user)
                     profile.role = role
                     profile.save()
-                    messages.success(request, "Vai trò đã được cập nhật.")
+                    messages.success(request, "Role has been updated.")
             except Role.DoesNotExist:
-                messages.error(request, "Vai trò không tồn tại.")
+                messages.error(request, "Role does not exist.")
             except Profile.DoesNotExist:
-                messages.error(request, "User này chưa có hồ sơ.")
+                messages.error(request, "This user does not have a profile.")
         else:
-            messages.warning(request, "Vui lòng chọn một vai trò.")
+            messages.warning(request, "Please select a role.")
     return redirect('main:home')
 
 
-
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
 def reset_role(request):
     if request.method == 'POST':
         # Xóa role tạm thời khỏi session

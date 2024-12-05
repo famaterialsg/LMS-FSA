@@ -58,3 +58,4 @@ transformers
 scikit-learn
 torch
 openai
+googletrans==4.0.0-rc1

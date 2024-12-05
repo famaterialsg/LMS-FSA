@@ -7,10 +7,14 @@ from django.utils.dateparse import parse_date
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.db.models import Count
+from datetime import timedelta
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.db.models.functions import TruncDate
 import json 
 import logging 
+from module_group.models import ModuleGroup
 
 @login_required
 def activity_view(request):
@@ -70,8 +74,12 @@ def activity_view(request):
     # Calculate the start index for the current page
     activity_logs_page.start_index = (activity_logs_page.number - 1) * page_size + 1
 
+    module_groups = ModuleGroup.objects.all()  # Thay đổi theo cách bạn lấy dữ liệu
+    grouped_modules = {group: group.modules.all() for group in module_groups}
     # Render the template with context data
     return render(request, 'activity.html', {
+        'module_groups': module_groups,
+        'grouped_modules': grouped_modules,
         'activity_logs': activity_logs_page,
         'search_query': search_query,
         'from_date': from_date,
@@ -185,38 +193,63 @@ def activity_dashboard_view(request):
         })
         
 
-# @login_required
-# def fetch_activity_logs(request):
-#     log_activity = request.GET.get('log_activity', 'false') == 'true'
-#     search_query = request.GET.get('search', '')
-#     from_date = request.GET.get('from_date')
-#     to_date = request.GET.get('to_date')
+@login_required
+def fetch_activity_logs(request):
+    log_activity = request.GET.get('log_activity', 'false') == 'true'
+    search_query = request.GET.get('search', '')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    page_number = request.GET.get('page', 1)  # Get the current page number from the query string
 
-#     activity_logs = UserActivityLog.objects.filter(user=request.user)
+    activity_logs = UserActivityLog.objects.filter(user=request.user)
 
-#     if search_query:
-#         activity_logs = activity_logs.filter(activity_details__icontains=search_query)
-#     if from_date:
-#         activity_logs = activity_logs.filter(activity_timestamp__gte=parse_date(from_date))
-#     if to_date:
-#         activity_logs = activity_logs.filter(activity_timestamp__lte=parse_date(to_date))
+    if search_query:
+        activity_logs = activity_logs.filter(activity_details__icontains=search_query)
+    if from_date:
+        activity_logs = activity_logs.filter(activity_timestamp__gte=parse_date(from_date))
+    if to_date:
+        activity_logs = activity_logs.filter(activity_timestamp__lte=parse_date(to_date))
 
-#     activity_logs = activity_logs.order_by('-activity_timestamp')
+    activity_logs = activity_logs.order_by('-activity_timestamp')
 
-#     if log_activity:
-#         UserActivityLog.objects.create(
-#             user=request.user,
-#             activity_type='fetch_activity_logs',
-#             activity_details='Fetched activity logs.',
-#             activity_timestamp=timezone.now()
-#         )
+    # Pagination
+    page_size = 20
+    paginator = Paginator(activity_logs, page_size)
+    activity_logs_page = paginator.get_page(page_number)
 
-#     data = [
-#         {
-#             'activity_type': log.get_activity_type_display(),
-#             'activity_details': log.activity_details,
-#             'activity_timestamp': log.activity_timestamp,
-#         }
-#         for log in activity_logs
-#     ]
-#     return JsonResponse(data, safe=False)
+    # Paginated response
+    data = [
+        {
+            'activity_type': log.get_activity_type_display(),
+            'activity_details': log.activity_details,
+            'activity_timestamp': timezone.localtime(log.activity_timestamp).strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        for log in activity_logs_page
+    ]
+
+    # Pagination information
+    pagination_info = {
+        'has_previous': activity_logs_page.has_previous(),
+        'has_next': activity_logs_page.has_next(),
+        'current_page': activity_logs_page.number,
+        'previous_page_number': activity_logs_page.previous_page_number() if activity_logs_page.has_previous() else None,
+        'next_page_number': activity_logs_page.next_page_number() if activity_logs_page.has_next() else None,
+        'page_range': list(paginator.page_range),
+        'num_pages': paginator.num_pages,
+    }
+
+    if log_activity:
+        UserActivityLog.objects.create(
+            user=request.user,
+            activity_type='fetch_activity_logs',
+            activity_details='Fetched activity logs.',
+            activity_timestamp=timezone.now()
+        )
+
+    response_data = {
+        'logs': data,
+        'pagination': pagination_info,
+    }
+
+    return JsonResponse(response_data)
+
