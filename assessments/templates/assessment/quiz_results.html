@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ assessment.assessment_title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Tiêu đề -->
+    <div class="text-center mb-4">
+        <h2 class="display-6 fw-bold text-primary">Quiz Results: {{ assessment.title }}</h2>
+        <p class="text-muted">Check your answers and review your performance</p>
+    </div>
+
+    <!-- Nút trở lại -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{% url 'assessment:assessment_report' assessment.id attempt.id attempt.email %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Report
+        </a>
+    </div>
+
+    <!-- Điểm và thời gian -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <h5 class="fw-bold text-success"><i class="fas fa-star me-2 text-warning"></i>Quiz Score</h5>
+                    <p class="display-6 text-primary">{{ score_quiz }} / {{total_score}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <h5 class="fw-bold text-success"><i class="fas fa-clock me-2 text-secondary"></i>Time Taken</h5>
+                    <p class="display-6 text-primary">{{ duration }} seconds</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách câu hỏi và câu trả lời -->
+    <div class="card shadow-lg border-0">
+        <div class="card-body">
+            <h4 class="fw-bold text-secondary mb-4"><i class="fas fa-list me-2"></i>Your Answers</h4>
+            {% for answer in user_answers %}
+                <div class="mb-4 border-bottom pb-3">
+                    <p class="fw-bold">{{ forloop.counter }}. {{ answer.question.question_text|safe }}</p>
+                    <ul class="list-group">
+                        {% for option in answer.question.answer_options.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center
+                                {% if option in answer.selected_options.all and option.is_correct %}
+                                    list-group-item-success
+                                {% elif option in answer.selected_options.all and not option.is_correct %}
+                                    list-group-item-danger
+                                {% elif option.is_correct %}
+                                    list-group-item-success
+                                {% endif %}">
+                                {{ option.option_text }}
+                                {% if option in answer.selected_options.all %}
+                                    <span class="badge bg-primary">{% if option.is_correct %}✔ Correct{% else %}✖ Incorrect{% endif %}</span>
+                                {% elif option.is_correct %}
+                                    <span class="badge bg-success">Correct Answer</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                        {% if not answer.selected_options.exists and answer.question.question_type == 'MCQ' %}
+                            <li class="list-group-item">
+                                <strong>Text Response:</strong> 
+                                {% if answer.text_response %}
+                                    {{ answer.text_response }}
+                                {% else %}
+                                    <span class="text-muted">No text response provided.</span>
+                                {% endif %}
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% empty %}
+                <div class="alert alert-info text-center">No answers submitted yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

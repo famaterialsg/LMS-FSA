@@ -51,36 +51,26 @@
             </div>
             <div class="card-body">
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    {% if show_exercises %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if show_exercises and not show_questions%}active{% endif %}" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab" aria-controls="exercises" aria-selected="{% if show_exercises %}true{% else %}false{% endif %}">Exercises</button>
-                        </li>
-                    {% endif %}
-                    {% if show_questions %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if show_questions and not show_exercises %}active{% endif %}" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab" aria-controls="questions" aria-selected="{% if show_questions %}true{% else %}false{% endif %}">Questions</button>
-                        </li>
-                    {% endif %}
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link {% if not show_exercises and not show_questions %}active{% endif %}" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="true">Settings</button>
+                        <button class="nav-link active" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab" aria-controls="exercises" aria-selected="true">Exercises</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab" aria-controls="questions" aria-selected="false">Questions</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Settings</button>
                     </li>
                 </ul>
-                
-                <div class="tab-content mt-3" id="myTabContent">
-                    {% if show_exercises %}
-                        <div class="tab-pane fade {% if show_exercises and not show_questions %}show active{% endif %}" id="exercises" role="tabpanel" aria-labelledby="exercises-tab">
-                            {% include "assessment/exercises_tab.html" %}
-                        </div>
-                    {% endif %}
-                    {% if show_questions %}
-                        <div class="tab-pane fade {% if show_questions and not show_exercises %}show active{% endif %}" id="questions" role="tabpanel" aria-labelledby="questions-tab">
-                           {% include "assessment/questions_tab.html" %}
-                        </div>
-                    {% endif %}
 
-                    <div class="tab-pane fade {% if not show_exercises and not show_questions %}show active{% endif %}" id="settings" role="tabpanel" aria-labelledby="settings-tab">
-                         {% include "assessment/settings_tab.html" %}
-                    </div>
+                <div class="tab-content mt-3" id="myTabContent">
+                    <!-- Exercises Tab -->
+                    {% include "assessment/exercises_tab.html" %}
+
+                    <!-- Questions Tab -->
+                    {% include "assessment/questions_tab.html" %}
+
+                    <!-- Settings Tab -->
+                    {% include "assessment/settings_tab.html" %}
                 </div>
 
             </div>
@@ -181,16 +171,17 @@
                 event.preventDefault();
                 event.stopPropagation();
                 
-                const questionId = this.dataset.questionId; 
+                const questionId = this.dataset.questionId;
                 const questionTextElement = this.parentElement.querySelector('.question-text');
                 questionTextElement.classList.add('fw-normal');
-                const questionText = questionTextElement.innerText.trim();
+                // CHANGE: Use innerHTML to preserve HTML structure, including images
+                const questionText = questionTextElement.innerHTML; 
                 const answerOptions = Array.from(this.parentElement.querySelectorAll('.answer-option'));
         
                 // Kiểm tra nếu câu hỏi đã có trong danh sách
                 if (questionMap.has(questionId)) {
                     const listItem = questionMap.get(questionId);
-                    listItem.querySelector('.question-input').value = questionText; 
+                    listItem.querySelector('.question-input').innerHTML = questionText;
         
                     // Cập nhật câu trả lời
                     const answerInputs = listItem.querySelectorAll('.answer-field');
@@ -227,7 +218,59 @@
 
                     listItem.innerHTML = `
                         <div class="question-content flex-grow-1">
-                            <textarea class="form-control question-input" placeholder="Edit question..." required>${questionText}</textarea>
+                            <!-- Toolbar -->
+                            <div class="btn-toolbar mb-2" role="toolbar" aria-label="Toolbar for text formatting">
+                                <div class="btn-group me-2" role="group">
+                                    <select class="form-control form-select-sm" style="width: auto;">
+                                        <option>Normal</option>
+                                        <option>Heading 1</option>
+                                        <option>Heading 2</option>
+                                    </select>
+                                </div>
+                                <div class="btn-group me-2" role="group" aria-label="Text formatting">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatText('bold')" title="Bold">
+                                        <b>B</b>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatText('italic')" title="Italic">
+                                        <i>I</i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatText('underline')" title="Underline">
+                                        <u>U</u>
+                                    </button>
+                                    
+                                </div>
+                                <div class="btn-group me-2" role="group" aria-label="Lists">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatText('insertUnorderedList')" title="Unordered List">
+                                        <i class="fas fa-list-ul"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatText('insertOrderedList')" title="Ordered List">
+                                        <i class="fas fa-list-ol"></i>
+                                    </button>
+                                </div>
+                                <div class="btn-group me-2" role="group" aria-label="Insert">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertImage()" title="Insert Image">
+                                        <i class="fas fa-image"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertLink()" title="Insert Link">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="insertCode()" title="Insert Code">
+                                        <i class="fas fa-code"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Nội dung câu hỏi -->
+                            <div class="question-input" contenteditable="true" placeholder="Edit question..." 
+                                    required style="min-height: 80px; 
+                                    border: 1px solid #ccc; 
+                                    border-radius: 10px; padding: 8px; 
+                                    font-size: 16px; line-height: 1.6; 
+                                    background: #fff; color: #333; 
+                                    font-family: Arial, sans-serif; 
+                                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+                                    outline: none; word-wrap: break-word;">
+                                ${questionText} 
+                            </div>
                             <div id="answerOptionsContainer" class="mt-2"></div>
                             <button class="btn btn-primary btn-sm add-answer">Add Answer</button>
                         </div>
@@ -257,6 +300,98 @@
 
                     selectedQuestionsList.appendChild(listItem);
                     questionMap.set(questionId, listItem);
+
+                    // Function to toggle text formatting (bold, italic, etc.)
+                    function toggleTextFormat(command) {
+                        const selection = window.getSelection();
+                        const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+                        if (!range) return; // If no selection exists, do nothing
+
+                        // Check the current selection's state to determine if it's already formatted
+                        const isFormatted = document.queryCommandState(command);
+
+                        // If formatted, remove the format, else apply it
+                        if (isFormatted) {
+                            document.execCommand(command, false, null); // Remove the format
+                        } else {
+                            document.execCommand(command, false, null); // Apply the format
+                        }
+                    }
+
+                    listItem.querySelector('.btn-toolbar').addEventListener('click', (event) => {
+                        const button = event.target.closest('button');
+                        if (!button) return; // Ignore clicks that are not on buttons
+                        
+                        const title = button.title;
+                        console.log(`Button clicked: ${title}`);
+                    
+                        switch (title) {
+                            case 'Bold':
+                                toggleTextFormat('bold');
+                                break;
+                            case 'Italic':
+                                toggleTextFormat('italic');
+                                break;
+                            case 'Underline':
+                                toggleTextFormat('underline');
+                                break;
+                            
+                            case 'Unordered List':
+                                toggleTextFormat('insertUnorderedList');
+                                break;
+                            case 'Ordered List':
+                                toggleTextFormat('insertOrderedList');
+                                break;
+                            case 'Insert Image':
+                                const questionInput = event.currentTarget.closest('li').querySelector('.question-input'); // Get the correct questionInput
+                                insertImage(questionInput); // Pass it to the function
+                                break;
+                            case 'Insert Link':
+                                insertLink();
+                                break;
+                            case 'Insert Code':
+                                insertCode();
+                                break;
+                        }
+                    });
+                    function insertImage(questionInput) {
+                        const fileInput = document.createElement('input');
+                        fileInput.type = 'file';
+                        fileInput.accept = 'image/*';
+                        fileInput.style.display = 'none';
+                        document.body.appendChild(fileInput);
+                        fileInput.click();
+                    
+                        fileInput.addEventListener('change', function(e) {
+                            const file = e.target.files[0];
+                            const reader = new FileReader();
+                    
+                            reader.onload = function(event) {
+                                const imgSrc = event.target.result;
+                                const imgContainer = document.createElement('div');
+                                
+                                // Căn giữa hình ảnh
+                                imgContainer.style.display = 'flex';
+                                imgContainer.style.justifyContent = 'center';
+                                imgContainer.style.marginTop = '10px'; // Khoảng cách giữa câu hỏi và ảnh
+                    
+                                const imgElement = document.createElement('img');
+                                imgElement.src = imgSrc;
+                                imgElement.alt = file.name;
+                                imgElement.style.maxWidth = '200px';
+                                imgElement.style.maxHeight = '150px';
+                    
+                                imgContainer.appendChild(imgElement);
+                    
+                                // Thêm ảnh dưới câu hỏi
+                                questionInput.appendChild(imgContainer);
+                    
+                                // Xoá file input để tránh lặp thừa
+                                fileInput.remove();
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
 
                     // NOW add the event listeners:
                     const moveUpButton = listItem.querySelector('.move-up');
@@ -377,7 +512,7 @@
         
             // Collect edited questions and answers
             questionMap.forEach((item, questionId) => {
-                const editedQuestionText = item.querySelector('.question-input').value;
+                const editedQuestionText = item.querySelector('.question-input').innerHTML;
                 const answerInputs = Array.from(item.querySelectorAll('.answer-field'));
                 
                 // Check if the question is marked as deleted

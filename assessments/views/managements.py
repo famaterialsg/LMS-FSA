@@ -39,8 +39,8 @@ class Assessment_list(View):
         assessments = Assessment.objects.all().order_by('created_at')
         # Lọc quiz dựa trên subject được chọn
         selected_course = request.GET.get('course', '')
-        # if selected_course:
-        #     assessments = assessments.filter(course__id=selected_course)
+        if selected_course:
+           assessments = assessments.filter(course__id=selected_course)
         
         # Dynamically calculate exercise and question counts for each assessment
         assessments_with_counts = []
@@ -60,6 +60,7 @@ class Assessment_list(View):
             'module_groups': module_groups,
             'courses': courses,
             'assessments_with_counts': assessments_with_counts,
+            'selected_course': selected_course
         })
 
 
@@ -112,19 +113,15 @@ class Assessment_create(View):
         form = AssessmentForm(request.POST)
         if form.is_valid():
             assessment = form.save(commit=False)
-            assessment_type_name = assessment.assessment_type.type_name
             assessment.created_by = request.user
             assessment.save()
 
-            if assessment_type_name in ["Entry Test", "Assignment"]:
-                selected_exercise_ids = request.POST.getlist('exercises')
-                assessment.exercises.set(selected_exercise_ids)
+            selected_exercise_ids = request.POST.getlist('exercises')
+            assessment.exercises.set(selected_exercise_ids)
 
-            if assessment_type_name in ["Entry Test", "Quiz"]:
-                selected_question_ids = request.POST.getlist('selected_questions[]')
-                if selected_question_ids:
-                    assessment.questions.set(selected_question_ids)
-
+            selected_question_ids = request.POST.getlist('selected_questions[]')
+            if selected_question_ids:
+                assessment.questions.set(selected_question_ids)
 
             assessment.save()
             messages.success(request, 'Assessment created successfully with exercises and questions!')
@@ -240,13 +237,65 @@ class Assessment_detail(View):
             'final_scores_value':final_scores_values,
             'name':name
         })
- 
+# class Assessment_edit(View):
+#     @method_decorator(login_required)
+#     def get(self, request, pk):
+#         assessment = get_object_or_404(Assessment, id=pk)
+    
+#         # Fetch all available exercises and questions
+#         exercises = Exercise.objects.all()
+#         questions = Question.objects.all()
+        
+#         # Fetch selected exercises and questions for the assessment
+#         selected_exercises = assessment.exercises.values_list('id', flat=True)
+#         # print("selected_exercise is:  {selected_exercises}")
+#         # selected_questions = assessment.questions.values_list('id', flat=True)
+#         selected_question_ids = assessment.questions.values_list('id', flat=True)
+#         # print("selected_question_ids is:  {selected_question_ids}")
+#         selected_questions = Question.objects.filter(id__in=selected_question_ids)  # Fetching the actual Question objects
+#         # print(f"selected_questions is: {selected_questions}")
+#         # selected_questions = assessment.questions.all()  # Fetching selected Question objects
+#         form = AssessmentForm(instance=assessment)
+
+#         return render(request, 'assessment/assessment_form.html', {
+#             'form': form,
+#             'assessment': assessment,
+#             'exercises': exercises,
+#             'questions': questions,
+#             'selected_exercises': selected_exercises,
+#             'selected_questions': selected_questions,
+#         })
+#     @method_decorator(login_required)
+#     def post(self, request, pk):
+#         assessment = get_object_or_404(Assessment, id=pk)
+
+#         form = AssessmentForm(request.POST, instance=assessment)
+        
+#         if form.is_valid():
+#             form.save()
+#             # print("-----------------")
+#             # Update associated exercises
+#             selected_exercise_ids = request.POST.getlist('selected_exercises')
+#             # print(f"form after post.getlist exercise {selected_exercise_ids}")
+#             assessment.exercises.set(selected_exercise_ids)  # Update the associated exercises
+#             # print(f"assessment is:  {assessment}")
+#             # print(f"assessment is:  { assessment.exercises}")
+#             # Update associated questions from the selected questions in the HTML
+#             selected_question_ids = request.POST.get('selected_questions', '').split(',')
+#             # print(f"selected_question_ids is {selected_question_ids}")
+#             selected_question_ids = [q_id for q_id in selected_question_ids if q_id]  # Filter out empty strings
+            
+#             assessment.questions.set(selected_question_ids)  # Update the associated questions
+            
+#             assessment.save()
+
+#             messages.success(request, 'The assessment has been successfully saved.')
+#             return redirect('assessment:assessment_list') 
 from django.contrib.auth.mixins import LoginRequiredMixin
 class Assessment_edit(View):
     @method_decorator(login_required)
     def get(self, request, pk):
         assessment = get_object_or_404(Assessment, id=pk)
-        assessment_type_name = assessment.assessment_type.type_name
         form = AssessmentForm(instance=assessment)
 
         # Fetch all available exercises and quizzes
@@ -283,8 +332,6 @@ class Assessment_edit(View):
             'quiz_questions': quiz_questions,
             'total_questions_selected_quiz': total_questions_selected_quiz,
             'languages': languages,
-            'show_exercises': assessment_type_name in ["Entry Test", "Assignment"],
-            'show_questions': assessment_type_name in ["Entry Test", "Quiz"],
         }
 
         return render(request, 'assessment/assessment_form.html', context)
@@ -292,20 +339,19 @@ class Assessment_edit(View):
     @method_decorator(login_required)
     def post(self, request, pk):
         assessment = get_object_or_404(Assessment, id=pk)
-        assessment_type_name = assessment.assessment_type.type_name
         form = AssessmentForm(request.POST, instance=assessment)
 
         if form.is_valid():
             assessment = form.save()
 
-            if assessment_type_name in ["Entry Test", "Assignment"]:
-                 selected_exercise_ids = request.POST.getlist('exercises')
-                 assessment.exercises.set(selected_exercise_ids)
-            
-            if assessment_type_name in ["Entry Test", "Quiz"]:
-                selected_question_ids = request.POST.getlist('selected_questions[]')
-                if selected_question_ids:
-                    assessment.questions.set(selected_question_ids)
+            # Update associated exercises
+            selected_exercise_ids = request.POST.getlist('exercises')
+            assessment.exercises.set(selected_exercise_ids)
+
+            # Update associated questions from selected questions in the HTML
+            selected_question_ids = request.POST.getlist('selected_questions[]')
+            if selected_question_ids:
+                assessment.questions.set(selected_question_ids)
                 assessment.save()
 
             
@@ -359,7 +405,8 @@ class Assessment_edit(View):
 class Assessment_Type_List_View(View):
     def get(self, request):
         assessment_types = AssessmentType.objects.all()
-        return render(request, 'assessmenttype/assessment_type_list.html', {'assessment_types': assessment_types})
+        module_groups = ModuleGroup.objects.all()
+        return render(request, 'assessmenttype/assessment_type_list.html', {'assessment_types': assessment_types, 'module_groups': module_groups,})
 
 class Assessment_Type_Create_View(View):
     def get(self, request):

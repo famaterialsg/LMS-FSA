@@ -1,133 +1,134 @@
-
-<div class="row">
-    <!-- Search Bar -->
-    <div class="col-md-12">
-        <div class="mb-3"> 
-            <div class="input-group">   
-                <span class="input-group-text">🔍</span> 
-                <input type="text" id="search-questions" class="form-control" placeholder="Search for questions..." onkeyup="filterQuestions()">
-            </div>                                                                                               
-        </div>
-    </div>
-    
-    <!-- Multiple Choice Library -->
-    <div class="col-md-5">
-        <div class="card shadow-sm hover-shadow">
-            <div class="card-header">
-                <h5 class="mb-0">Multiple Choice Library</h5> <!-- Use the "Questions" label from Code 1 -->
+<div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="questions-tab">
+    <div class="row">
+        <!-- Search Bar -->
+        <div class="col-md-12">
+            <div class="mb-3"> 
+                <div class="input-group">   
+                    <span class="input-group-text">🔍</span> 
+                    <input type="text" id="search-questions" class="form-control" placeholder="Search for questions..." onkeyup="filterQuestions()">
+                </div>                                                                                               
             </div>
-            <div class="card-body question-library" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
-                <div class="accordion" id="quizAccordion">
-                    {% for quiz_option in all_quizzes %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading{{ quiz_option.id }}">
-                            <div class="quiz-dropdown border rounded p-2 mb-2 bg-light" id="quizDropdown{{ quiz_option.id }}" style="cursor: pointer;">
-                                <div class="quiz-header d-flex justify-content-between align-items-center border-bottom pb-1 mb-1" style="font-size: 0.8rem;">
-                                    <div class="position-relative">
-                                        <span class="quiz-title h6 fw-bold" style="font-size: 16px; margin-right: 10px;">
-                                            {{ quiz_option.quiz_title }}
-                                            <span class="badge bg-success" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">{{ quiz_option.total_questions }} questions</span>
-                                        </span>
-                                        
-                                        <div class="quiz-info d-flex gap-3" style="font-size: 0.7rem; color: #666;">
-                                            <div style="position: absolute; left: 200px; margin-top: 12px; transform: rotate(180deg);">
-                                                <svg width="10" height="10" viewBox="0 0 24 24">
-                                                    <path d="M 12 4 L 20 16 L 4 16 Z" fill="#999999" stroke="#999999" stroke-width="4" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px cyan);"/>
-                                                </svg>
+        </div>
+        
+        <!-- Multiple Choice Library -->
+        <div class="col-md-5">
+            <div class="card shadow-sm hover-shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Multiple Choice Library</h5> <!-- Use the "Questions" label from Code 1 -->
+                </div>
+                <div class="card-body question-library" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                    <div class="accordion" id="quizAccordion">
+                        {% for quiz_option in all_quizzes %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ quiz_option.id }}">
+                                <div class="quiz-dropdown border rounded p-2 mb-2 bg-light" id="quizDropdown{{ quiz_option.id }}" style="cursor: pointer;">
+                                    <div class="quiz-header d-flex justify-content-between align-items-center border-bottom pb-1 mb-1" style="font-size: 0.8rem;">
+                                        <div class="position-relative">
+                                            <span class="quiz-title h6 fw-bold" style="font-size: 16px; margin-right: 10px;">
+                                                {{ quiz_option.quiz_title }}
+                                                <span class="badge bg-success" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">{{ quiz_option.total_questions }} questions</span>
+                                            </span>
+                                            
+                                            <div class="quiz-info d-flex gap-3" style="font-size: 0.7rem; color: #666;">
+                                                <div style="position: absolute; left: 200px; margin-top: 12px; transform: rotate(180deg);">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24">
+                                                        <path d="M 12 4 L 20 16 L 4 16 Z" fill="#999999" stroke="#999999" stroke-width="4" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px cyan);"/>
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
+                                    
+                                        <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center position-relative btn-add-question add-questions" 
+                                                data-quiz-id="{{ quiz_option.id }}" 
+                                                data-question-id="{{ question.id }}" 
+                                                style="width: 35px; height: 35px; border-radius: 50%; transition: width 0.3s ease; overflow: hidden;" 
+                                                onmouseover="this.style.width='70px'; this.style.borderRadius='5px'; this.querySelector('.add-all-text').style.opacity='1'; this.querySelector('.add-all-text').style.transform='translateY(0)'; this.querySelector('.plus-sign').style.opacity='0';" 
+                                                onmouseout="this.style.width='35px'; this.style.borderRadius='50%'; this.querySelector('.add-all-text').style.opacity='0'; this.querySelector('.add-all-text').style.transform='translateY(-10px)'; this.querySelector('.plus-sign').style.opacity='1';">
+                                            <span class="plus-sign" style="font-size: 1.3rem; transition: opacity 0.3s ease;">+</span>
+                                            <span class="add-all-text position-absolute" style="opacity: 0; left: 20%; transform: translateX(-50%) translateY(-10px); font-size: 0.8rem; transition: opacity 0.3s ease, transform 0.3s ease;">Add All</span>
+                                        </button>
                                     </div>
-                                
-                                    <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center position-relative btn-add-question add-questions" 
-                                            data-quiz-id="{{ quiz_option.id }}" 
-                                            data-question-id="{{ question.id }}" 
-                                            style="width: 35px; height: 35px; border-radius: 50%; transition: width 0.3s ease; overflow: hidden;" 
-                                            onmouseover="this.style.width='70px'; this.style.borderRadius='5px'; this.querySelector('.add-all-text').style.opacity='1'; this.querySelector('.add-all-text').style.transform='translateY(0)'; this.querySelector('.plus-sign').style.opacity='0';" 
-                                            onmouseout="this.style.width='35px'; this.style.borderRadius='50%'; this.querySelector('.add-all-text').style.opacity='0'; this.querySelector('.add-all-text').style.transform='translateY(-10px)'; this.querySelector('.plus-sign').style.opacity='1';">
-                                        <span class="plus-sign" style="font-size: 1.3rem; transition: opacity 0.3s ease;">+</span>
-                                        <span class="add-all-text position-absolute" style="opacity: 0; left: 20%; transform: translateX(-50%) translateY(-10px); font-size: 0.8rem; transition: opacity 0.3s ease, transform 0.3s ease;">Add All</span>
-                                    </button>
-                                </div>
 
-                                {% if selected_quiz %}
-                                    <div class="selected-quiz-info">
-                                        <span>Selected Quiz: {{ selected_quiz.quiz_title }}</span>
-                                        <span>Total Questions: {{ total_questions_selected_quiz }}</span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </h2>
-                        <div id="collapse{{ quiz_option.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ quiz_option.id }}" data-bs-parent="#quizAccordion">
-                            <div class="accordion-body">
-                                <ul class="list-group" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
-                                    {% for question in quiz_option.questions.all %}
-                                    <li class="list-group-item d-flex align-items-start justify-content-between shadow-sm">
-                                        <span class="question-text">{{ question.question_text }}</span>
-                                        <button class="btn btn-sm btn-primary add-question ms-3 align-self-center" data-question-id="{{ question.id }}">+</button>
-                                        <div class="answer-options bg-success-subtle d-none">
-                                            {% for answer in question.answer_options.all %}
-                                            <span class="answer-option" data-is-correct="{{ answer.is_correct|yesno:'true,false' }}" data-answer-id="{{ answer.id }}">{{ answer.option_text }}</span>
-                                            {% endfor %}
+                                    {% if selected_quiz %}
+                                        <div class="selected-quiz-info">
+                                            <span>Selected Quiz: {{ selected_quiz.quiz_title }}</span>
+                                            <span>Total Questions: {{ total_questions_selected_quiz }}</span>
                                         </div>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
+                                    {% endif %}
+                                </div>
+                            </h2>
+                            <div id="collapse{{ quiz_option.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ quiz_option.id }}" data-bs-parent="#quizAccordion">
+                                <div class="accordion-body">
+                                    <ul class="list-group" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                                        {% for question in quiz_option.questions.all %}
+                                        <li class="list-group-item d-flex align-items-start justify-content-between shadow-sm">
+                                            <span class="question-text">{{ question.question_text|safe }}</span>
+                                            <button class="btn btn-sm btn-primary add-question ms-3 align-self-center" data-question-id="{{ question.id }}">+</button>
+                                            <div class="answer-options bg-success-subtle d-none">
+                                                {% for answer in question.answer_options.all %}
+                                                <span class="answer-option" data-is-correct="{{ answer.is_correct|yesno:'true,false' }}" data-answer-id="{{ answer.id }}">{{ answer.option_text }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Selected Questions -->
-    <div class="col-md-7">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Selected Questions</h5> 
-            </div>
-            <div class="card-body">
-                <ul class="list-group" id="selected-questions" style="max-height: 350px; overflow-y: auto;">
-                    <!-- Selected questions will be dynamically added here -->
-                    {% for question in assessment.questions.all %}
-                        <li class="list-group-item d-flex" data-question-id="{{ question.id }}">
-                            <div class="question-content flex-grow-1">
-                                <!-- Question text area (readonly for view-only mode) -->
-                                <textarea class="form-control question-input" name="question_text_{{ question.id }}" placeholder="Edit question..." readonly>{{ question.question_text }}</textarea>
-                                <br>
-                                <!-- Answers section (readonly for view-only mode) -->
-                                
-                                {% for answer in question.answer_options.all %}
-                                    <div class="answer-container d-flex align-items-center mb-3"> <!-- Bootstrap margin-bottom for spacing -->
-                                        <!-- Checkbox before the answer textarea -->
-                                        <input type="checkbox" name="answer_{{ answer.id }}" {% if answer.is_correct %} checked {% endif %} disabled>
-                                        
-                                        <!-- Answer textarea with conditional background color -->
-                                        <textarea class="form-control answer-input" name="answer_text_{{ answer.id }}" rows="2" readonly
-                                                style="{% if answer.is_correct %}background-color: #d9f7d9;{% endif %}">{{ answer.option_text }}</textarea>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                    
-                            <!-- Actions section (optional) -->
-                            <div class="actions d-flex flex-column align-items-center ml-2" style="gap: 5px;"> <!-- Align vertically with gap -->
-                                <!-- Trash icon button to remove question -->
-                                <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center remove-question" style="width: 30px; height: 30px; font-size: 1rem; border: none; background-color: transparent; margin-left: 15px;" data-question-id="{{ question.id }}" title="Remove question">
-                                    <i class="fas fa-trash-alt text-danger" style="font-size: 1.2rem;"></i> <!-- Trash icon -->
-                                </button>
-                                
-                                <!-- Question number (read-only view) -->
-                                <span class="question-number d-flex justify-content-center align-items-center" style="font-size: 0.9rem; width: 30px; height: 30px; border-radius: 50%; background-color: #f8f9fa; color: #6c757d; font-weight: bold; margin-left: 15px;">
-                                    {{ forloop.counter }}
-                                </span>
-                            </div>                                                                                                   
-                    
-                            <!-- Hidden input to keep track of selected questions -->
-                            <input type="hidden" name="selected_questions[]" value="{{ question.id }}">
-                        </li>
-                    {% endfor %}
-                </ul>                                                                                
+        <!-- Selected Questions -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Selected Questions</h5> 
+                </div>
+                <div class="card-body">
+                    <ul class="list-group" id="selected-questions" style="max-height: 350px; overflow-y: auto;">
+                        <!-- Selected questions will be dynamically added here -->
+                        {% for question in assessment.questions.all %}
+                            <li class="list-group-item d-flex" data-question-id="{{ question.id }}">
+                                <div class="question-content flex-grow-1">
+                                    <!-- Question text area (readonly for view-only mode) -->
+                                    <div class="form-control question-input" name="question_text_{{ question.id }}" placeholder="Edit question..." readonly>{{ question.question_text|safe }}</div>
+                                    <br>
+                                    <!-- Answers section (readonly for view-only mode) -->
+                                    
+                                    {% for answer in question.answer_options.all %}
+                                        <div class="answer-container d-flex align-items-center mb-3"> <!-- Bootstrap margin-bottom for spacing -->
+                                            <!-- Checkbox before the answer textarea -->
+                                            <input type="checkbox" name="answer_{{ answer.id }}" {% if answer.is_correct %} checked {% endif %} disabled>
+                                            
+                                            <!-- Answer textarea with conditional background color -->
+                                            <textarea class="form-control answer-input" name="answer_text_{{ answer.id }}" rows="2" readonly
+                                                    style="{% if answer.is_correct %}background-color: #d9f7d9;{% endif %}">{{ answer.option_text }}</textarea>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                        
+                                <!-- Actions section (optional) -->
+                                <div class="actions d-flex flex-column align-items-center ml-2" style="gap: 5px;"> <!-- Align vertically with gap -->
+                                    <!-- Trash icon button to remove question -->
+                                    <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center remove-question" style="width: 30px; height: 30px; font-size: 1rem; border: none; background-color: transparent; margin-left: 15px;" data-question-id="{{ question.id }}" title="Remove question">
+                                        <i class="fas fa-trash-alt text-danger" style="font-size: 1.2rem;"></i> <!-- Trash icon -->
+                                    </button>
+                                    
+                                    <!-- Question number (read-only view) -->
+                                    <span class="question-number d-flex justify-content-center align-items-center" style="font-size: 0.9rem; width: 30px; height: 30px; border-radius: 50%; background-color: #f8f9fa; color: #6c757d; font-weight: bold; margin-left: 15px;">
+                                        {{ forloop.counter }}
+                                    </span>
+                                </div>                                                                                                   
+                        
+                                <!-- Hidden input to keep track of selected questions -->
+                                <input type="hidden" name="selected_questions[]" value="{{ question.id }}">
+                            </li>
+                        {% endfor %}
+                    </ul>                                                                                
+                </div>
             </div>
         </div>
     </div>

@@ -11,6 +11,7 @@
         <a href="{% url 'assessment:assessment_list' %}" class="btn btn-secondary">Back to List</a>
     </div>
     
+    {% if has_questions %}
     <div class="card mb-4">
         <div class="card-header">
             <h3 class="mb-0">Quiz Answers</h3>
@@ -27,7 +28,7 @@
                 <ul class="list-group">
                     {% for answer in user_answers %}
                         <li class="list-group-item">
-                            <strong>{{ forloop.counter }}. </strong> {{ answer.question.question_text }}<br>
+                            <strong>{{ forloop.counter }}. </strong> {{ answer.question.question_text|safe }}<br>
                             <ul class="list-group">
                                 {% for option in answer.question.answer_options.all %}
                                     <li class="list-group-item 
@@ -59,7 +60,9 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if has_exercises %}
     <div class="card mb-4">
         <div class="card-header">
             <h3 class="mb-0">Exercise Submissions</h3>
@@ -78,9 +81,11 @@
             </ul>
         </div>
     </div>
+    
 
     <div class="alert alert-primary" role="alert">
         <h4 class="alert-heading">Total Assessment Score: {{ submission_score|floatformat:1 }}</h4>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -32,6 +32,11 @@ from django.utils.decorators import decorator_from_middleware_with_args
 from cheat_logger.utils.encryption_handler import Data_Encryption
 import datetime
 import subprocess
+from django.db.models import F
+from django.core.mail import send_mass_mail
+import json
+from datetime import timedelta
+
 
 def no_cache(view):
     def no_cache_view(request, *args, **kwargs):
@@ -73,6 +78,8 @@ class Invite_candidates(View):
         emails = [email.strip() for email in emails if email.strip()]
 
         invited_candidates = []
+        newly_invited_count = 0
+        email_messages = []
 
         for email in emails:
             # if InvitedCandidate.objects.filter(assessment=assessment, email=email).exists():
@@ -92,20 +99,24 @@ class Invite_candidates(View):
                 reverse('assessment:assessment_invite_accept', kwargs={'uidb64': uid, 'token': token})
             )
 
-            send_mail(
-                subject=f"You're invited to complete an assessments: {assessment.title}",
-                message=f"Please click the link below to access the assessment. This link will expire in 7 days.\n\n{invite_link}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-            )
+            # Prepare the message
+            subject = f"You're invited to complete an assessment: {assessment.title}"
+            message = f"Please click the link below to access the assessment. This link will expire in 7 days.\n\n{invite_link}"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = [email]
+
+            # Add this email message to the list
+            email_messages.append((subject, message, from_email, recipient_list))
 
             # Track the invited candidate
             invited_candidates.append(invited_candidate)
-
-        # invited_candidate = len(InvitedCandidate.objects.all())
+            newly_invited_count += 1
+        # Send all the emails at once
+        if email_messages:
+            send_mass_mail(email_messages, fail_silently=False)
         
         # Update invited_count based on the number of unique invited candidates
-        assessment.invited_count = len(InvitedCandidate.objects.all())
+        assessment.invited_count = F('invited_count') + newly_invited_count 
         assessment.save()
 
         return redirect('assessment:assessment_list')
@@ -116,18 +127,21 @@ class Take_assessment(View):
     def get(self, request, assessment_id):
         data_encryption = Data_Encryption()
         assessment = get_object_or_404(Assessment, id=assessment_id)
-        assessment_type_name = assessment.assessment_type.type_name
         
-        questions = assessment.questions.all() if assessment_type_name in ["Entry Test", "Quiz"] else []
-        exercises = assessment.exercises.all() if assessment_type_name in ["Entry Test", "Assignment"] else []
+        questions = assessment.questions.all()
+        exercises = assessment.exercises.all()
         is_preview = request.GET.get('preview', 'false').lower() == 'true'
         
         if is_preview:
+            has_questions = bool(questions) 
+            has_exercises = bool(exercises)
             return render(request, 'assessment/take_assessment.html', {
                 'assessment': assessment,
                 'questions': questions,
                 'exercises': exercises,
                 'is_preview': True,
+                'has_questions': has_questions, 
+                'has_exercises': has_exercises,
             })
         
         # total_marks = assessment.total_score
@@ -150,8 +164,10 @@ class Take_assessment(View):
         if attempt.is_submitted:
             return redirect('/')
         
-            
+        has_questions = assessment.questions.exists()
+        has_exercises = assessment.exercises.exists()
         # Render the assessment page
+        
         return render(request, 'assessment/take_assessment.html', {
             'assessment': assessment,
             'questions': questions,
@@ -159,117 +175,170 @@ class Take_assessment(View):
             'is_preview': False,
             'anonymous': not request.user.is_authenticated,
             'email': attempt.email,
-            'attempt': attempt  # This will be None for GET request
+            'attempt': attempt,  # This will be None for GET request
+            'has_questions': has_questions,
+            'has_exercises': has_exercises,
         })
     
     def post(self, request, assessment_id):
         data_encryption = Data_Encryption()
         assessment = get_object_or_404(Assessment, id=assessment_id)
-        assessment_type_name = assessment.assessment_type.type_name
-        questions = assessment.questions.all() if assessment_type_name in ["Entry Test", "Quiz"] else []
-        exercises = assessment.exercises.all() if assessment_type_name in ["Entry Test", "Assignment"] else []
-
+        questions = assessment.questions.all()
+        exercises = assessment.exercises.all()
+        total_marks = assessment.total_score
+        total_questions = questions.count()
 
         b64_encoded_attempt_id = request.COOKIES.get('id', None)
         if b64_encoded_attempt_id is None:
-            return redirect('home')  # Or wherever you want to redirect
+            return redirect('home')
         encrypted_data = urlsafe_base64_decode(b64_encoded_attempt_id)
         try:
             attempt_id = data_encryption.str_decrypt(encrypted_data)
         except:
-            return redirect('/')  # Or wherever you want to redirect for decryption error
+            return redirect('/')
         attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
-
-        if attempt.is_submitted:  # Check if the assessment has already been submitted
-            messages.info(request, "This assessment has already been submitted.")
-            return redirect("assessment:assessment_list")
-
-
-
-        total_marks = assessment.total_score
-        total_questions = len(questions)
 
         correct_answers = 0
         duration = round(
             datetime.datetime.now().timestamp()
             - attempt.attempt_date.timestamp()
         )
-
-        # Process Quiz questions ONLY if they exist
-        if questions:  # equivalent to if len(questions) > 0:
+        print(duration)
+        # Process each question
+        total_questions = questions.count()
+        if total_questions > 0:
             for question in questions:
+                # Fetch all selected option IDs for the question (adjust if using checkboxes or other multi-select elements)
                 selected_option_ids = request.POST.getlist(f'question_{question.id}')
                 text_response = request.POST.get(f'text_response_{question.id}')
-                selected_options = AnswerOption.objects.filter(id__in=selected_option_ids)
 
+                # Initialize selected_options as an empty list to store AnswerOption instances
+                selected_options = []
+
+                # Populate selected_options with AnswerOption instances if IDs are valid
+                if selected_option_ids:
+                    selected_options = AnswerOption.objects.filter(id__in=selected_option_ids)
+
+                # Create a UserAnswer instance for the question, excluding selected_options for now
                 student_answer = UserAnswer.objects.create(
                     attempt=attempt,
                     question=question,
-                    text_response=text_response
+                    text_response=text_response  # Keep text_response field
                 )
+
+                # Set the selected options using the ManyToManyField's set method
                 student_answer.selected_options.set(selected_options)
 
+                # Optional: Count correct answers if selected options are supposed to be evaluated for correctness
                 correct_answers += sum(1 for option in selected_options if option.is_correct)
-            total_quiz_score = (total_marks / total_questions) * correct_answers if total_questions > 0 else 0 # avoid divide by zero
+            total_quiz_score = (total_marks / total_questions) * correct_answers
         else:
-             total_quiz_score = 0
+            total_quiz_score = 0
 
-        #Calculate exercise score if exist
-        if exercises:
+        total_exercise_score = 0
+        num_submissions = 0
+
+        if exercises.exists(): # Check if there are any exercises
             total_exercise_score = sum(
                 submission.score for exercise in exercises
                 for submission in Submission.objects.filter(exercise=exercise, assessment=assessment, email=attempt.email)
                 if submission.score is not None
             )
-            num_submissions = Submission.objects.filter(assessment=assessment, email=attempt.email).count()
-            average_exercise_score = total_exercise_score / num_submissions if num_submissions > 0 else 0
 
-        else:
-            average_exercise_score = 0
+            num_submissions = sum(
+                1 for exercise in exercises
+                for submission in Submission.objects.filter(exercise=exercise, assessment=assessment, email=attempt.email)
+                if submission.score is not None
+            )
 
-
+        average_exercise_score = total_exercise_score / num_submissions if num_submissions > 0 else 0
 
         attempt.score_quiz = total_quiz_score
-        attempt.score_ass = average_exercise_score # Use the average
+        attempt.score_ass = average_exercise_score
         attempt.is_submitted = True
         attempt.duration = duration
         attempt.save()
+        attempt_id = attempt.id  # Store the attempt_id after saving the attempt
+        # Redirect to the results page with attempt details
+        
+        reverse_link = reverse(
+            "assessment:assessment_result",
+            kwargs={
+                "assessment_id":assessment.id,
+                "attempt_id":attempt.id
+            },
+        )
 
+        response = HttpResponse("Submit successfully!")
+        response.delete_cookie('id')
+        response.delete_cookie('target')
+        response['Location'] = reverse_link
+        response.status_code = 302
+        return response
 
+        # return redirect(reverse_link)
 
-        # Simplified redirect logic
-        return redirect('assessment:assessment_result', assessment_id=assessment.id, attempt_id=attempt.id)
+        if not User.objects.filter(email = attempt.email).exists():  # Check if email is provided
+            return redirect(
+                'assessment:assessment_result',  # Use the name for the URL with email
+                assessment_id=assessment.id,
+                attempt_id=attempt.id,  # Ensure this is the correct attempt ID
+                email=attempt.email  # Include email if available
+            )
+        else:
+            return redirect(
+                'assessment:assessment_result_no_email',  # Use the name for the URL without email
+                assessment_id=assessment.id,
+                attempt_id=attempt.id  # Redirect without email if not available
+            )
 
 
 class Assessment_result(View):
     # @method_decorator(login_required)
     def get(self, request, assessment_id, attempt_id):
+        print("bắt đầu Assessment_result ")
         assessment = get_object_or_404(Assessment, id=assessment_id)
         attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
+        print(attempt.email)
+        print(assessment_id)
         user_answers = attempt.quiz_answers.all()
+        user_submit = None
+        submission_attempt = None
+        submission_score = None
+        if attempt.assessment.exercises.exists():  
+            try:
+                submissions = Submission.objects.filter(assessment_id=assessment_id, email=attempt.email)
+                if submissions.exists():
+                    submission_attempt = list(submissions) # Keep as a list for consistency
+                    submission_score = sum(s.score for s in submissions) / len(submissions) if submissions else 0 # Handle empty list case
+            except Exception as e:
+                print(f"Bug in submission query: {e}")
 
-        submission_attempts = Submission.objects.filter(assessment=assessment, email=attempt.email)
-        # calculate score:
-
-        total_exercise_score = sum(
-                submission.score for submission in submission_attempts
-                if submission.score is not None
-        )
-        num_submissions = submission_attempts.count()
-        submission_score = total_exercise_score / num_submissions if num_submissions > 0 else 0
         score_ass = attempt.score_ass
         score_quiz = attempt.score_quiz
 
+        total_score = 0
+        if submission_score is not None:
+            total_score += submission_score
+        if score_quiz:
+            total_score += score_quiz
 
+        if attempt.assessment.exercises.exists() and attempt.assessment.questions.exists():
+            total_score /= 2  # Average if both quiz and exercises are present
 
+        has_questions = assessment.questions.exists()
+        has_exercises = assessment.exercises.exists()
         context = {
             'assessment': assessment,
             'attempt': attempt,
             'user_answers': user_answers,
             'score_ass': score_ass,
             'score_quiz': score_quiz,
-            'submission_attempt':submission_attempts,
-            'submission_score':submission_score
+            'submission_attempt':submission_attempt,
+            'submission_score':submission_score,
+            'total_score': total_score,
+            'has_questions': has_questions,
+            'has_exercises': has_exercises,
             
         }
 
@@ -282,6 +351,9 @@ class Assessment_report(View):
         assessment = get_object_or_404(Assessment, id=assessment_id)
         attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
         user_answers = UserAnswer.objects.filter(attempt=attempt)
+        questions = assessment.questions.all()
+        total_questions = questions.count()
+        duration = attempt.duration
         
 
         try:
@@ -292,57 +364,39 @@ class Assessment_report(View):
                 attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, email=email, assessment_id=assessment)
             else:
                 raise Http404("No email provided for anonymous user.")
-
-            # Get the user's submissions
-
-            print(f"attempt cuối cùng là :{attempt}")
-            try:
-            # Truy vấn tất cả các submission phù hợp
-                user_submissions = Submission.objects.filter(assessment_id=assessment_id, email=attempt.email)
-                if user_submissions.exists():
-                    if user_submissions.count() > 1:
-                        print(f"Found multiple submissions: {user_submissions}")
-                        # Chọn submission đầu tiên (hoặc có logic tùy chỉnh)
-                        submission_attempt = [a for a in user_submissions]
-                        submission_score = sum([a.score for a in user_submissions])/len(user_submissions)
-                        print(f"submission {submission_attempt}")
-                        print(f"submission score ís  {submission_score}")
-                    else:
-                        submission_attempt = user_submissions.get()
-                
-            except Exception as e:
-                print(f"Bug in submission query: {e}")
+        
+            user_submissions = Submission.objects.filter(assessment_id=assessment_id, email=attempt.email)
+            submission_attempt = list(user_submissions)
                 
             # Calculate skill ratings for the specific attempt and assessment
             skill_ratings = {}
-            for submission in user_submissions:
-                language = submission.exercise.language  # Language of the exercise
-                score = submission.score                 # Score for this exercise
-                print(f"languaga là {language} - và score là {score}")
-                if language not in skill_ratings:
-                    skill_ratings[language] = {'total_score': 0, 'count': 0}
+            score_ass = 0
+            if user_submissions.exists():
+                for submission in user_submissions:
+                    language = submission.exercise.language
+                    score = submission.score
+                    if language not in skill_ratings:
+                        skill_ratings[language] = {'total_score': 0, 'count': 0}
+                    skill_ratings[language]['total_score'] += score
+                    skill_ratings[language]['count'] += 1
 
-                # Sum scores and count exercises for this attempt
-                skill_ratings[language]['total_score'] += score
-                skill_ratings[language]['count'] += 1
+                for language, data in skill_ratings.items():
+                    data['average_score'] = data['total_score'] / data['count'] if data['count'] > 0 else 0
+                score_ass = sum(data['average_score'] for data in skill_ratings.values()) / len(skill_ratings) if skill_ratings else 0
 
-            # Calculate average score for each language
-            
-            for language, data in skill_ratings.items():
-                print(f"language is {language} and data is {data}")
-                data['average_score'] = data['total_score'] / data['count'] if data['count'] > 0 else 0
-
-                print(f"skill_ratings là {skill_ratings}")
-
-            # Overall scores for the attempt
-            if skill_ratings:
-                total_average_score = sum(data['average_score'] for data in skill_ratings.values()) / len(skill_ratings)
-                score_ass = total_average_score
-            else:
-                score_ass = 0
-            
             score_quiz = attempt.score_quiz
-            average_score = (score_ass + score_quiz) / 2
+
+            # Calculate average score considering different scenarios
+            if assessment.exercises.exists() and assessment.questions.exists():
+                average_score = (score_ass + score_quiz) / 2
+            elif assessment.exercises.exists():
+                average_score = score_ass
+            elif assessment.questions.exists():
+                average_score = score_quiz
+            else:
+                average_score = 0 
+
+            user_answers = attempt.quiz_answers.all() 
             
             context = {
                 'assessment': assessment,
@@ -353,7 +407,9 @@ class Assessment_report(View):
                 'score_quiz': score_quiz,
                 'average_score': average_score,
                 'skill_ratings': skill_ratings,
-                'submission_attempt':submission_attempt
+                'submission_attempt':submission_attempt,
+                'total_questions': total_questions,
+                'duration': duration,
             }
             return render(request, 'assessment/assessment_report.html', context)
 
@@ -361,6 +417,9 @@ class Assessment_report(View):
             print(f"Error: {str(e)}")
             return render(request, 'assessment/error.html', {'error': 'Attempt not found. Please ensure you have provided a valid email.'})
     
+        except Exception as e:
+            print(f"Error in Assessment_report: {e}")  # Print error for debugging
+            return render(request, 'assessment/error.html', {'error': 'An error occurred while generating the report.'})
     
 class Challenge_solution(View):
     def get(self, request, assessment_id, attempt_id, email=None , submission_id=None):
@@ -490,6 +549,38 @@ class RunCodeView(View):
             return {"status": "error", "error": "Execution timed out."}
         except Exception as e:
             return {"status": "error", "error": str(e)}
+
+
+class QuizResultsView(View):
+    def get(self, request, assessment_id, attempt_id, email=None):  # Optional email argument
+        assessment = get_object_or_404(Assessment, id=assessment_id)
+        attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
+        try:
+            if request.user.is_authenticated:
+                attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, assessment=assessment)
+            elif email: # If the user is not authenticated
+                attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, assessment=assessment, email=email)
+            else:
+                raise Http404("No email provided for anonymous user") # If the email is not provided
+            user_answers = attempt.quiz_answers.all()
+            score_quiz = attempt.score_quiz
+            duration = attempt.duration
+            total_score = assessment.total_score
+            context = {
+                'assessment': assessment,
+                'attempt': attempt,
+                'user_answers': user_answers,
+                'score_quiz': score_quiz,
+                'duration': duration,
+                'total_score': total_score
+            }
+            return render(request, 'assessment/quiz_results.html', context)  # New template
+        except Http404:
+             return render(request, 'assessment/error.html', {'error': 'Attempt not found. Please ensure you have provided a valid email.'})
+        except Exception as e: #Catch all exception
+            print(f"Lỗi trong QuizResultsView: {e}")
+            return render(request, 'assessment/error.html', {'error': 'Đã xảy ra lỗi khi tạo báo cáo.'})
+        
 
 class Handle_anonymous_info(View):
     def get(self, request, invited_candidate_id):

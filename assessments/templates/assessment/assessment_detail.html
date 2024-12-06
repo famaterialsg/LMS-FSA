@@ -31,46 +31,45 @@
 
     <!-- Two-Column Layout for Exercises and Questions -->
     <div class="row mb-4">
-        {% if assessment.assessment_type.type_name in 'Entry Test' or assessment.assessment_type.type_name in 'Assignment' %}
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Exercises</h3>
-                    </div>
-                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                        <ul class="list-group">
-                            {% for exercise in assessment.exercises.all %}
-                                <li class="list-group-item">
-                                    <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id %}" target="_blank">{{ exercise.title }}</a>
-                                </li>
-                            {% empty %}
-                                <li class="list-group-item text-muted">No exercises assigned.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+        <!-- Exercises Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Exercises</h3>
+                </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    <ul class="list-group">
+                        {% for exercise in assessment.exercises.all %}
+                        <li class="list-group-item">
+                           
+                            <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id %}" target="_blank">{{ exercise.title }}</a>
+                            
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-muted">No exercises assigned.</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
-        {% endif %}
+        </div>
 
         <!-- Questions Section -->
-        {% if assessment.assessment_type.type_name in 'Entry Test' or assessment.assessment_type.type_name in 'Quiz' %}
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Multiple Choice</h3>
-                    </div>
-                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                        <ul class="list-group">
-                            {% for question in assessment.questions.all %}
-                                <li class="list-group-item">{{ forloop.counter }}. {{ question.question_text }}</li>
-                            {% empty %}
-                                <li class="list-group-item text-muted">No questions assigned.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Multiple Choice</h3>
+                </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    <ul class="list-group">
+                        {% for question in assessment.questions.all %}
+                        <li class="list-group-item">{{ forloop.counter }}. {{ question.question_text|safe }}</li>
+                        {% empty %}
+                        <li class="list-group-item text-muted">No questions assigned.</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
-        {% endif %}
+        </div>
 
     </div>
 

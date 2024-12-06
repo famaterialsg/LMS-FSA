@@ -31,6 +31,7 @@
                 <a href="#skill-ratings" class="fw-bold text-secondary text-decoration-none mb-2 link-hover" style="border-left: 4px solid gray; padding-left: 10px; font-size: 0.875rem;">SKILL RATINGS</a>
                 <a href="#scorecard" class="fw-bold text-secondary text-decoration-none mb-2 link-hover" style="border-left: 4px solid gray; padding-left: 10px; font-size: 0.875rem;">SCORECARD</a>
                 <a href="#challenges" class="fw-bold text-secondary text-decoration-none link-hover" style="border-left: 4px solid gray; padding-left: 10px; font-size: 0.875rem;">CHALLENGE SOLUTIONS</a>
+                <a href="#quizResults" class="fw-bold text-secondary text-decoration-none mb-2 link-hover" style="border-left: 4px solid gray; padding-left: 10px; font-size: 0.875rem;">QUIZ RESULTS</a>
             </nav>
         </div>
         
@@ -250,8 +251,8 @@
             
                         <!-- Score Box and Language/Resources -->
                         <div class="d-flex align-items-center ms-auto">
-                            <div class="bg-success text-white rounded d-flex justify-content-center align-items-center" style="width:50px; height:50px;">
-                                {{submission.score }}/10
+                            <div class="bg-success text-white rounded d-flex justify-content-center align-items-center" style="width:60px; height:50px;">
+                                {{submission.score }}/100
                             </div>
             
                             <div class="vr mx-3" style="height: 60px;"></div>
@@ -261,14 +262,54 @@
                                 <div><span><i class="bi bi-browser-chrome"></i><b> Vietnam </b></span></div>
                             </div>
                         </div>
-                    </div>
+                    </div>  
                 </div>
                 {% endfor %}
+            </div>
+
+            <!-- New Section: Quiz Results -->
+            <hr style="margin-top: 3rem; margin-bottom: 3rem;">
+            <h4 style="font-size: 1.25rem; margin-bottom: 2rem;" id="quizResults">Quiz Results</h4>
+
+            <!-- Quiz Result Cards -->
+            <div class="col-md-12 mb-4">
+                
+                <div class="card card-body d-flex align-items-left mb-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <!-- Quiz Title and Details -->
+                        <div>
+                            <p class="mb-0">
+                                <b>QUIZ</b> 
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </p>
+                            <div class="d-flex align-items-center">
+                                <a href="{% url 'assessment:quiz_results' assessment.id attempt.id attempt.email %}" class="btn btn-link p-0">View Details</a>
+                                <span class="mx-2">|</span>
+                                <span>{{ duration }} seconds</span>
+                                <span class="mx-2">|</span>
+                            </div>
+                            
+                        </div>
+                     
+                        <!-- Score Box -->
+                        <div class="d-flex align-items-center ms-auto">
+                            <div class="bg-success text-white rounded d-flex justify-content-center align-items-center" style="width:60px; height:50px;">
+                                {{total_questions}}
+                            </div>
+            
+                            <div class="vr mx-3" style="height: 60px;"></div>
+            
+                            <div>
+                                <div><span><b>{{ submission.quiz.language|capfirst }}</b></span></div>
+                                <div><span><i class="bi bi-ui-checks"></i><b> Multiple choice</b></span></div>
+                            </div>
+                        </div>
+                    </div>  
+                </div>       
             </div>
         </div>
     </div>
 </div>
-
 
 
 <script>
@@ -373,13 +414,33 @@ document.addEventListener("DOMContentLoaded", function () {
         const typescriptRating = getRatings("typescript-skills");
         const privateNotes = document.getElementById("editor").innerHTML;
 
-        // Lưu tạm thời vào localStorage
-        localStorage.setItem("algorithmRating", algorithmRating);
-        localStorage.setItem("codeQualityRating", codeQualityRating);
-        localStorage.setItem("typescriptRating", typescriptRating);
-        localStorage.setItem("privateNotes", privateNotes);
+        // Gửi dữ liệu qua AJAX tới server
+        const url = window.location.pathname;  // Get current URL path
+        const params = new URLSearchParams(window.location.search);  // Get query parameters
 
-        location.reload();
+        fetch(`${url}?${params}`, {
+            method: 'POST',  // Sending POST request
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value // CSRF token for security
+            },
+            body: JSON.stringify({
+                algorithm_rating: algorithmRating,
+                code_quality_rating: codeQualityRating,
+                typescript_rating: typescriptRating,
+                private_notes: privateNotes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Saved ratings:", data);
+            alert("Your ratings and notes have been saved!");
+            location.reload();  // Reload the page after saving
+        })
+        .catch(error => {
+            console.error("Error saving ratings:", error);
+            alert("An error occurred while saving your data.");
+        });
     });
 
     // Khôi phục đánh giá đã lưu từ localStorage
@@ -399,13 +460,13 @@ document.addEventListener("DOMContentLoaded", function () {
     restoreRatings("code-quality", parseInt(localStorage.getItem("codeQualityRating") || "0"));
     restoreRatings("typescript-skills", parseInt(localStorage.getItem("typescriptRating") || "0"));
 
-
     // Khôi phục ghi chú đã lưu từ localStorage
     const privateNotes = localStorage.getItem("privateNotes");
     if (privateNotes) {
         document.getElementById("editor").innerHTML = privateNotes; // Hiển thị ghi chú đã lưu
     }
 });
+
 
 
 </script>
