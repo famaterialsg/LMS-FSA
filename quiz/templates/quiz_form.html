@@ -4,7 +4,6 @@
 {% block title %}{{ form.instance.pk|yesno:"Edit Quiz,Add New Quiz" }}{% endblock %}
 
 {% block content %}
-
 <div class="container mt-4">
     <h2>{{ form.instance.pk|yesno:"Edit Quiz,Add New Quiz" }}</h2>
     <form method="post">
@@ -48,7 +47,11 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{% url 'quiz:quiz_list' %}" class="btn btn-secondary">Back to Quiz List</a>
+        
+        <!-- Back Button -->
+        <a href="{% if form.instance.pk %}{% url 'quiz:quiz_detail' form.instance.pk %}{% else %}{% url 'quiz:quiz_list' %}{% endif %}" class="btn btn-secondary">
+            {% if form.instance.pk %}Back to Quiz Detail{% else %}Back to Quiz List{% endif %}
+        </a>
     </form>
     
     {% if form.errors %}

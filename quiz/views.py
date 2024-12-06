@@ -82,7 +82,7 @@ def quiz_edit(request, pk):
             quiz.end_datetime = request.POST.get('end_datetime')  
             quiz.attempts_allowed = request.POST.get('attempts_allowed')  
             quiz.save()  
-            return redirect('quiz:quiz_list')
+            return redirect('quiz:quiz_detail')
     else:
         form = QuizForm(instance=quiz)
     return render(request, 'quiz_form.html', {'form': form, 'quiz': quiz})
@@ -186,13 +186,23 @@ def get_answers(request, question_pk):
 
 
 def quiz_detail(request, quiz_id):
+    # Initialize quizzes with a queryset
+    quizzes = Quiz.objects.all()
     # Get the current quiz or return 404 if not found
     quiz = get_object_or_404(Quiz, id=quiz_id)
     course = quiz.course
-    print(course)
+    question_form = QuestionForm()
 
-    # Retrieve all quizzes with their total question counts
-    all_quizzes = Quiz.objects.annotate(total_questions=Count('questions'))
+    # Retrieve all courses for the dropdown
+    courses = Course.objects.all()
+
+    # Filter quizzes by the selected course
+    selected_course = request.GET.get('course', '')
+    if selected_course:
+        all_quizzes = Quiz.objects.filter(course_id=selected_course).annotate(total_questions=Count('questions'))
+    else:
+        all_quizzes = Quiz.objects.annotate(total_questions=Count('questions'))
+
     selected_quiz = None
     quiz_questions = []
 
@@ -217,6 +227,15 @@ def quiz_detail(request, quiz_id):
 
     # Handle POST request to update or add questions to the current quiz
     if request.method == 'POST':
+        if 'add_question' in request.POST:
+            question_form = QuestionForm(request.POST)
+        if question_form.is_valid():
+            new_question = question_form.save(commit=False)
+            new_question.quiz = quiz
+            new_question.save()  # Lưu question mới vào database
+            return redirect('quiz:quiz_detail', quiz_id=quiz.id)
+        
+
         data = json.loads(request.body)
 
         # Check if data is a list or a dictionary
@@ -276,7 +295,6 @@ def quiz_detail(request, quiz_id):
                         return JsonResponse({'status': 'error', 'message': f'Answer with ID {answer_id} not found.'}, status=400)
                 else:  # Create new answer
                     AnswerOption.objects.create(question=question, option_text=answer_text, is_correct=is_correct)
-
         # Copy questions from the selected quiz to the current quiz if specified
         for item in received_questions:
             question_id = item.get('id')
@@ -315,9 +333,13 @@ def quiz_detail(request, quiz_id):
     # Pass data to the template
     context = {
         'quiz': quiz,
-        'course':course,
+        'quizzes': quizzes,
+        'course': course,
+        'question_form': question_form,
         'all_quizzes': all_quizzes,
         'selected_quiz': selected_quiz,
+        'courses': courses,
+        'selected_course': selected_course,
         'quiz_questions': quiz_questions,
         'total_questions_selected_quiz': total_questions_selected_quiz
     }
@@ -504,52 +526,106 @@ def import_questions(request, quiz_id):
     if request.method == 'POST':
         excel_file = request.FILES['file']
         
-        # Read the Excel file with all columns as strings
-        df = pd.read_excel(excel_file, dtype=str)  # Ensure all are strings to avoid NaN errors
+        # Read the Excel file without converting "null" or "NaN" to actual NaN
+        df = pd.read_excel(excel_file, dtype=str, keep_default_na=False)  # Prevent "null" and "NaN" from being treated as NaN
         
         # Iterate through each row in the DataFrame and save to the database
-        for index, row in df.iterrows():
-            question_text = row['Question']
+        for _, row in df.iterrows():
+            question_text = row['question']
+            correct_options = row['correct'].split(',') if row['correct'].strip() else []  # Split correct options by comma
             
-            # Convert 'Correct Answer' to a string if it's not already, to prevent errors
-            correct_answers = str(row['Correct Answer']).split(',') if pd.notna(row['Correct Answer']) else []
-            question_type = row['Question Type']
+            # Collect all option columns
+            options = {col.split('[')[1][0]: row[col] for col in row.index if col.startswith('options[')}
             
-            # Collect all answer columns starting from 'Answer_'
-            answers = {}
-            for col in row.index:
-                if col.startswith('Answer_'):
-                    answer_option_label = col.split('_')[1]  # E.g., 'Answer_A' -> 'A'
-                    
-                    # Check if the column is not NaN and not empty
-                    answer_text = row[col]
-                    if pd.notna(answer_text) and answer_text.strip():  # Ensure not NaN and not empty string
-                        answers[answer_option_label] = answer_text
+            # Include all non-empty cells, including "null" and "NaN"
+            valid_options = {key: value for key, value in options.items() if value.strip()}  # Accept all non-empty strings
+            
+            # Skip the question if there are no valid options
+            if not valid_options:
+                continue
             
             # Create the Question object
             question = Question.objects.create(
-                quiz=quiz,  
+                quiz=quiz,
                 question_text=question_text,
-                question_type=question_type,  # Set type from Excel file
-                points=1  # Set default or customizable points value
+                question_type='MCQ',  # Assuming the type is always MCQ
+                points=1  # Default points value
             )
             
-            # Create AnswerOption objects for MCQ and TF
-            if question_type in ['MCQ', 'TF']:
-                for option_label, answer_text in answers.items():
-                    is_correct = (option_label in [ans.strip() for ans in correct_answers])  # Check if the answer is correct
-
-                    # Create AnswerOption
-                    AnswerOption.objects.create(
-                        question=question, 
-                        option_text=answer_text, 
-                        is_correct=is_correct
-                    )
-
-        return redirect('quiz:quiz_detail', quiz_id=quiz_id)  # Redirect to quiz list after successful import
+            # Create AnswerOption objects
+            for option_label, option_text in valid_options.items():
+                is_correct = option_label.strip().upper() in [opt.strip().upper() for opt in correct_options]
+                
+                AnswerOption.objects.create(
+                    question=question,
+                    option_text=option_text,
+                    is_correct=is_correct
+                )
+        
+        return redirect('quiz:quiz_detail', quiz_id=quiz_id)  # Redirect to quiz detail after successful import
 
     return render(request, 'import_questions.html', {'quiz': quiz})
 
+def import_quiz_json(request, quiz_id, course_id):
+    # Lấy quiz và course từ database
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    course = get_object_or_404(Course, id=course_id)
+    context={
+                            'quiz':quiz,
+                            'course':course,
+                        }
+
+    if request.method == 'POST' and request.FILES.get('file'):
+        try:
+            # Lấy file JSON và parse dữ liệu
+            file = request.FILES['file']
+            data = json.load(file)
+
+            # Nếu muốn tạo quiz mới (hoặc chỉnh sửa quiz hiện có):
+            quiz.quiz_title = data.get('quiz_title', quiz.quiz_title)
+            quiz.quiz_description = data.get('quiz_description', quiz.quiz_description)
+            quiz.total_marks = data.get('total_marks', 100)
+            quiz.time_limit = data.get('time_limit', 60)
+            quiz.course = course  # Gắn vào khóa học tương ứng
+            quiz.save()
+
+            # Thêm câu hỏi và đáp án
+            for mc_question in data.get('mc_questions', []):
+                # Tạo hoặc cập nhật câu hỏi
+                question = Question.objects.create(
+                    quiz=quiz,
+                    question_text=mc_question['question'],
+                    question_type='MCQ',  # Mặc định là Multiple Choice
+                    points=mc_question.get('points', 1),  # Điểm mỗi câu hỏi
+                )
+
+                # Tạo các đáp án
+                correct_answers = mc_question['correct'].split(', ')
+                for i, answer_text in enumerate(mc_question['answers']):
+                    AnswerOption.objects.create(
+                        question=question,
+                        option_text=answer_text,
+                        is_correct=chr(65 + i) in correct_answers,  # Kiểm tra đáp án đúng
+                    )
+                
+
+            return redirect('quiz:quiz_detail', quiz_id=quiz.id)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON file format.'}, status=400)
+        except KeyError as e:
+            return JsonResponse({'error': f'Missing required field: {e}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+        
+    return render(request, 'import_quiz_json.html' ,context)
+
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image as ExcelImage
+import os
+from io import BytesIO
 
 
 def export_questions(request, quiz_id):
@@ -561,60 +637,72 @@ def export_questions(request, quiz_id):
     sheet = workbook.active
     sheet.title = quiz.quiz_title
 
-    # Define the header (initial columns)
-    header = ['Question', 'Correct Answer', 'Question Type']
-
-    # Determine the maximum number of answer options across all questions
+    # Define the header
+    header = ['Question', 'Correct']  # Start with 'Question' and 'Correct' columns
     max_answers = 0
     for question in questions:
         answer_count = AnswerOption.objects.filter(question=question).count()
         max_answers = max(max_answers, answer_count)
 
-    # Dynamically add "Answer" columns based on the maximum number of answers
+    # Add dynamic columns for answer options
     for i in range(1, max_answers + 1):
-        header.insert(i, f'Answer_{chr(64 + i)}')  # Inserts columns like Answer A, Answer B, etc.
+        header.append(f'Options[{chr(96 + i)}]')  # Creates columns like options[a], options[b], etc.
+
+    # Add the image column at the end (after options columns)
+    header.append('Image')
 
     # Write the header to the sheet
     sheet.append(header)
 
-    # Write the data for each question
+    # Write data for each question
+    row_idx = 2  # Start after the header
     for question in questions:
         # Get the answer options for the question
         answers = AnswerOption.objects.filter(question=question).order_by('id')  # Ensure consistent order
         answer_list = [answer.option_text for answer in answers]
-        
-        # Collect correct answers as letters
-        correct_answer_letters = []
-        for index, answer in enumerate(answers):
-            if answer.is_correct:
-                correct_answer_letters.append(chr(65 + index))  # Convert index to letter (A=65)
+
+        # Collect correct answers as uppercase letters
+        correct_answer_letters = [
+            chr(65 + index) for index, answer in enumerate(answers) if answer.is_correct
+        ]
 
         # Prepare the row data
-        row = [question.question_text]
+        row = [question.question_text, ','.join(correct_answer_letters)]  # Question and correct answers
 
-        # Add answers dynamically from A to max_answers
+        # Add answers dynamically from a to max_answers
         for i in range(max_answers):
-            if i < len(answer_list):
-                row.append(answer_list[i])  # Add answer text in the correct order
-            else:
-                row.append('')  # Add empty space for missing answers
+            row.append(answer_list[i] if i < len(answer_list) else '')  # Add answer text in the correct order
 
-        # Format the correct answers as a comma-separated string of letters
-        correct_answer_str = ', '.join(correct_answer_letters)
+        # Add the image column at the end (placeholder)
+        row.append('')  # Placeholder for image (image will be added separately)
 
-        row.append(correct_answer_str)  # Add correct answers as a string
-        row.append(question.question_type)
-
-        # Write the row to the sheet
+        # Add the row to the sheet
         sheet.append(row)
 
+        # Check if the question has an image
+        if hasattr(question, 'image') and question.image:  # Assuming `image` is the field name for the image
+            image_path = question.image.path  # Get the file path of the image
+            if os.path.exists(image_path):
+                img = ExcelImage(image_path)
+                img.width, img.height = 150, 150  # Resize the image if needed
+                image_cell = f"{chr(64 + len(header))}{row_idx}"  # Place the image in the last column (Image column)
+                sheet.add_image(img, image_cell)
+
+        row_idx += 1
+
+    # Save the workbook to an in-memory file
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
     # Create an HTTP response with the Excel file
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="{quiz.quiz_title}_questions.xlsx"'
-    workbook.save(response)
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{quiz.quiz_title}_questions_with_images.xlsx"'
 
     return response
-
 
 
 
@@ -906,57 +994,3 @@ def _get_quiz_result_context(quiz, attempt):
         'questions_with_options': questions_with_options,
     }
 
-# json import .
-def import_quiz_json(request, quiz_id, course_id):
-    # Lấy quiz và course từ database
-    quiz = get_object_or_404(Quiz, id=quiz_id)
-    course = get_object_or_404(Course, id=course_id)
-    context={
-                            'quiz':quiz,
-                            'course':course,
-                        }
-
-    if request.method == 'POST' and request.FILES.get('file'):
-        try:
-            # Lấy file JSON và parse dữ liệu
-            file = request.FILES['file']
-            data = json.load(file)
-
-            # Nếu muốn tạo quiz mới (hoặc chỉnh sửa quiz hiện có):
-            quiz.quiz_title = data.get('quiz_title', quiz.quiz_title)
-            quiz.quiz_description = data.get('quiz_description', quiz.quiz_description)
-            quiz.total_marks = data.get('total_marks', 100)
-            quiz.time_limit = data.get('time_limit', 60)
-            quiz.course = course  # Gắn vào khóa học tương ứng
-            quiz.save()
-
-            # Thêm câu hỏi và đáp án
-            for mc_question in data.get('mc_questions', []):
-                # Tạo hoặc cập nhật câu hỏi
-                question = Question.objects.create(
-                    quiz=quiz,
-                    question_text=mc_question['question'],
-                    question_type='MCQ',  # Mặc định là Multiple Choice
-                    points=mc_question.get('points', 1),  # Điểm mỗi câu hỏi
-                )
-
-                # Tạo các đáp án
-                correct_answers = mc_question['correct'].split(', ')
-                for i, answer_text in enumerate(mc_question['answers']):
-                    AnswerOption.objects.create(
-                        question=question,
-                        option_text=answer_text,
-                        is_correct=chr(65 + i) in correct_answers,  # Kiểm tra đáp án đúng
-                    )
-                
-
-            return redirect('quiz:quiz_detail', quiz_id=quiz.id)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON file format.'}, status=400)
-        except KeyError as e:
-            return JsonResponse({'error': f'Missing required field: {e}'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-        
-    return render(request, 'import_quiz_json.html' ,context)

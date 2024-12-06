@@ -33,7 +33,6 @@ urlpatterns = [
     path('import/', views.import_quizzes, name='import_quizzes'),
     path('excel_to_json_view/',views.excel_to_json_view , name='excel_to_json_view'),
     path('get_answers/<int:question_pk>/', views.get_answers, name='get_answers'),
-
-
     path('import_quiz_json/<int:quiz_id>/<int:course_id>/', views.import_quiz_json, name='import_quiz_json')
+    
 ]
