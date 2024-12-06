@@ -348,6 +348,7 @@ def course_list(request):
 
     # Combine enrolled courses with other filtered courses, removing duplicates
     courses = list(enrolled_courses_list) + [course for course in courses if course not in enrolled_courses_list]
+    courses = [course for course in courses if course.sessions.filter(materials__isnull=False).exists()]
 
     # Mark courses as enrolled or not, and process last accessed materials
     last_access_data = defaultdict(lambda: {"material": None, "session": None})
@@ -447,7 +448,6 @@ def course_detail(request, pk):
         for enrollment in enrolled_users
     ]
 
-    is_enrolled = Enrollment.objects.filter(student=request.user, course=course, is_active=True).exists()
     if is_enrolled:
         enrollment = Enrollment.objects.get(student=request.user, course=course)
         if enrollment:
@@ -470,7 +470,10 @@ def course_detail(request, pk):
     else:
         comeback = 0
         last_accessed_session = sessions.first()
-        last_accessed_material = last_accessed_session.materials.first()
+        if last_accessed_session and last_accessed_session.materials.exists():
+            last_accessed_material = last_accessed_session.materials.first()
+        else:
+            last_accessed_material = None
 
     context = {
         'course': course,
