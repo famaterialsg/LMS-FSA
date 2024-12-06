@@ -35,7 +35,9 @@
         <div class="col-md-3">
             <div class="card border-0 bg-white h-100">
                 <div class="position-relative">
-                    <a href="{% url 'student_portal:course_content_no_session' course.id %}"
+                    {% with last_access_data|default_if_none:''|get_item:course.id as access_data %}
+                    {% if access_data.material %}
+                    <a href="{% url 'student_portal:course_content' course.pk access_data.session.id %}?file_id={{ access_data.material.id }}&file_type={{ access_data.material.material_type }}"
                        class="text-decoration-none">
                         <div class="ratio ratio-16x9">
                             {% if course.image %}
@@ -48,6 +50,7 @@
                                      alt="Default Image">
                             {% endif %}
                         </div>
+
                         {% if course.user_enrolled %}
                         <div class="position-absolute top-0 end-0 m-2">
                             <span class="badge bg-success">
@@ -56,6 +59,8 @@
                         </div>
                         {% endif %}
                     </a>
+                    {% endif %}
+                    {% endwith %}
                 </div>
 
                 <div class="card-body d-flex flex-column">
@@ -74,6 +79,13 @@
                                 {% endif %}
                             {% endfor %}
                             <span class="ms-2 text-muted">({{ course.average_rating|floatformat:1 }})</span>
+                            {% if course.user_enrolled %}
+                            <a href="{% url 'feedback:combined_feedback' course.id %}"
+                               class="btn btn-outline-primary btn-sm rounded-pill">
+                                <i class="fas fa-comment-alt me-1"></i>
+                                Give Feedback
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
 

@@ -380,6 +380,12 @@ def course_list(request):
                         "material": first_session.materials.first(),
                         "session": first_session,
                     }
+        else:
+            first_session = Session.objects.filter(course=course).first()
+            last_access_data[course.id] = {
+                "material": first_session.materials.first(),
+                "session": first_session,
+            }
 
     # Pagination setup
     paginator = Paginator(courses, 6)  # Show 6 courses per page
