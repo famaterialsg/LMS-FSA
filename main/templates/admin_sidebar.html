@@ -215,12 +215,6 @@
             }
         });
 
-        // Nếu không có nhóm nào được mở rộng (tức là isActiveGroup = false), ẩn sidebar
-        if (!document.querySelectorAll('.sidebar-expanded .collapse.show').length) {
-            sidebarState = 'hidden';
-            mainContentAreaState = 'col-md-12';
-            updateSidebarState(); // Cập nhật lại trạng thái thanh sidebar và nội dung chính
-        }
     });
 </script>
 

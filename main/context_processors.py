@@ -29,17 +29,37 @@ def breadcrumb(request):
 
             # Kiểm tra nếu breadcrumbs hiện tại không khớp với đường dẫn mới
             if not breadcrumbs or breadcrumbs[-1]["url"] != current_path:
-                # Nếu đường dẫn là danh sách (chứa 'list'), chỉ hiển thị Home > List
-                if "list" in current_title.lower():
+                # Điều kiện đặc biệt cho Book search
+                if "book search" in current_title.lower():
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    breadcrumbs.append({"name": "Book search", "url": current_path})
+                
+                # Điều kiện đặc biệt cho Report module
+                elif app_name == "reports":
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    
+                    # Kiểm tra nếu là trang báo cáo dashboard
+                    if 'dashboard' in current_path:
+                        breadcrumbs.append({"name": "Report", "url": "/reports/dashboard/"})
+                    else:
+                        # Các báo cáo khác
+                        breadcrumbs.append({"name": "Report", "url": "/reports/dashboard/"})
+                        breadcrumbs.append({"name": current_title, "url": current_path})
+
+                # Điều kiện đặc biệt cho Activity, Achievement, Quiz Bank
+                elif app_name in ["activity", "achievement", "quiz_bank"]:
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    breadcrumbs.append({"name": app_name.capitalize(), "url": current_path})
+                
+                # Xử lý các module khác
+                elif "list" in current_title.lower():
                     breadcrumbs = [{"name": "Home", "url": "/"}]
                     breadcrumbs.append({"name": f"{app_name.capitalize()} List", "url": current_path})
                 else:
-                    # Xử lý cho các chức năng khác (ngoài danh sách)
-                    # Nếu breadcrumb trước đó là danh sách, chỉ thêm chức năng vào sau danh sách
+                    # Xử lý cho các chức năng khác
                     if len(breadcrumbs) > 1 and "list" in breadcrumbs[-1]["name"].lower():
                         breadcrumbs.append({"name": current_title, "url": current_path})
                     else:
-                        # Nếu không, giữ Home > List > Chức năng
                         breadcrumbs = [{"name": "Home", "url": "/"}]
                         breadcrumbs.append({"name": f"{app_name.capitalize()} List", "url": f"/{app_name}/list/"})
                         breadcrumbs.append({"name": current_title, "url": current_path})
