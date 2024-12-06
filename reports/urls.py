@@ -4,7 +4,7 @@ from . import views, users_report
 app_name = 'reports'
 urlpatterns = [
     # URL to load the report dashboard
-    path('dashboard/', views.report_dashboard, name='report_dashboard'),
+    path('', views.report_dashboard, name='report_dashboard'),
     
     #Course
     path('course/course-overview/', views.course_overview_report, name='course_overview_report'),

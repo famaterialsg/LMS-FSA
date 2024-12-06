@@ -96,6 +96,7 @@
         <div class="sidebar-collapsed">
             <ul class="nav flex-column">
                 {% for group in module_groups %}
+                    <!-- Hiển thị nhóm module nếu có module trong nhóm -->
                     {% for module in grouped_modules|get_item:group %}
                         <li class="nav-item text-center">
                             <a class="nav-link text-light {% if module.module_url == active_module_url %}active{% endif %}" 
@@ -105,6 +106,10 @@
                             </a>
                         </li>
                     {% endfor %}
+                    <!-- Thêm dấu gạch ngang sau mỗi nhóm -->
+                    {% if not forloop.last %}
+                        <hr class="my-2" style="border-color: #ccc; border-width: 2px;"> <!-- Đường phân cách đậm hơn -->
+                    {% endif %}
                 {% endfor %}
             </ul>
         </div>
@@ -179,7 +184,8 @@
 
         // Kiểm tra và thêm lớp active cho sidebar mở rộng
         document.querySelectorAll('.sidebar-expanded .nav-link').forEach(function (link) {
-            if (link.getAttribute('href') === currentURL) {
+            // Kiểm tra xem URL hiện tại có bắt đầu bằng URL của link không (ví dụ: /user và /user/add)
+            if (currentURL.startsWith(link.getAttribute('href'))) {
                 link.classList.add('active'); // Thêm lớp active cho mục phù hợp
                 link.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Cuộn đến mục active
             } else {
@@ -189,7 +195,7 @@
 
         // Kiểm tra và thêm lớp active cho sidebar thu gọn
         document.querySelectorAll('.sidebar-collapsed .nav-link').forEach(function (link) {
-            if (link.getAttribute('href') === currentURL) {
+            if (currentURL.startsWith(link.getAttribute('href'))) {
                 link.classList.add('active'); // Thêm lớp active cho mục phù hợp
                 link.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Cuộn đến mục active
             } else {
@@ -215,40 +221,5 @@
             }
         });
 
-    });
-</script>
-
-
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Hàm sắp xếp các mục trong sidebar theo alphabet
-        function sortSidebarItems() {
-            document.querySelectorAll('.sidebar-collapsed ul').forEach(function (ul) {
-                let items = Array.from(ul.children);
-
-                // Sắp xếp các mục theo tên module (thứ tự alphabet)
-                items.sort((a, b) => {
-                    let nameA = a.querySelector('.module-name').innerText.toLowerCase();
-                    let nameB = b.querySelector('.module-name').innerText.toLowerCase();
-                    return nameA.localeCompare(nameB);
-                });
-
-                // Gắn lại từng item vào ul sau khi sắp xếp
-                items.forEach(item => ul.appendChild(item));
-            });
-        }
-
-        // Sắp xếp các mục ngay khi trang được tải
-        sortSidebarItems();
-
-        // Sau khi sắp xếp, nếu có module nào đã được active, chúng ta sẽ đảm bảo mục đó vẫn được active
-        const currentURL = window.location.pathname; // Lấy URL hiện tại
-        document.querySelectorAll('.sidebar-collapsed .nav-link').forEach(function (link) {
-            if (link.getAttribute('href') === currentURL) {
-                link.classList.add('active'); // Thêm lớp active cho mục phù hợp
-                link.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Cuộn đến mục active
-            }
-        });
     });
 </script>

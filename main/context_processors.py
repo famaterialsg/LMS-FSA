@@ -1,5 +1,6 @@
 # context_processors.py
 from .models import SiteStatus
+from django.urls import resolve
 
 def site_status(request):
     # Lấy bản ghi đầu tiên của SiteStatus (trạng thái trang web)
@@ -9,7 +10,7 @@ def site_status(request):
     return {
         'is_site_locked': not site_status.status if site_status else False
     }
-from django.urls import resolve
+
 
 def breadcrumb(request):
     # Lấy session của breadcrumb hoặc khởi tạo mới
@@ -34,18 +35,24 @@ def breadcrumb(request):
                     breadcrumbs = [{"name": "Home", "url": "/"}]
                     breadcrumbs.append({"name": "Book search", "url": current_path})
                 
-                # Điều kiện đặc biệt cho Report module
                 elif app_name == "reports":
                     breadcrumbs = [{"name": "Home", "url": "/"}]
                     
-                    # Kiểm tra nếu là trang báo cáo dashboard
-                    if 'dashboard' in current_path:
-                        breadcrumbs.append({"name": "Report", "url": "/reports/dashboard/"})
+                    # Kiểm tra nếu là trang báo cáo chính (dashboard)
+                    if current_path == "/reports/":
+                        breadcrumbs.append({"name": "Report", "url": "/reports/"})
                     else:
                         # Các báo cáo khác
-                        breadcrumbs.append({"name": "Report", "url": "/reports/dashboard/"})
+                        breadcrumbs.append({"name": "Report", "url": "/reports/"})
                         breadcrumbs.append({"name": current_title, "url": current_path})
 
+
+                # Điều kiện đặc biệt cho module_group/modules
+                elif current_path.startswith('/module_group/modules/'):
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    breadcrumbs.append({"name": "Module Group List", "url": "/module_group/"})  # Sửa thành /module_group/
+                    breadcrumbs.append({"name": "Modules", "url": current_path})
+                
                 # Điều kiện đặc biệt cho Activity, Achievement, Quiz Bank
                 elif app_name in ["activity", "achievement", "quiz_bank"]:
                     breadcrumbs = [{"name": "Home", "url": "/"}]

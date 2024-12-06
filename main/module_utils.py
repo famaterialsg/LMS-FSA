@@ -32,11 +32,15 @@ def get_grouped_modules(user, temporary_role_id=None):
     module_groups = ModuleGroup.objects.all()
     grouped_modules = {}
     
-    # Nhóm các module theo group
+    # Nhóm các module theo group và sắp xếp theo tên module
     for module in user_modules:
         group = module.module_group
         if group not in grouped_modules:
             grouped_modules[group] = []
         grouped_modules[group].append(module)
     
+    # Sắp xếp modules trong từng group theo tên (module_name)
+    for group, modules in grouped_modules.items():
+        grouped_modules[group] = sorted(modules, key=lambda module: module.module_name.lower())
+
     return module_groups, grouped_modules
