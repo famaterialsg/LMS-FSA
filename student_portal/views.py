@@ -608,15 +608,6 @@ def course_detail(request, pk):
             # Calculate the expected duration for the material
             reading = ReadingMaterial.objects.get(id=material.material_id)
             if reading.content:
-                youtube_links = re.findall(
-                    r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
-                    reading.content)
-                print("This is the link:", youtube_links, "of the reading number", reading.title)
-                for link in youtube_links:
-                    youtube_total_duration += get_youtube_video_duration(link)
-                    #material.expect_duration += get_youtube_video_duration(link)
-                    print("This is the total duration:", youtube_total_duration)
-
                 match = re.search(r'src="(/media/course_pdf/.*?)"', reading.content)
                 if match:
                     file_url = match.group(1)  # Extract the URL part from the 'src' attribute
@@ -627,12 +618,29 @@ def course_detail(request, pk):
                     if default_storage.exists(file_path):
                         word_count = count_words_in_pdf(file_path)
                         material.expect_duration = word_count / 250
+                        youtube_links = re.findall(
+                            r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
+                            reading.content)
+                        print("This is the link:", youtube_links, "of the reading number", reading.title)
+                        for link in youtube_links:
+                            youtube_total_duration += get_youtube_video_duration(link)
+                            material.expect_duration += get_youtube_video_duration(link)/60
+                            print("This is the total duration:", youtube_total_duration)
                     else:
                         print(f"File does not exist: {file_path}")
                 else:
                     plain_text = re.sub(r'<[^>]+>', '', reading.content)
                     word_count = len(plain_text.split())
                     material.expect_duration = word_count / 250
+
+                    youtube_links = re.findall(
+                        r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
+                        reading.content)
+                    print("This is the link:", youtube_links, "of the reading number", reading.title)
+                    for link in youtube_links:
+                        youtube_total_duration += get_youtube_video_duration(link)
+                        material.expect_duration += get_youtube_video_duration(link)/60
+                        print("This is the total duration:", youtube_total_duration)
 
                 material.save()
 
@@ -666,7 +674,7 @@ def course_detail(request, pk):
         'articles_count': len(articles),
         'exercises_count': len(exercises),
         'lectures_list': len(lectures_list),
-        'total_duration': sum(total_duration)/60 + youtube_duration_hours,
+        'total_duration': sum(total_duration)/60,
         'youtube_duration': youtube_duration_hours,
     }
 
