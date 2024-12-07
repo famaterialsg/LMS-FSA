@@ -78,7 +78,7 @@
                                     <i class="far fa-star text-warning"></i>
                                 {% endif %}
                             {% endfor %}
-                            <span class="ms-2 text-muted">({{ course.average_rating|floatformat:1 }})</span>
+                            <span class="ms-2 text-muted">({{ course.average_rating|floatformat:1 }})</span>&nbsp;
                             {% if course.user_enrolled %}
                             <a href="{% url 'feedback:combined_feedback' course.id %}"
                                class="btn btn-outline-primary btn-sm rounded-pill">
@@ -91,29 +91,39 @@
 
                     <!-- Action Buttons -->
                     <div class="mt-auto">
-                        <div class="d-grid gap-2">
+                        <div class="d-flex gap-2"> <!-- Flex container for inline buttons -->
                             {% if course.user_enrolled %}
                                 {% with last_access_data|default_if_none:''|get_item:course.id as access_data %}
                                     {% if access_data.material %}
+                                        <!-- Continue Learning Button -->
                                         <a href="{% url 'student_portal:course_content' course.pk access_data.session.id %}?file_id={{ access_data.material.id }}&file_type={{ access_data.material.material_type }}"
-                                           class="btn btn-primary">
+                                           class="btn btn-primary flex-fill">
                                             <i class="fas fa-play-circle me-2"></i>Continue Learning
                                         </a>
-                                    {% else %}
+
+                                        <!-- View Details Button -->
                                         <a href="{% url 'student_portal:course_detail' course.id %}"
-                                           class="btn btn-outline-primary">
+                                           class="btn btn-outline-primary flex-fill">
+                                            <i class="fas fa-info-circle me-2"></i>View Details
+                                        </a>
+                                    {% else %}
+                                        <!-- Single View Details Button -->
+                                        <a href="{% url 'student_portal:course_detail' course.id %}"
+                                           class="btn btn-outline-primary flex-fill">
                                             <i class="fas fa-info-circle me-2"></i>View Details
                                         </a>
                                     {% endif %}
                                 {% endwith %}
                             {% else %}
+                                <!-- Single View Details Button for Not Enrolled -->
                                 <a href="{% url 'student_portal:course_detail' course.id %}"
-                                   class="btn btn-outline-primary">
+                                   class="btn btn-outline-primary flex-fill">
                                     <i class="fas fa-info-circle me-2"></i>View Details
                                 </a>
                             {% endif %}
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -197,4 +207,3 @@
     </div>
 </div>
 {% endblock %}
-

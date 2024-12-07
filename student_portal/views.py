@@ -16,6 +16,12 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 import json
 import re
+import urllib.parse
+from django.conf import settings
+import os
+from django.core.files.storage import default_storage
+import pdfplumber
+
 
 
 def start_viewing(user, material, request):
@@ -403,6 +409,98 @@ def course_list(request):
     })
 
 
+def count_words_in_pdf(pdf_path):
+    word_count = 0
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                # Extract the text from the page
+                text = page.extract_text()
+                if text:
+                    # Count words by splitting the text by whitespace
+                    word_count += len(text.split())
+    except Exception as e:
+        print(f"Error processing PDF: {e}")
+    return word_count
+
+import urllib.parse
+from googleapiclient.discovery import build
+
+YOUTUBE_API_KEY = 'AIzaSyAzxLp14NgigkY99iNz684GG4iM4_lLfoI'
+
+
+def get_youtube_video_duration(video_url):
+    """
+    Fetch the duration of a YouTube video using the YouTube Data API.
+
+    Args:
+        video_url (str): The YouTube video URL or embedded URL.
+
+    Returns:
+        int: Duration of the video in seconds, or 0 if the video cannot be fetched.
+    """
+    try:
+        # Extract the video ID from the URL
+        parsed_url = urllib.parse.urlparse(video_url)
+
+        if "youtube.com/watch" in video_url:
+            # Regular YouTube video link
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            video_id = query_params.get('v', [None])[0]
+        elif "youtube.com/embed/" in video_url:
+            # Embedded YouTube video link
+            path_parts = parsed_url.path.split('/')
+            video_id = path_parts[-1] if path_parts else None
+            # Remove query parameters from video ID if present
+            if video_id and '?' in video_id:
+                video_id = video_id.split('?')[0]
+        else:
+            video_id = None
+
+        if not video_id:
+            return 0
+
+        # Initialize the YouTube API client
+        youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+
+        # Request video details
+        response = youtube.videos().list(
+            part='contentDetails',
+            id=video_id
+        ).execute()
+
+        if 'items' in response and len(response['items']) > 0:
+            content_details = response['items'][0]['contentDetails']
+            duration_iso = content_details.get('duration')
+
+            # Parse ISO 8601 duration into seconds
+            return parse_iso8601_duration(duration_iso)
+
+    except Exception as e:
+        print(f"Error fetching video duration: {e}")
+
+    return 0
+
+
+def parse_iso8601_duration(duration_iso):
+    """
+    Convert ISO 8601 duration format (PnDTnHnMnS) to seconds.
+
+    Args:
+        duration_iso (str): Duration in ISO 8601 format (e.g., PT1H2M30S).
+
+    Returns:
+        int: Duration in seconds.
+    """
+    import isodate
+
+    try:
+        parsed_duration = isodate.parse_duration(duration_iso)
+        return int(parsed_duration.total_seconds())
+    except Exception as e:
+        print(f"Error parsing ISO 8601 duration: {e}")
+        return 0
+
 @login_required
 def course_detail(request, pk):
     # Get the course based on the primary key (pk)
@@ -481,6 +579,69 @@ def course_detail(request, pk):
         else:
             last_accessed_material = None
 
+    articles = []
+    exercises = []
+    lectures_list = []
+    total_duration = []
+    youtube_total_duration = 0
+
+    # Loop through each session
+    for session in sessions:
+        # Get all the materials for this session in one query
+        materials = CourseMaterial.objects.filter(session=session,
+                                                  material_type__in=['lectures', 'references', 'assignments', 'labs',
+                                                                     'assessments'])
+
+        # Loop through all materials in this session
+        for material in materials:
+            # Append to articles or exercises list based on material type
+            if material.material_type in ['lectures', 'references']:
+                articles.append(material)
+            elif material.material_type in ['assignments', 'labs', 'assessments']:
+                exercises.append(material)
+
+            # If it's a lecture, add it to the lectures list
+            if material.material_type == 'lectures':
+                lectures_list.append(material)
+
+            # Calculate the expected duration for the material
+            reading = ReadingMaterial.objects.get(id=material.material_id)
+            if reading.content:
+                youtube_links = re.findall(
+                    r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
+                    reading.content)
+                print("This is the link:", youtube_links, "of the reading number", reading.title)
+                for link in youtube_links:
+                    youtube_total_duration += get_youtube_video_duration(link)
+                    print("This is the total duration:", youtube_total_duration)
+
+                match = re.search(r'src="(/media/course_pdf/.*?)"', reading.content)
+                if match:
+                    file_url = match.group(1)  # Extract the URL part from the 'src' attribute
+                    decoded_file_url = urllib.parse.unquote(file_url)  # Decode the URL
+                    decoded_file_url = decoded_file_url.split('#')[0]
+                    file_path = decoded_file_url.lstrip('/media')  # Remove leading slash to get the actual file path
+                    file_path = os.path.join(settings.MEDIA_ROOT, file_path)
+                    if default_storage.exists(file_path):
+                        word_count = count_words_in_pdf(file_path)
+                        material.expect_duration = word_count / 250
+                    else:
+                        print(f"File does not exist: {file_path}")
+                else:
+                    plain_text = re.sub(r'<[^>]+>', '', reading.content)
+                    word_count = len(plain_text.split())
+                    material.expect_duration = word_count / 250
+
+                material.save()
+
+            # Add to total duration list for later summing
+            total_duration.append(material.expect_duration)
+
+        # Calculate and store the lecture count for the session
+        session.lecture_count = len([m for m in materials if m.material_type == 'lectures'])
+
+    youtube_duration_hours = youtube_total_duration / 3600
+
     context = {
         'course': course,
         'prerequisites': prerequisites,
@@ -500,6 +661,11 @@ def course_detail(request, pk):
         'comeback': comeback,
         'last_accessed_material': last_accessed_material,
         'last_accessed_session': last_accessed_session,
+        'articles_count': len(articles),
+        'exercises_count': len(exercises),
+        'lectures_list': len(lectures_list),
+        'total_duration': sum(total_duration)/60,
+        'youtube_duration': youtube_duration_hours,
     }
 
     return render(request, 'courses/course_detail.html', context)

@@ -9,7 +9,7 @@ from django.template.loader import render_to_string
 class Course(models.Model):
     course_name = models.CharField(max_length=255, unique=True)
     course_code = models.CharField(max_length=20, unique=True, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    description = RichTextField(blank=True, null=True)
 
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_courses')
     instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='taught_courses')
@@ -120,6 +120,7 @@ class CourseMaterial(models.Model):
     material_type = models.CharField(max_length=20, choices=MATERIAL_TYPE_CHOICES)
     order = models.PositiveIntegerField()  # Order of appearance
     title = models.CharField(max_length=255)
+    expect_duration = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f'session id: {self.session.id}   title: {self.title}'
