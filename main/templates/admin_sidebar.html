@@ -181,12 +181,17 @@
 
         // Xử lý các link active trong sidebar
         const currentURL = window.location.pathname; // Lấy URL hiện tại
+        // Trích xuất phần đầu tiên của URL (tên ứng dụng)
+        const appName = currentURL.split('/')[1];
 
-        // Kiểm tra và thêm lớp active cho sidebar mở rộng
+        // Xử lý logic dựa trên tên ứng dụng
         document.querySelectorAll('.sidebar-expanded .nav-link').forEach(function (link) {
-            // Kiểm tra xem URL hiện tại có bắt đầu bằng URL của link không (ví dụ: /user và /user/add)
-            if (currentURL.startsWith(link.getAttribute('href'))) {
-                link.classList.add('active'); // Thêm lớp active cho mục phù hợp
+            const linkHref = link.getAttribute('href'); // Lấy href của từng link
+            const linkAppName = linkHref.split('/')[1]; // Lấy phần đầu từ href
+        
+            // So sánh appName với linkAppName
+            if (appName === linkAppName) {
+                link.classList.add('active'); // Thêm lớp active
                 link.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Cuộn đến mục active
             } else {
                 link.classList.remove('active'); // Xóa lớp active nếu không phù hợp
@@ -195,8 +200,12 @@
 
         // Kiểm tra và thêm lớp active cho sidebar thu gọn
         document.querySelectorAll('.sidebar-collapsed .nav-link').forEach(function (link) {
-            if (currentURL.startsWith(link.getAttribute('href'))) {
-                link.classList.add('active'); // Thêm lớp active cho mục phù hợp
+            const linkHref = link.getAttribute('href'); // Lấy href của từng link
+            const linkAppName = linkHref.split('/')[1]; // Lấy phần đầu từ href
+
+            // So sánh appName với linkAppName
+            if (appName === linkAppName) {
+                link.classList.add('active'); // Thêm lớp active
                 link.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Cuộn đến mục active
             } else {
                 link.classList.remove('active'); // Xóa lớp active nếu không phù hợp
