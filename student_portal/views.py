@@ -594,6 +594,7 @@ def course_detail(request, pk):
 
         # Loop through all materials in this session
         for material in materials:
+            #material.expect_duration = 0
             # Append to articles or exercises list based on material type
             if material.material_type in ['lectures', 'references']:
                 articles.append(material)
@@ -613,6 +614,7 @@ def course_detail(request, pk):
                 print("This is the link:", youtube_links, "of the reading number", reading.title)
                 for link in youtube_links:
                     youtube_total_duration += get_youtube_video_duration(link)
+                    #material.expect_duration += get_youtube_video_duration(link)
                     print("This is the total duration:", youtube_total_duration)
 
                 match = re.search(r'src="(/media/course_pdf/.*?)"', reading.content)
@@ -664,7 +666,7 @@ def course_detail(request, pk):
         'articles_count': len(articles),
         'exercises_count': len(exercises),
         'lectures_list': len(lectures_list),
-        'total_duration': sum(total_duration)/60,
+        'total_duration': sum(total_duration)/60 + youtube_duration_hours,
         'youtube_duration': youtube_duration_hours,
     }
 
