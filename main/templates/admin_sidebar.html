@@ -96,23 +96,29 @@
         <div class="sidebar-collapsed">
             <ul class="nav flex-column">
                 {% for group in module_groups %}
-                    <!-- Hiển thị nhóm module nếu có module trong nhóm -->
-                    {% for module in grouped_modules|get_item:group %}
-                        <li class="nav-item text-center">
-                            <a class="nav-link text-light {% if module.module_url == active_module_url %}active{% endif %}" 
-                            href="{% url module.module_url %}">
-                                <i class="{{ module.icon }}" style="font-size: 4vh;"></i> <!-- Icon module -->
-                                <span class="module-name d-block mt-1" style="font-size: 1vh;">{{ module.module_name }}</span> <!-- Tên module -->
-                            </a>
-                        </li>
-                    {% endfor %}
-                    <!-- Thêm dấu gạch ngang sau mỗi nhóm -->
-                    {% if not forloop.last %}
-                        <hr class="my-2" style="border-color: #ccc; border-width: 2px;"> <!-- Đường phân cách đậm hơn -->
-                    {% endif %}
+                    <!-- Lấy danh sách các module trong nhóm -->
+                    {% with grouped_modules|get_item:group as modules_in_group %}
+                        <!-- Hiển thị nhóm module nếu còn module trong nhóm -->
+                        {% if modules_in_group %}
+                            {% for module in modules_in_group %}
+                                <li class="nav-item text-center">
+                                    <a class="nav-link text-light {% if module.module_url == active_module_url %}active{% endif %}" 
+                                       href="{% url module.module_url %}">
+                                        <i class="{{ module.icon }}" style="font-size: 4vh;"></i> <!-- Icon module -->
+                                        <span class="module-name d-block mt-1" style="font-size: 1vh;">{{ module.module_name }}</span> <!-- Tên module -->
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            <!-- Thêm dấu gạch ngang nếu nhóm hiện tại không phải nhóm cuối và có module -->
+                            {% if not forloop.last %}
+                                <hr class="my-2" style="border-color: #ccc; border-width: 2px;">
+                            {% endif %}
+                        {% endif %}
+                    {% endwith %}
                 {% endfor %}
             </ul>
         </div>
+        
 
     {% endif %}
 </ul>
