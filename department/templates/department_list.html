@@ -129,9 +129,25 @@
                     <form method="POST" enctype="multipart/form-data" action="{% url 'department:import_departments' %}">
                         {% csrf_token %}
                         <div class="modal-body">
-                            <div class="form-group">
-                                <label for="file_format">Select File Format</label>
-                                <select id="file_format" name="file_format" class="form-select">
+                            <div>
+                                <p>Please download and use one of the following templates:</p>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" id="templateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Download Template
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="templateDropdown">
+                                        <li><a class="dropdown-item" href="{% static 'department/departments.csv' %}" download="template.csv">CSV Template</a></li>
+                                        <li><a class="dropdown-item" href="{% static 'department/departments.xlsx' %}" download="template.xlsx">Excel Template</a></li>
+                                        <li><a class="dropdown-item" href="{% static 'department/departments.tsv' %}" download="template.tsv">TSV Template</a></li>
+                                        <li><a class="dropdown-item" href="{% static 'department/departments.json' %}" download="template.json">JSON Template</a></li>
+                                        <li><a class="dropdown-item" href="{% static 'department/departments.yaml' %}" download="template.yaml">YAML Template</a></li>
+                                    </ul>
+                                </div>
+                                <hr>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="file_format" class="form-label">Select File Format</label>
+                                <select id="file_format" name="file_format" class="form-select" required>
                                     <option value="csv">CSV</option>
                                     <option value="yaml">YAML</option>
                                     <option value="json">JSON</option>
@@ -140,8 +156,9 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="file">Upload File</label>
+                                <label for="file" class="form-label">Upload File</label>
                                 <input type="file" id="file" name="file" class="form-control" accept=".csv,.yaml,.json,.tsv,.xlsx" required>
+                                <small class="form-text text-muted">Supported formats: CSV, YAML, JSON, TSV, Excel</small>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -152,6 +169,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Modal Export -->
         <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">

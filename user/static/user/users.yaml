@@ -1,0 +1,162 @@
+- {email: gianglhse171770@fpt.edu.vn, first_name: Lưu Huỳnh Giang, last_name: Lưu,
+  password: pbkdf2_sha256$870000$X3p29Dec2NeoDMODELBj0e$q3FX2dNdrDIcTwtOVqLtso6h0qRXNG3UM38kf1fhKt8=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE35222, username: gianglhse171770}
+- {email: hieuttse173132@fpt.edu.vn, first_name: Trần Trung Hiếu, last_name: Trần,
+  password: pbkdf2_sha256$870000$SWKG13R3ZBNL2cs3fQBCbn$kigX607QcQIFd4laf1HO6OhFW9geYu+qLQv84lZZQys=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE34222, username: hieuttse173132}
+- {email: hoangnnse171944@fpt.edu.vn, first_name: Nguyễn Nhật Hoàng, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$4etfy668HaswCyrwtHkUIr$e7oeG7L3VaEmkExBwUo/UXxukfWwxsKWt2Cyb3GAWDE=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE33222, username: hoangnnse171944}
+- {email: huybtse171401@fpt.edu.vn, first_name: Bùi Tấn Huy, last_name: Bùi, password: pbkdf2_sha256$870000$hNPsyzfeF4cUe1Po4IGzsg$/Nkjl4D85b20iYuG/cmdo5HluB0MEGXKT5zFoBahUfU=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE32222, username: huybtse171401}
+- {email: huynvse183373@fpt.edu.vn, first_name: Nguyễn Việt Huy, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$DI2mVWVcZcahWAUUuS3GRg$lolZxKwAhK7oeXHQPbDgBMfAB9Af7eXFtCtU6gK0QpE=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE29222, username: huynvse183373}
+- {email: khangnvse171562@fpt.edu.vn, first_name: Nguyễn Vĩnh Khang, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$HHbsRJxu6Q2B3jpkMsGxhM$0Jy29xIoVKSYz6JZrAPiLzRcoAgdYjTsq7tcw10i6/k=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE27222, username: khangnvse171562}
+- {email: khangphse180736@fpt.edu., first_name: Phan Hoài Khang, last_name: Phan,
+  password: pbkdf2_sha256$870000$wBB1pWlNwgRVZrGbJRredf$xZF29Gnqyi2hku3NmoDQuUKMdtTCSSsT45nKIWUMn3w=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE26222, username: khangphse180736}
+- {email: khoanktse184063@fpt.edu.vn, first_name: Nguyễn Khánh Thành Khoa, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$KP1wrD5E4aymDMf3iEt5C6$EcNiKuXhIEIXw7ZQZisggKFEwIKAIm60FM8riPTmWtA=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE25222, username: khoanktse184063}
+- {email: nguyendngse172356@fpt.edu.vn, first_name: Đồng Nguyễn Gia Nguyên, last_name: Đồng,
+  password: pbkdf2_sha256$720000$ElYvzO9PEcxllfic0KzX1F$bePhR8HmlXnBw7yZbvTwlsZb7uMQgtuppLpRZl/HHmw=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE24222, username: nguyendngse172356}
+- {email: nguyentkse183486@fpt.edu.vn, first_name: Trần Khánh Nguyên, last_name: Trần,
+  password: pbkdf2_sha256$870000$JSgsVTfuL7oTzY84sNprLx$3TqSyiKwe7XXGeYESTxbGipOM2ehA5taaWbEiasSOjc=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE23222, username: nguyentkse183486}
+- {email: nhu@gmail.com, first_name: nhu, last_name: ne, password: pbkdf2_sha256$720000$vJbmsREQeFiGtYb8kSSeAQ$cfNYU6d8080G90Dl3NSccK6rKBFV3Bh3GKtxntd2q/g=,
+  profile__bio: '123', profile__interests: '123', profile__learning_style: '123',
+  profile__preferred_language: '123', profile__profile_picture_url: 'https://hoanghamobile.com/tin-tuc/wp-content/webp-express/webp-images/uploads/2024/04/anh-con-cho-51.jpg.webp',
+  profile__role__role_name: Manager, student_code: '', username: nhu}
+- {email: nhudnqse171733@fpt.edu.vn, first_name: Dương Ngọc Quỳnh Như, last_name: Dương,
+  password: pbkdf2_sha256$870000$dkJ1RHV6Dd7Ld4jjbVarL9$R9tla9sMg3ZWWSk969ty0kZ6psAkk3mMlnbBsub+FwI=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE19222, username: nhudnqse171733}
+- {email: phatptse170522@fpt.edu.vn, first_name: Phan Tấn Phát, last_name: Phan, password: pbkdf2_sha256$870000$CrZlEnIHq0bTX8hlDzyD14$kvJwwbFRf9MfUOJ07rB7L9xOeCzcSvclOePZ0ouwB/4=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE18222, username: phatptse170522}
+- {email: phongnnse184886@fpt.edu.vn, first_name: Nguyễn Nguyên Phong, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$rdGa2YpB01xfqQ5WWAt8lt$eAZOrzV55Yj+V//K90n8pGuzZJAHWZ3y5qabXaCFUmE=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE17222, username: phongnnse184886}
+- {email: quannhmse183631@fpt.edu.vn, first_name: Nguyễn Hồng Minh Quân, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$lpmROqCicAML8wZoUQYmU5$0Acxsr01iWtxyEy7l36VLFUdKzTU9pm3Qm2r1QotP7s=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE16222, username: quannhmse183631}
+- {email: quynhnndse172195@fpt.edu.vn, first_name: Nguyễn Ngọc Diễm Quỳnh, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$P3tkgHWatAPD0fbjYYD2R3$0LYcyj0mu2qjKyve/haJvGOi+rIaktO+Deqqw879HGw=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE15222, username: quynhnndse172195}
+- {email: test125@gmail.com, first_name: Test, last_name: Tran, password: pbkdf2_sha256$870000$KLzuUqovGTEo7bMY7T7Zy0$cjfAKMzv0Rm3w1Y2nntCMdLijueYl0v0i1XaDM6/S34=,
+  profile__bio: fff, profile__interests: '', profile__learning_style: ff, profile__preferred_language: ff,
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE42222, username: test}
+- {email: thangdqse170249@fpt.edu.vn, first_name: Đặng Quốc Thắng, last_name: Đặng,
+  password: pbkdf2_sha256$870000$MY4Ivwg7gC0MlOwKau7znM$vKb/P+mrG4RccNtCGy4DI1MGpd6IOUWXEGpaRLnnyfA=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE14222, username: thangdqse170249}
+- {email: thaonlpse183092@fpt.edu.vn, first_name: Nguyễn Lâm Phương Thảo, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$rth7hni6IjG6DawiOC4iCs$yjO2CqXKazl60BNpoyKMofwB/pXlRbU4O76VJ4tHST0=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE13222, username: thaonlpse183092}
+- {email: thinhndpse171720@fpt.edu.vn, first_name: Nguyễn Đặng Phúc Thịnh, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$N5F1c72fBxCrqlm2QY99fr$YWKCh1vs8u+wtHOo/J2S0ZriPq9vblBrFSnwhc0PF9o=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE12222, username: thinhndpse171720}
+- {email: tinndse181833@fpt.edu.vn, first_name: Nguyễn Đức Tín, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$AQHXdNtliXnwoEqgAjoKWk$UPTCQnGKJidDpFlQgHycH9kkEt7+Xlwh8F3zf2XYp/A=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE99999, username: tinndse181833}
+- {email: tinntse171437@fpt.edu.vn, first_name: Nguyễn Trọng Tín, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$w3Um1wBOHVAZ8zT1SMeFdz$hDOJ3/4+8ztBar9VtZGFeXcWYwV/WUBBLWSabWDpzW0=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE77777, username: tinntse171437}
+- {email: trieuhhse172034@fpt.edu.vn, first_name: Huỳnh Hải Triều, last_name: Huỳnh,
+  password: pbkdf2_sha256$870000$0kuOSgy0OEkn7UNHOJxf5Q$mwIVbcQQMyEeADgr09voLrnSKRyyv1LCBMBgchk0HeA=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE11111, username: trieuhhse172034}
+- {email: trungndse183937@fpt.edu.vn, first_name: Nguyễn Đức Trung, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$tm5DTBEYvfh0nKT8Rrpr5i$nFxWakYY3wfxsjrRzlhby844AOLJ3g6y/2SBBp5pOHA=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE66666, username: trungndse183937}
+- {email: truongtqse173295@fpt.edu.vn, first_name: Trần Quốc Trường, last_name: Trần,
+  password: pbkdf2_sha256$870000$pcurLQHiI3l6s4cYarbzmK$n6Jzwc6Zpln7yaLTW71EOxLPb4rAVCwBMusERT1SyAg=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE88888, username: truongtqse173295}
+- {email: uyenntse170340@fpt.edu.vn, first_name: Nguyễn Thu Uyên, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$ZnsUPwRrQVhNOOfbkc2S2Z$4+6wS4AwLmoseNmGuWr1rODMsN7B57xByzKrUtRn+Sw=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE44444, username: uyenntse170340}
+- {email: zidanepmse171506@fpt.edu.vn, first_name: Phạm Minh Zidane, last_name: Phạm,
+  password: pbkdf2_sha256$870000$C6UmPjqztMwgJBxAyE4fLa$2CwVMYuzmNq4m4Xze/97CNrKV1N9kr7bG0k9L+gxFkA=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE33333, username: zidanepmse171506}
+- {email: baodlqse171300@fpt.edu.vn, first_name: Dương Lâm Quốc Bảo, last_name: Dương,
+  password: pbkdf2_sha256$870000$TIPxXZQE0OXqumuCvV3G7Q$17gf6T/fbyEvLf4c/oUvSurT1WZ4OLwQlVWWDnIe8H4=,
+  profile__bio: aaaaaá, profile__interests: sadassd, profile__learning_style: sadfsadf,
+  profile__preferred_language: Vietnamese, profile__profile_picture_url: 'https://cdn.discordapp.com/attachments/1152195825305399331/1281649965260869773/image.png?ex=66e6604b&is=66e50ecb&hm=4a5b17b6b92ebff9d4d52162709116c16ed6397dd2e9ffd5b27d7b105944bd93&',
+  profile__role__role_name: Student, student_code: SE17123123, username: baodlqse171300}
+- {email: diennpse171952@fpt.edu.vn, first_name: Nguyễn Phúc Điền, last_name: Nguyễn,
+  password: pbkdf2_sha256$870000$NgD9s8jfFPTDcs722deSQu$//32ESXQD2iqUh1WaAz2FrIR260haERWRYAXVDBHOa4=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE38222, username: diennpse171952}
+- {email: dinhvvse183558@fpt.edu.vn, first_name: Võ Viết Đỉnh, last_name: Võ, password: pbkdf2_sha256$870000$c6lLJ0cs2Ga84WBzFQYmH6$LTVnjw+HFjm9oSCEjR7I92mDvsx9nFEXmO4XhZcBArI=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE37222, username: dinhvvse183558}
+- {email: duyhkse184883@fpt.edu.vn, first_name: Hoàng Khương Duy, last_name: Hoàng,
+  password: pbkdf2_sha256$870000$tvkuOb470BnoBXv7hf03N7$3OQu/gcBNnWy27GctIiJ8dlfApQ4s9A8TLGu1qmiiDg=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE22222, username: duyhkse184883}
+- {email: duytlse172563@fpt.edu.vn, first_name: Trần Lê Duy, last_name: Trần, password: pbkdf2_sha256$870000$2opico9jdhXA35XS172oHf$0OTCjNfNR15pIbreL3XmVx7AwzL7qawLMMn3Ii6Nyeo=,
+  profile__bio: '', profile__interests: ấd, profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'http://127.0.0.1:8000/user/add/', profile__role__role_name: Student,
+  student_code: SE36222, username: duytlse172563}
+- {email: khang@gmail.com, first_name: khang, last_name: ne, password: pbkdf2_sha256$870000$guL9n4sOWHGjD9Ojzd5rPw$lORmRMtnDCkipfXHqxUYy8WJ1qrxdCTVbbR4h2sYtfQ=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: 'https://th.bing.com/th/id/OIP.P24qWOlgK_36gMSQPLUfNwHaFn?w=218&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7',
+  profile__role__role_name: Instructor, student_code: '', username: khang}
+- {email: khai@gmail.com, first_name: khai, last_name: ne, password: pbkdf2_sha256$870000$YAWKNmRuN5dRKqDUWzbCHn$YdcFZHGqSLzVLZ7gdqMAgzxYIHbV3yZ6ObhqM32O6qU=,
+  profile__bio: '', profile__interests: '', profile__learning_style: '', profile__preferred_language: '',
+  profile__profile_picture_url: '', profile__role__role_name: Manager, student_code: '',
+  username: khai}

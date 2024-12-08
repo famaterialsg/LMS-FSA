@@ -44,10 +44,26 @@
                                     <h5 class="modal-title" id="importModalLabel">Import Users</h5>
                                     <button type="button" class="btn-close" id="closeImportModal" data-bs-dismiss="modal" aria-label="Close"></button>                                    
                                 </div>
+                                <div class="modal-body text-center">
+                                    <p>Please download and use one of the following templates. Each file must contain exactly one sheet with the required columns:</p>
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="templateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Download Template
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="templateDropdown">
+                                            <li><a class="dropdown-item" href="{% static 'user/users.csv' %}" download="template.csv">CSV Template</a></li>
+                                            <li><a class="dropdown-item" href="{% static 'user/users.xlsx' %}" download="template.xlsx">Excel Template</a></li>
+                                            <li><a class="dropdown-item" href="{% static 'user/users.tsv' %}" download="template.tsv">TSV Template</a></li>
+                                            <li><a class="dropdown-item" href="{% static 'user/users.json' %}" download="template.json">JSON Template</a></li>
+                                            <li><a class="dropdown-item" href="{% static 'user/users.yaml' %}" download="template.yaml">YAML Template</a></li>
+                                        </ul>
+                                    </div>
+                                    <hr>
+                                </div>
                                 <form id="importForm" method="POST" enctype="multipart/form-data" action="{% url 'user:import_users' %}">
                                     {% csrf_token %}
                                     <div class="modal-body text-center">
-                                        <h5>Choose a file (XLSX, CSV, JSON)</h5>
+                                        <h5>Choose a file (XLSX, CSV, JSON, TSV, YAML)</h5>
                                         <div id="drop_area" class="drag-area">
                                             <p>Drag and drop file here or click to browse</p>
                                             <small>Limit 200MB per file • <span id="fileName"></span></small>

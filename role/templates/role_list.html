@@ -3,7 +3,7 @@
 {% block title %}Role List{% endblock %}
 {% block content %}
 <div class="mt-4">
-    <h2>Roles</h2>
+    <h1>Roles</h1>
 
     <!-- Hiển thị thông báo nếu có -->
     {% if messages %}
@@ -84,6 +84,15 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="importModalLabel">Import Roles</h5>
                 <button type="button" class="btn-close" id="closeImportModal" data-bs-dismiss="modal" aria-label="Close"></button>                                    
+            </div>
+            <div class="modal-body text-center">
+                <p>Please download and use the following template.</p>
+                <div class="button">
+                    <ul>
+                        <a href="{% static 'excel/template.xlsx' %}" download="template.xlsx">Download Example Template</a>
+                    </ul>
+                </div>
+                <hr>
             </div>
             <form id="importForm" method="POST" enctype="multipart/form-data" action="{% url 'role:import_roles' %}">
                 {% csrf_token %}

@@ -1,0 +1,5 @@
+- {address: Hòa Lạc, courses: 'SQL,Hibernate,JPL - Java Programing Language,Spring
+    Boot Basics,Python Programming', location__name: Hà Nội, name: FSA. HN, users: admin}
+- {address: Quận 9, courses: 'REST API Development,Machine Learning Basics,Advanced
+    Java Programming', location__name: TP. HCM, name: FSA. HN, users: ''}
+- {address: Đà Nẵng, courses: SQL, location__name: Đà Nẵng, name: Ai, users: admin}
