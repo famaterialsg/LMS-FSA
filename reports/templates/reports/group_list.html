@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'group_list' %}active{% endif %}" href="{% url 'reports:group_list' %}">Group List</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'course_distribution' %}active{% endif %}" href="{% url 'reports:course_distribution' %}">Course Distribution</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'group_performance' %}active{% endif %}" href="{% url 'reports:group_performance' %}">Group Performance</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'member_feedback' %}active{% endif %}" href="{% url 'reports:member_feedback' %}">Member Feedback</a>
+    </li>
+</ul>
+
+<div class="container mt-4">
+    <h1>Group List - Pie Chart</h1>
+
+    <!-- Pie Chart Section -->
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="groupPieChart" width="400" height="400"></canvas>
+        </div>
+
+        <!-- Summary Table Section -->
+        <div class="col-md-4">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Total Metrics</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Groups</td>
+                        <td>{{ total_groups }}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Members</td>
+                        <td>{{ total_members }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('groupPieChart').getContext('2d');
+    const groupData = {
+        labels: [{% for group in groups %}"{{ group.group_name }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Number of Members',
+            data: [{% for group in groups %}{{ group.member_count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#F44336', '#FF9F40', '#9966FF'
+            ],
+            hoverOffset: 4
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: groupData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.raw + ' members';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
