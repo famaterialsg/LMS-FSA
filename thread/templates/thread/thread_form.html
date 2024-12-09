@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load form_filters %}
+
+{% block title %}{% if form.instance.pk %}Edit Thread{% else %}Create Thread{% endif %}{% endblock %}
+
+{% block header %}
+<div class="container-fluid bg-gradient py-3">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="text-white mb-0">
+                {% if form.instance.pk %}
+                    <i class="fas fa-edit me-2"></i>Edit Thread
+                {% else %}
+                    <i class="fas fa-plus-circle me-2"></i>Create New Thread
+                {% endif %}
+            </h3>
+            <a href="{% url 'thread:thread_list' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-1"></i>Back to Threads
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="thread-container">
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Thread Title -->
+                <div class="mb-3">
+                    <label class="form-label">Thread Title</label>
+                    {{ form.thread_title|add_class:"form-control" }}
+                    {% if form.thread_title.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.thread_title.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Course Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Course</label>
+                    {{ form.course|add_class:"form-select" }}
+                    {% if form.course.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.course.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Thread Content -->
+                <div class="mb-3">
+                    <label class="form-label">Content</label>
+                    {{ form.thread_content|add_class:"form-control" }}
+                    {% if form.thread_content.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.thread_content.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Image Upload -->
+                <div class="mb-3">
+                    <label class="form-label">Image (optional)</label>
+                    {{ form.image|add_class:"form-control" }}
+                    {% if form.image.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.image.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Anonymous Posting Option -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.is_anonymous|add_class:"form-check-input" }}
+                        <label class="form-check-label" for="{{ form.is_anonymous.id_for_label }}">
+                            Post Anonymously
+                            <small class="text-muted d-block">Your username will be hidden from other users</small>
+                        </label>
+                    </div>
+                    {% if form.is_anonymous.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.is_anonymous.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        {% if form.instance.pk %}
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        {% else %}
+                            <i class="fas fa-plus me-1"></i>Create Thread
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'thread:thread_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+    }
+
+    .thread-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid #ced4da;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .btn {
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #3498db, #2c3e50);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-light {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-light:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-danger {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-check-label {
+        color: #495057;
+    }
+
+    .form-check-input:checked {
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+
+    @media (max-width: 768px) {
+        .thread-container {
+            margin: 1rem auto;
+        }
+        
+        .card {
+            border-radius: 8px;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+        }
+    }
+</style>
+{% endblock %}

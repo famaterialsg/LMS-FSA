@@ -1,0 +1,560 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Thread List{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Table Header Styling */
+    .custom-table thead {
+        background: linear-gradient(45deg, #2c3e50, #3498db) !important;
+        color: white;
+    }
+
+    /* Table Layout */
+    .custom-table {
+        width: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: #e3f2fd;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-table th {
+        white-space: nowrap;
+        padding: 15px 10px;
+        font-weight: 600;
+    }
+
+    /* Column Widths */
+    .col-id { width: 5%; }
+    .col-title { width: 30%; }
+    .col-author { width: 15%; }
+    .col-reactions { width: 30%; }
+    .col-comments { width: 10%; }
+    .col-actions { width: 10%; }
+
+    /* Reactions Styling */
+    .reactions-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .reaction-total {
+        padding: 4px 12px;
+        border-radius: 20px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #2c3e50;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .reaction-total:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+    }
+
+    /* Popover custom styles */
+    .reaction-details {
+        padding: 8px;
+    }
+
+    .reaction-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        font-size: 0.9rem;
+    }
+
+    /* Colors for reaction icons */
+    .text-purple { color: #9b59b6; }
+    .text-orange { color: #e67e22; }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+    }
+
+    .btn-sm {
+        padding: 5px 8px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Thread Title */
+    .thread-title-link {
+        color: #2c3e50;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .thread-title-link:hover {
+        color: #3498db;
+    }
+
+    /* Search and Button Styling */
+    .input-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .input-group input[type="text"] {
+        flex-grow: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .input-group button[type="submit"] {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background-color: #4CAF50;
+        color: white;
+        cursor: pointer;
+    }
+
+    .input-group button[type="submit"]:hover {
+        background-color: #45a049;
+    }
+
+    /* Pagination Styling */
+    .pagination {
+        gap: 5px;
+    }
+
+    .page-item {
+        margin: 0 2px;
+    }
+
+    .page-link {
+        border: none;
+        padding: 8px 16px;
+        color: #2c3e50;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        min-width: 40px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .page-link:hover {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Active Page */
+    .page-item.active .page-link {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Disabled State */
+    .page-item.disabled .page-link {
+        background-color: #e9ecef;
+        color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    /* Previous/Next Icons */
+    .page-link i {
+        font-size: 0.875rem;
+    }
+
+    /* Hover Effects */
+    .page-link:focus {
+        box-shadow: none;
+        outline: none;
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 576px) {
+        .pagination {
+            gap: 3px;
+        }
+
+        .page-link {
+            padding: 6px 12px;
+            min-width: 35px;
+            font-size: 0.875rem;
+        }
+        
+        /* Hide some page numbers on mobile */
+        .pagination .page-item:not(.active):not(:first-child):not(:last-child) {
+            display: none;
+        }
+        
+        .pagination .page-item.active {
+            display: block;
+        }
+    }
+
+    /* Animation */
+    @keyframes pageHover {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+        100% { transform: translateY(0); }
+    }
+
+    .page-link:hover {
+        animation: pageHover 0.3s ease;
+    }
+
+    .btn-custom-gradient {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-custom-gradient:hover {
+        background: linear-gradient(45deg, #3498db, #2c3e50);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .btn-custom-feed {
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        box-shadow: 0 2px 10px rgba(26, 42, 108, 0.2);
+    }
+
+    .btn-custom-feed:hover {
+        background: linear-gradient(135deg, #b21f1f, #1a2a6c);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(26, 42, 108, 0.3);
+    }
+
+    .btn-custom-gradient {
+        background: linear-gradient(135deg, #2c3e50, #3498db);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        box-shadow: 0 2px 10px rgba(44, 62, 80, 0.2);
+    }
+
+    .btn-custom-gradient:hover {
+        background: linear-gradient(135deg, #3498db, #2c3e50);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+    }
+
+    /* Optional: Add a subtle border */
+    .btn-custom-feed, .btn-custom-gradient {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .header-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn-custom-feed,
+        .btn-custom-gradient {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link active" href="{% url 'thread:thread_list' %}">Thread</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'thread:recent_activity' %}">Recent Activity</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'thread:view_reports' %}">Report</a>
+    </li>
+</ul>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <h2 class="text-center mb-4">Thread List{% if course %} for {{ course.course_name }}{% endif %}</h2>
+
+            <!-- Search and Course Selection Form -->
+            <form method="GET" action="{% url 'thread:thread_list' %}" class="mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Search and Course Selection Group -->
+                    <div class="d-flex gap-3" style="flex-grow: 1;">
+                        <!-- Search Bar -->
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" 
+                                   placeholder="Search threads..." 
+                                   value="{{ query|default:'' }}">
+                            <button class="btn btn-outline-success" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+
+                        <!-- Course Select -->
+                        <div>
+                            <select class="form-select" id="courseSelect" name="course">
+                                <option value="{% url 'thread:thread_list' %}" 
+                                        {% if not selected_course %}selected{% endif %}>
+                                    ALL Courses
+                                </option>
+                                {% for course_item in courses %}
+                                    <option value="{% url 'thread:thread_list_by_course' course_item.id %}"
+                                            {% if selected_course.id == course_item.id %}selected{% endif %}>
+                                        {{ course_item.course_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Add Thread Button -->
+                    <div class="header-actions">
+                        <a href="{% url 'thread:user_feed' %}" class="btn btn-custom-feed">
+                            <i class="fas fa-user-circle me-1"></i>My Feed
+                        </a>
+                        <a href="{% url 'thread:create_thread' %}" class="btn btn-custom-gradient">
+                            <i class="fas fa-plus me-1"></i>Add New Thread
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Thread Table -->
+            <div class="table-responsive">
+                <table class="table custom-table">
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th class="col-title">Title</th>
+                            <th class="col-author">Author</th>
+                            <th class="col-reactions text-center">Reactions</th>
+                            <th class="col-comments text-center">Comments</th>
+                            <th class="col-actions text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if threads %}
+                            {% for thread in threads %}
+                                <tr>
+                                    <td>{{ forloop.counter0|add:threads.start_index }}</td>
+                                    <td>
+                                        <a href="{% url 'thread:thread_detail' thread.pk %}" 
+                                           class="thread-title-link">
+                                            {{ thread.thread_title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'user:user_detail' thread.created_by.pk %}" 
+                                           class="text-muted text-decoration-none">
+                                            <i class="fas fa-user me-1"></i>{{ thread.created_by }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="reactions-container">
+                                            <button type="button" 
+                                                    class="btn btn-light reaction-total" 
+                                                    data-bs-toggle="popover" 
+                                                    data-bs-placement="top" 
+                                                    data-bs-html="true"
+                                                    data-bs-content="
+                                                        <div class='reaction-details'>
+                                                            <div class='reaction-item'><i class='fas fa-thumbs-up text-primary'></i> {{ thread.total_likes }}</div>
+                                                            <div class='reaction-item'><i class='fas fa-heart text-danger'></i> {{ thread.total_loves }}</div>
+                                                            <div class='reaction-item'><i class='fas fa-laugh-squint text-warning'></i> {{ thread.total_haha }}</div>
+                                                            <div class='reaction-item'><i class='fas fa-surprise text-purple'></i> {{ thread.total_wow }}</div>
+                                                            <div class='reaction-item'><i class='fas fa-sad-tear text-secondary'></i> {{ thread.total_sad }}</div>
+                                                            <div class='reaction-item'><i class='fas fa-angry text-orange'></i> {{ thread.total_angry }}</div>
+                                                        </div>
+                                                    ">
+                                                <i class="fas fa-heart"></i>
+                                                {{ thread.total_reactions }}
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="reaction-count">
+                                            <i class="fas fa-comments text-info"></i>{{ thread.total_comments }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{% url 'thread:thread_detail' thread.pk %}" 
+                                               class="btn btn-info btn-sm" 
+                                               title="Detail">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'thread:update_thread' thread.pk %}" 
+                                               class="btn btn-warning btn-sm" 
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'thread:delete_thread' thread.pk %}" 
+                                               class="btn btn-danger btn-sm" 
+                                               title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            <a href="{% url 'thread:report_thread' thread.pk %}" 
+                                               class="btn btn-danger btn-sm" 
+                                               title="Report">
+                                                <i class="fas fa-flag"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-2x mb-3 text-muted"></i>
+                                    <p class="mb-0">No threads available for this course.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if threads.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if threads.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&q={{ query|urlencode }}" aria-label="First">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ threads.previous_page_number }}&q={{ query|urlencode }}" aria-label="Previous">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in threads.paginator.page_range %}
+                        {% if threads.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&q={{ query|urlencode }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if threads.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ threads.next_page_number }}&q={{ query|urlencode }}" aria-label="Next">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ threads.paginator.num_pages }}&q={{ query|urlencode }}" aria-label="Last">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#courseSelect').select2({
+            theme: 'default',
+            placeholder: 'Select a course...',
+            allowClear: true,
+            width: '200px',
+            minimumResultsForSearch: 0,
+            dropdownCssClass: 'select2-dropdown-custom',
+            selectionCssClass: 'select2-selection-custom'
+        }).on('select2:select', function(e) {
+            window.location.href = $(this).val();
+        });
+
+        // Initialize all popovers
+        const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+        const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl, {
+                trigger: 'click',
+                container: 'body'
+            })
+        })
+
+        // Close popover when clicking outside
+        $(document).on('click', function (e) {
+            if ($(e.target).data('bs-toggle') !== 'popover'
+                && $(e.target).parents('[data-bs-toggle="popover"]').length === 0) {
+                popoverList.forEach(popover => popover.hide())
+            }
+        })
+    });
+</script>
+{% endblock %}

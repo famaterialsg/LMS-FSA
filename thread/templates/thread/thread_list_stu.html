@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Thread Feed{% endblock %}
+{% block content %}
+<style>
+    /* Layout Container */
+    .thread-container {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 12fr) 220px;
+        gap: 20px;
+        padding: 20px 40px;
+        max-width: 1600px;
+        margin: 0 auto;
+        margin-left: 80px;
+    }
+
+    /* Main content width constraint */
+    .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    /* Section Containers */
+    .course-list, .main-content, .recent-activity {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        height: fit-content;
+    }
+
+    /* Course List */
+    .course-list {
+        position: sticky;
+        top: 20px;
+        width: 180px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+
+    .course-list h5 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f2f5;
+    }
+
+    .course-list ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .course-list li {
+        margin-bottom: 10px;
+    }
+
+    .course-list a {
+        display: block;
+        padding: 8px 15px;
+        border-radius: 8px;
+        color: #2c3e50;
+        transition: all 0.3s ease;
+    }
+
+    .course-list a:hover {
+        background: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    /* Recent Activity */
+    .recent-activity {
+        position: sticky;
+        top: 20px;
+        width: 220px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .activity-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    /* Post Cards */
+    .post-card {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .featured-post {
+        border-left: 4px solid #3498db;
+        background: linear-gradient(to right, rgba(52, 152, 219, 0.05), transparent);
+    }
+
+    /* Buttons */
+    .btn {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #3498db, #2c3e50);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    }
+
+    /* Reaction Buttons */
+    .reaction-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+
+    .reaction-buttons form {
+        margin: 0;
+    }
+
+    .reaction-buttons button {
+        padding: 6px 12px;
+        font-size: 14px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .reaction-buttons button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Pagination */
+    .pagination {
+        gap: 5px;
+        margin-top: 30px;
+    }
+
+    .page-link {
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        color: #2c3e50;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        border: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1400px) {
+        .thread-container {
+            grid-template-columns: 160px minmax(0, 12fr) 200px;
+            gap: 15px;
+            padding: 15px 30px;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .thread-container {
+            grid-template-columns: 140px minmax(0, 12fr) 180px;
+            gap: 10px;
+            padding: 10px 20px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .thread-container {
+            grid-template-columns: 1fr;
+            padding: 15px;
+            margin-left: 60px;
+        }
+
+        .course-list, .recent-activity {
+            display: none;
+        }
+
+        .main-content {
+            padding: 15px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .thread-container {
+            padding: 10px;
+            margin-left: 0;
+        }
+
+        .reaction-buttons {
+            gap: 4px;
+        }
+
+        .reaction-buttons button {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+    }
+
+    /* Scrollbar Styling */
+    .course-list::-webkit-scrollbar,
+    .recent-activity::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .course-list::-webkit-scrollbar-thumb,
+    .recent-activity::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    .course-list::-webkit-scrollbar-track,
+    .recent-activity::-webkit-scrollbar-track {
+        background: #f8f9fa;
+    }
+</style>
+
+<div class="container mt-5 thread-container">
+    <!-- Left side: Course list -->
+    <div class="course-list">
+        <h5>Browse Courses</h5>
+        <ul>
+            <li><a href="{% url 'thread:thread_list' %}">All</a></li>
+            {% for course in courses %}
+                <li><a href="{% url 'thread:thread_list_by_course' course.id %}">{{ course.course_name }}</a></li>
+            {% empty %}
+                <li>No courses available</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Right side: Thread Feed or Thread Details -->
+    <div class="main-content">
+        <!-- Search and action buttons -->
+        <div class="actions-container mb-3">
+            <form method="GET" action="{% url 'thread:thread_list' %}" class="form-inline search-bar">
+                <input type="text" name="q" class="form-control mr-sm-2" placeholder="Search threads..." value="{{ query|default:'' }}">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+            <a href="{% url 'thread:create_thread' %}" class="btn btn-primary ml-auto">Add New Thread</a>
+            <a href="{% url 'thread:user_feed' %}" class="btn btn-secondary ml-2">My Feed</a>
+        </div>
+
+        {% if threads.object_list|length > 0 %}
+            <!-- Featured Threads Section -->
+            {% if featured_threads and threads.number == 1 %}
+            <h2>Featured Threads</h2>
+            {% for thread in featured_threads %}
+            <div class="card post-card featured-post">
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <a href="{% url 'thread:thread_detail' thread.pk %}">{{ thread.thread_title }}</a>
+                    </h4>
+                    <p class="text-muted mb-2">
+                        <strong>@{{ thread.get_display_name }}</strong> · 
+                        <small>Posted on {{ thread.course.course_name }} at {{ thread.created|date:"M d, Y H:i" }}</small>
+                    </p>
+                    <div class="post-content">{{ thread.thread_content }}</div>
+
+                    <!-- Reaction Buttons for Featured Threads -->
+                    <div class="reaction-buttons">
+                        
+                
+                
+                        <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" name="reaction_type" value="like" class="btn btn-outline-primary btn-sm">👍 Like ({{ thread.likes_count }})</button>
+                        </form>
+                        <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" name="reaction_type" value="love" class="btn btn-outline-danger btn-sm">❤️ Love ({{ thread.loves_count }})</button>
+                        </form>
+                        <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" name="reaction_type" value="haha" class="btn btn-outline-warning btn-sm">😂 Haha ({{ thread.haha_count }})</button>
+                        </form>
+                        <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" name="reaction_type" value="wow" class="btn btn-outline-success btn-sm">😮 Wow ({{ thread.wow_count }})</button>
+                        </form>
+                        <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" name="reaction_type" value="sad" class="btn btn-outline-secondary btn-sm">😢 Sad ({{ thread.sad_count }})</button>
+                        </form>
+                        <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" name="reaction_type" value="angry" class="btn btn-outline-dark btn-sm">😡 Angry ({{ thread.angry_count }})</button>
+                        </form>
+                        <form method="post" action="{% url 'thread:thread_detail' thread.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary btn-sm">💬 Comment</button>
+                        </form>
+                        
+                        {% if request.user == thread.created_by %}
+                        <!-- Edit Thread Button -->
+                        <a href="{% url 'thread:update_thread' thread.pk %}">
+                            <button type="button" class="btn btn-warning btn-sm">✏️ Edit</button>
+                        </a>
+
+                        <!-- Delete Thread Button -->
+                        <form method="post" action="{% url 'thread:delete_thread' thread.pk %}" onsubmit="return confirm('Are you sure you want to delete this thread?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">🗑️ Delete</button>
+                        </form>
+                        {% endif %}
+                        {% if request.user != thread.created_by %}
+                        <!-- Report Thread Button -->
+                        <form method="post" action="{% url 'thread:report_thread' thread.pk %}" onsubmit="return confirm('Are you sure you want to report this thread?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">⚠️ Report</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Regular Threads Section -->
+            {% for thread in threads %}
+                <div class="card post-card">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <a href="{% url 'thread:thread_detail' thread.pk %}">{{ thread.thread_title }}</a>
+                        </h4>
+                        <p class="text-muted mb-2">
+                            <strong>@{{ thread.get_display_name }}</strong> · 
+                            <small>Posted on {{ thread.course.course_name }} at {{ thread.created|date:"M d, Y H:i" }}</small>
+                        </p>
+                        <div class="post-content">{{ thread.thread_content }}</div>
+
+                        <!-- Reaction Buttons -->
+                        <div class="reaction-buttons">
+                            <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" name="reaction_type" value="like" class="btn btn-outline-primary btn-sm">👍 Like ({{ thread.likes_count }})</button>
+                            </form>
+                            <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" name="reaction_type" value="love" class="btn btn-outline-danger btn-sm">❤️ Love ({{ thread.loves_count }})</button>
+                            </form>
+                            <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" name="reaction_type" value="haha" class="btn btn-outline-warning btn-sm">😂 Haha ({{ thread.haha_count }})</button>
+                            </form>
+                            <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" name="reaction_type" value="wow" class="btn btn-outline-success btn-sm">😮 Wow ({{ thread.wow_count }})</button>
+                            </form>
+                            <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" name="reaction_type" value="sad" class="btn btn-outline-secondary btn-sm">😢 Sad ({{ thread.sad_count }})</button>
+                            </form>
+                            <form method="post" action="{% url 'thread:react_to_thread' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" name="reaction_type" value="angry" class="btn btn-outline-dark btn-sm">😡 Angry ({{ thread.angry_count }})</button>
+                            </form>
+                            <form method="post" action="{% url 'thread:thread_detail' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-sm">💬 Comment</button>
+                            </form>
+
+                            {% if request.user == thread.created_by %}
+                            <!-- Edit Thread Button -->
+                            <a href="{% url 'thread:update_thread' thread.pk %}">
+                                <button type="button" class="btn btn-warning btn-sm">✏️ Edit</button>
+                            </a>
+                            
+                            <!-- Delete Thread Button -->
+                            <form method="post" action="{% url 'thread:delete_thread' thread.pk %}" style="display: inline"style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this thread?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Delete</button>
+                            </form>
+                            {% endif %}
+                            {% if request.user != thread.created_by %}
+                            <!-- Report Thread Button -->
+                            <form method="post" action="{% url 'thread:report_thread' thread.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">⚠️ Report</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        
+                    </div>
+                </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if threads.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1&q={{ query|urlencode }}" aria-label="First">
+                                <span aria-hidden="true">&laquo; First</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ threads.previous_page_number }}&q={{ query|urlencode }}" aria-label="Previous">
+                                <span aria-hidden="true">&lsaquo; Previous</span>
+                            </a>
+                        </li>
+                    {% endif %}
+    
+                    <!-- Page Number Links -->
+                    {% for num in threads.paginator.page_range %}
+                        {% if num == threads.number %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&q={{ query|urlencode }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+    
+                    {% if threads.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ threads.next_page_number }}&q={{ query|urlencode }}" aria-label="Next">
+                                <span aria-hidden="true">Next &rsaquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ threads.paginator.num_pages }}&q={{ query|urlencode }}" aria-label="Last">
+                                <span aria-hidden="true">Last &raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% else %}
+            <!-- No Threads Available Message -->
+            <div class="no-threads-container text-center py-5">
+                <div class="no-threads-icon mb-3">
+                    <i class="fas fa-comments fa-4x text-muted"></i>
+                </div>
+                <h3 class="text-muted mb-3">No Threads Available</h3>
+                <p class="text-muted mb-4">Be the first to start a discussion!</p>
+                <a href="{% url 'thread:create_thread' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Thread
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Side: Recent Activity -->
+    <div class="recent-activity">
+        <h5>Recent Activity</h5>
+        <div class="recent-activity-section" style="max-height: 300px; overflow-y: auto;">
+            <ul class="list-group">
+                {% for activity in recent_activities %}
+                <li class="list-group-item">
+                    <small>@{{ activity.created_by }} posted on <strong>{{ activity.course.course_name }}</strong> {{ activity.created|timesince }} ago</small>
+                </li>
+                {% empty %}
+                <li class="list-group-item">No recent activity.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

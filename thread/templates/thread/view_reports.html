@@ -1,0 +1,672 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report List{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Table Styling */
+    .custom-table {
+        width: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-table thead {
+        background: linear-gradient(45deg, #2c3e50, #3498db) !important;
+        color: white;
+    }
+
+    .custom-table th {
+        white-space: nowrap;
+        padding: 15px 10px;
+        font-weight: 600;
+    }
+
+    .custom-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: #e3f2fd;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+
+    /* Search and Button Styling */
+    .input-group {
+        max-width: 500px;
+    }
+
+    .input-group .form-control {
+        border-radius: 8px 0 0 8px;
+        border: 2px solid #ced4da;
+        padding: 10px 15px;
+    }
+
+    .input-group .btn {
+        border-radius: 0 8px 8px 0;
+        padding: 10px 20px;
+    }
+
+    /* Thread Title Link */
+    .thread-title-link {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .thread-title-link:hover {
+        color: #3498db;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-pending {
+        background-color: #ffeeba;
+        color: #856404;
+    }
+
+    .status-resolved {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    /* Pagination Styling */
+    .pagination {
+        gap: 5px;
+    }
+
+    .page-item {
+        margin: 0 2px;
+    }
+
+    .page-link {
+        border: none;
+        padding: 8px 16px;
+        color: #2c3e50;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        min-width: 40px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .page-link:hover {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Active Page */
+    .page-item.active .page-link {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Disabled State */
+    .page-item.disabled .page-link {
+        background-color: #e9ecef;
+        color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    /* Previous/Next Icons */
+    .page-link i {
+        font-size: 0.875rem;
+    }
+
+    /* Hover Effects */
+    .page-link:focus {
+        box-shadow: none;
+        outline: none;
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 576px) {
+        .pagination {
+            gap: 3px;
+        }
+
+        .page-link {
+            padding: 6px 12px;
+            min-width: 35px;
+            font-size: 0.875rem;
+        }
+        
+        /* Hide some page numbers on mobile */
+        .pagination .page-item:not(.active):not(:first-child):not(:last-child) {
+            display: none;
+        }
+        
+        .pagination .page-item.active {
+            display: block;
+        }
+    }
+
+    /* Animation */
+    @keyframes pageHover {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+        100% { transform: translateY(0); }
+    }
+
+    .page-link:hover {
+        animation: pageHover 0.3s ease;
+    }
+
+    .report-reason {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .report-reason.inappropriate_content {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .report-reason.spam {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .report-reason.harassment {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .report-reason.misinformation {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+
+    .report-reason.copyright {
+        background-color: #e2e3e5;
+        color: #383d41;
+    }
+
+    .report-reason.other {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .report-row {
+        transition: background-color 0.3s ease;
+    }
+
+    .report-row:hover {
+        background-color: #f8f9fa;
+    }
+
+    .report-row.resolved {
+        background-color: #f8f9fa;
+        opacity: 0.8;
+    }
+
+    .report-details {
+        position: relative;
+        max-width: 300px;
+    }
+
+    .show-more {
+        padding: 0;
+        font-size: 0.875rem;
+        color: #3498db;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-pending {
+        background-color: #ffeeba;
+        color: #856404;
+    }
+
+    .status-resolved {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    /* Report Reason Button */
+    .btn-link.report-reason {
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-link.report-reason:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Resolve Button */
+    .resolve-btn {
+        padding: 6px 12px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .resolve-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+    }
+
+    .modal-header {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-body h6 {
+        color: #2c3e50;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #eee;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .btn-sm {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .resolve-btn {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        color: white;
+    }
+
+    .delete-thread-btn {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        border: none;
+        color: white;
+    }
+
+    .btn-sm:hover {
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .resolve-btn:hover {
+        background: linear-gradient(135deg, #20c997, #28a745);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+    }
+
+    .delete-thread-btn:hover {
+        background: linear-gradient(135deg, #c82333, #dc3545);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+    }
+
+    .thread-info {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .thread-info p {
+        margin-bottom: 0.5rem;
+    }
+
+    .thread-info p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .btn-sm {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs ">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'thread:thread_list' %}">Thread</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'thread:recent_activity' %}">Recent Activity</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{% url 'thread:view_reports' %}">Report</a>
+    </li>
+</ul>
+<div class="container mt-5">
+    <!-- Navigation Tabs -->
+    
+
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <h2 class="text-center mb-4">Report List</h2>
+            
+            <!-- Search Form -->
+            <form method="GET" action="{% url 'thread:view_reports' %}" class="mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="Search reports..." 
+                               value="{{ query|default:'' }}">
+                        <button class="btn btn-outline-success" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Reports Table -->
+            <div class="table-responsive">
+                <table class="table custom-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">ID</th>
+                            <th style="width: 20%">Thread Title</th>
+                            <th style="width: 10%">Thread Creator</th>
+                            <th style="width: 10%">Reported By</th>
+                            <th style="width: 20%">Reason</th>
+                            <th style="width: 15%">Created At</th>
+                            <th style="width: 10%">Status</th>
+                            <th style="width: 10%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if reports %}
+                            {% for report in reports %}
+                            <tr class="report-row {% if report.is_resolved %}resolved{% endif %}">
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'thread:thread_detail' report.thread.id %}" 
+                                       class="thread-title-link">
+                                        {{ report.thread.thread_title }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user me-2"></i>
+                                        {{ report.thread.created_by.username }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle me-2"></i>
+                                        {{ report.reported_by.username }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-link report-reason {{ report.reason }}"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#reasonModal{{ report.id }}">
+                                        {% if report.reason == 'inappropriate_content' %}
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                        {% elif report.reason == 'spam' %}
+                                            <i class="fas fa-ban me-1"></i>
+                                        {% elif report.reason == 'harassment' %}
+                                            <i class="fas fa-angry me-1"></i>
+                                        {% elif report.reason == 'misinformation' %}
+                                            <i class="fas fa-info-circle me-1"></i>
+                                        {% elif report.reason == 'copyright' %}
+                                            <i class="fas fa-copyright me-1"></i>
+                                        {% else %}
+                                            <i class="fas fa-ellipsis-h me-1"></i>
+                                        {% endif %}
+                                        {{ report.get_reason_display }}
+                                    </button>
+                                </td>
+                                <td>
+                                    <i class="far fa-clock me-1"></i>
+                                    {{ report.created_at|date:"Y-m-d H:i" }}
+                                </td>
+                                <td class="text-center">
+                                    <span class="status-badge {% if report.is_resolved %}status-resolved{% else %}status-pending{% endif %}">
+                                        {% if report.is_resolved %}
+                                            <i class="fas fa-check-circle me-1"></i>Resolved
+                                        {% else %}
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="action-buttons">
+                                        {% if not report.is_resolved %}
+                                        <button class="btn btn-sm btn-success resolve-btn" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#resolveModal{{ report.id }}"
+                                                title="Resolve Report">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        
+                                        <button class="btn btn-sm btn-danger delete-thread-btn" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteThreadModal{{ report.thread.id }}"
+                                                title="Delete Thread">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Reason Details Modal -->
+                            <div class="modal fade" id="reasonModal{{ report.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-info-circle me-2"></i>Report Details
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="report-detail-content">
+                                                <div class="report-reason-badge mb-3">
+                                                    <span class="badge rounded-pill bg-primary">
+                                                        {% if report.reason == 'inappropriate_content' %}
+                                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                                        {% elif report.reason == 'spam' %}
+                                                            <i class="fas fa-ban me-1"></i>
+                                                        {% elif report.reason == 'harassment' %}
+                                                            <i class="fas fa-angry me-1"></i>
+                                                        {% elif report.reason == 'misinformation' %}
+                                                            <i class="fas fa-info-circle me-1"></i>
+                                                        {% elif report.reason == 'copyright' %}
+                                                            <i class="fas fa-copyright me-1"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-ellipsis-h me-1"></i>
+                                                        {% endif %}
+                                                        {{ report.get_reason_display }}
+                                                    </span>
+                                                </div>
+                                                <div class="report-details-text">
+                                                    {{ report.details|linebreaks }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="fas fa-times me-2"></i>Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Resolve Modal -->
+                            <div class="modal fade" id="resolveModal{{ report.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Resolve Report</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to mark this report as resolved?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form method="POST" action="{% url 'thread:resolve_report' report.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success">
+                                                    <i class="fas fa-check me-1"></i>Confirm Resolution
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Thread Modal -->
+                            <div class="modal fade" id="deleteThreadModal{{ report.thread.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Delete Thread</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to delete this thread?</p>
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                This will permanently delete the thread and all its comments.
+                                            </div>
+                                            <div class="thread-info mt-3">
+                                                <p><strong>Thread Title:</strong> {{ report.thread.thread_title }}</p>
+                                                <p><strong>Created by:</strong> {{ report.thread.created_by.username }}</p>
+                                                <p><strong>Reports Count:</strong> {{ report.thread.reports.count }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form method="POST" action="{% url 'thread:delete_thread' report.thread.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash-alt me-1"></i>Delete Thread
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-2x mb-3 text-muted"></i>
+                                    <p class="mb-0">No reports available.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if reports.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <!-- First Page -->
+                    {% if reports.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query|urlencode }}{% endif %}" aria-label="First">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <!-- Previous Page -->
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reports.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}" aria-label="Previous">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Page Numbers -->
+                    {% for num in reports.paginator.page_range %}
+                        {% if reports.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > reports.number|add:'-3' and num < reports.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Next Page -->
+                    {% if reports.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reports.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}" aria-label="Next">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <!-- Last Page -->
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reports.paginator.num_pages }}{% if query %}&q={{ query|urlencode }}{% endif %}" aria-label="Last">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <!-- Page Info -->
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    Showing page {{ reports.number }} of {{ reports.paginator.num_pages }}
+                    ({{ reports.paginator.count }} total reports)
+                </small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

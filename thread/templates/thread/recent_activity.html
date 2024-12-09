@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Recent Activity{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Table Container Styling */
+    .table-container {
+        height: 400px;
+        overflow-y: scroll;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+
+    /* Sticky Header */
+    .custom-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .custom-table thead th {
+        background: linear-gradient(45deg, #2c3e50, #3498db) !important;
+        color: white;
+        border-bottom: none;
+    }
+
+    /* Custom Scrollbar */
+    .table-container::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: #3498db;
+        border-radius: 3px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #2980b9;
+    }
+
+    /* Table Styling */
+    .custom-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .custom-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: #e3f2fd;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+
+    /* Activity Content Styling */
+    .activity-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .user-name {
+        color: #3498db;
+        font-weight: 500;
+    }
+
+    .thread-title {
+        color: #28a745;
+        font-weight: 500;
+    }
+
+    .course-name {
+        color: #e74c3c;
+        font-weight: 500;
+    }
+
+    .time-ago {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+
+    /* Search Form Styling */
+    .search-form {
+        margin-bottom: 2rem;
+    }
+
+    .search-container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .input-group .form-control {
+        border-radius: 8px 0 0 8px;
+        border: 2px solid #ced4da;
+    }
+
+    .input-group .btn {
+        border-radius: 0 8px 8px 0;
+        padding: 8px 20px;
+    }
+
+    /* Pagination Styling */
+    .pagination {
+        gap: 5px;
+    }
+
+    .page-item {
+        margin: 0 2px;
+    }
+
+    .page-link {
+        border: none;
+        padding: 8px 16px;
+        color: #2c3e50;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        min-width: 40px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .page-link:hover {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Active Page */
+    .page-item.active .page-link {
+        background: linear-gradient(45deg, #2c3e50, #3498db);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Disabled State */
+    .page-item.disabled .page-link {
+        background-color: #e9ecef;
+        color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    /* Previous/Next Icons */
+    .page-link i {
+        font-size: 0.875rem;
+    }
+
+    /* Hover Effects */
+    .page-link:focus {
+        box-shadow: none;
+        outline: none;
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 576px) {
+        .pagination {
+            gap: 3px;
+        }
+
+        .page-link {
+            padding: 6px 12px;
+            min-width: 35px;
+            font-size: 0.875rem;
+        }
+        
+        /* Hide some page numbers on mobile */
+        .pagination .page-item:not(.active):not(:first-child):not(:last-child) {
+            display: none;
+        }
+        
+        .pagination .page-item.active {
+            display: block;
+        }
+    }
+
+    /* Animation */
+    @keyframes pageHover {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+        100% { transform: translateY(0); }
+    }
+
+    .page-link:hover {
+        animation: pageHover 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs ">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'thread:thread_list' %}">Thread</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{% url 'thread:recent_activity' %}">Recent Activity</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'thread:view_reports' %}">Report</a>
+    </li>
+</ul>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <h2 class="text-center mb-4">Recent Activity</h2>
+            
+            <!-- Search Form -->
+            <form method="GET" action="{% url 'thread:recent_activity' %}" class="mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Search Group -->
+                    <div class="d-flex gap-3" style="flex-grow: 1;">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" 
+                                   placeholder="Search activities..." 
+                                   value="{{ query|default:'' }}">
+                            <button class="btn btn-outline-success" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Activity Table -->
+            <div class="table-container">
+                <table class="table custom-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">ID</th>
+                            <th style="width: 95%">Activity Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in recent_activities %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:recent_activities.start_index }}</td>
+                            <td>
+                                <div class="activity-content">
+                                    <i class="fas fa-user-circle text-primary"></i>
+                                    <span class="user-name">@{{ activity.created_by }}</span>
+                                    posted on
+                                    <span class="thread-title">{{ activity.thread_title }}</span>
+                                    <span class="text-muted">in</span>
+                                    <span class="course-name">{{ activity.course.course_name }}</span>
+                                    <span class="time-ago">
+                                        <i class="far fa-clock"></i>
+                                        {{ activity.created|timesince }} ago
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4">
+                                <i class="fas fa-inbox fa-2x mb-3 text-muted"></i>
+                                <p class="mb-0">No recent activities found.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if recent_activities.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if recent_activities.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1&q={{ query|urlencode }}" aria-label="First">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ recent_activities.previous_page_number }}&q={{ query|urlencode }}" aria-label="Previous">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in recent_activities.paginator.page_range %}
+                        {% if recent_activities.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&q={{ query|urlencode }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if recent_activities.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ recent_activities.next_page_number }}&q={{ query|urlencode }}" aria-label="Next">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ recent_activities.paginator.num_pages }}&q={{ query|urlencode }}" aria-label="Last">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
