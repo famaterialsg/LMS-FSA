@@ -1,0 +1,64 @@
+<form method="post" class="edit-message-form mb-4">
+    {% csrf_token %}
+    <div class="form-group">
+        <textarea 
+            name="message" 
+            class="form-control message-input edit-message-textarea" 
+            rows="3" 
+            placeholder="Edit your message..."
+            required
+        >{{ message.message }}</textarea>
+    </div>
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary edit-message-btn">Save Changes</button>
+    </div>
+</form>
+
+<style>
+    /* Enhanced styling for the edit message form */
+
+    .edit-message-form {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 15px;
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+        max-width: 600px;
+        margin: 20px auto; /* Center the form with margin */
+    }
+
+    .edit-message-textarea {
+        padding: 15px;
+        border-radius: 10px; /* Rounded input */
+        font-family: 'Arial', sans-serif;
+        border: 1px solid #ddd;
+        box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.1);
+        resize: none;
+        width: 100%;
+        transition: border-color 0.3s ease;
+    }
+
+    .edit-message-textarea:focus {
+        border-color: #007bff; /* Blue border on focus */
+        outline: none;
+    }
+
+    .edit-message-btn {
+        background-color: #007bff; /* Blue button */
+        color: #ffffff;
+        padding: 12px 35px;
+        border-radius: 30px;
+        font-weight: bold;
+        border: none;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .edit-message-btn:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+        transform: translateY(-2px); /* Slight lift on hover */
+    }
+
+    .edit-message-btn:active {
+        background-color: #004494; /* Even darker blue on click */
+        transform: translateY(0); /* Reset lift on click */
+    }
+</style>
