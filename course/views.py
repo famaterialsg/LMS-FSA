@@ -27,11 +27,104 @@ from django.utils import timezone
 import shutil
 import json
 from django.utils.text import slugify
+import pdfplumber
+from googleapiclient.discovery import build
+
+
+YOUTUBE_API_KEY = 'AIzaSyAzxLp14NgigkY99iNz684GG4iM4_lLfoI'
+
+
+def get_youtube_video_duration(video_url):
+    """
+    Fetch the duration of a YouTube video using the YouTube Data API.
+
+    Args:
+        video_url (str): The YouTube video URL or embedded URL.
+
+    Returns:
+        int: Duration of the video in seconds, or 0 if the video cannot be fetched.
+    """
+    try:
+        # Extract the video ID from the URL
+        parsed_url = urllib.parse.urlparse(video_url)
+
+        if "youtube.com/watch" in video_url:
+            # Regular YouTube video link
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            video_id = query_params.get('v', [None])[0]
+        elif "youtube.com/embed/" in video_url:
+            # Embedded YouTube video link
+            path_parts = parsed_url.path.split('/')
+            video_id = path_parts[-1] if path_parts else None
+            # Remove query parameters from video ID if present
+            if video_id and '?' in video_id:
+                video_id = video_id.split('?')[0]
+        else:
+            video_id = None
+
+        if not video_id:
+            return 0
+
+        # Initialize the YouTube API client
+        youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+
+        # Request video details
+        response = youtube.videos().list(
+            part='contentDetails',
+            id=video_id
+        ).execute()
+
+        if 'items' in response and len(response['items']) > 0:
+            content_details = response['items'][0]['contentDetails']
+            duration_iso = content_details.get('duration')
+
+            # Parse ISO 8601 duration into seconds
+            return parse_iso8601_duration(duration_iso)
+
+    except Exception as e:
+        print(f"Error fetching video duration: {e}")
+
+    return 0
+
+
+def parse_iso8601_duration(duration_iso):
+    """
+    Convert ISO 8601 duration format (PnDTnHnMnS) to seconds.
+
+    Args:
+        duration_iso (str): Duration in ISO 8601 format (e.g., PT1H2M30S).
+
+    Returns:
+        int: Duration in seconds.
+    """
+    import isodate
+
+    try:
+        parsed_duration = isodate.parse_duration(duration_iso)
+        return int(parsed_duration.total_seconds())
+    except Exception as e:
+        print(f"Error parsing ISO 8601 duration: {e}")
+        return 0
 
 
 def remove_accents(input_str):
     nfkd_form = unicodedata.normalize('NFKD', input_str)
     return ''.join([c for c in nfkd_form if not unicodedata.combining(c)])
+
+
+def count_words_in_pdf(pdf_path):
+    word_count = 0
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                # Extract the text from the page
+                text = page.extract_text()
+                if text:
+                    # Count words by splitting the text by whitespace
+                    word_count += len(text.split())
+    except Exception as e:
+        print(f"Error processing PDF: {e}")
+    return word_count
 
 
 def import_course_folder_view(request):
@@ -1181,14 +1274,19 @@ def course_content_edit(request, pk, session_id):
             edit_reading_material_titles = request.POST.getlist('edit_reading_material_title[]')
             edit_reading_material_contents = request.POST.getlist('edit_reading_material_content[]')
             edit_reading_material_types = request.POST.getlist('edit_reading_material_type[]')
+            edit_duration= request.POST.getlist('edit_material_duration[]')
 
-            for title, content, material_type in zip(edit_reading_material_titles, edit_reading_material_contents,
-                                                     edit_reading_material_types):
-                if title and content and material_type:
+            for title, content, material_type, duration in zip(edit_reading_material_titles, edit_reading_material_contents,
+                                                     edit_reading_material_types, edit_duration):
+                if title and content and material_type and duration:
                     editing_material.title = title
                     editing_material.content = content
                     editing_material.save()
                     editing_course_material.title = title
+                    editing_course_material.expect_duration = duration
+                    plain_text = re.sub(r'<[^>]+>', '', editing_material.content)
+                    if len(plain_text.split()) > 0:
+                        editing_course_material.word_count = len(plain_text.split())
                     if material_type and material_type != editing_course_material.material_type:
                         editing_course_material.material_type = material_type
                         editing_course_material.save()
@@ -1236,40 +1334,64 @@ def course_content_edit(request, pk, session_id):
             one_material_type = request.POST.get(
                 'uploaded_material_type[]')  # Get the selected material type (single value)
             material_types = [one_material_type] * len(uploaded_files)
+            pdf_expect_duration = request.POST.getlist('pdf_material_duration[]')
 
-            for uploaded_file, material_type in zip(uploaded_files, material_types):
-                file_name = remove_accents(uploaded_file.name)
-                file_name = file_name.replace(' ', '-').replace('_', '-')
-                course_code = course.course_code
-                course_code = course_code.replace(' ', '-').replace('_', '-')
+            for uploaded_file, material_type, duration in zip(uploaded_files, material_types, pdf_expect_duration):
+                file_name = remove_accents(uploaded_file.name).replace(' ', '-').replace('_', '-')
+                course_code = course.course_code.replace(' ', '-').replace('_', '-')
                 file_path = default_storage.save(f'course_pdf/{course_code}/{file_name}', uploaded_file)
                 file_url = default_storage.url(file_path)
 
                 iframe_html = f'<iframe src="{file_url}#toolbar=0" style="border: none; width: 100%; height: 590px;"></iframe>'
 
                 if iframe_html:
-                    # Create and save reading material with HTML content containing base64 images
+                    # Create and save reading material
                     reading_material = ReadingMaterial.objects.create(
-                        title=file_name,  # Use the uploaded file name as the title
-                        content=iframe_html,  # Save HTML with embedded images
+                        title=file_name,
+                        content=iframe_html,
                     )
 
-                    # Create CourseMaterial linking to the reading material
                     course_material = CourseMaterial.objects.create(
                         session=session,
                         material_id=reading_material.id,
                         material_type=material_type,
                         title=reading_material.title,
-                        order=CourseMaterial.objects.count() + 1  # Increment order automatically
+                        order=CourseMaterial.objects.count() + 1,
+                        expect_duration=duration if duration else None,  # Skip calculation if provided
                     )
                     reading_material.material = course_material
                     reading_material.save()
+
+                    # Calculate expect_duration only if it wasn't provided
+                    if not duration:
+                        match = re.search(r'src="(/media/course_pdf/.*?)"', reading_material.content)
+                        if match:
+                            file_url = match.group(1)  # Extract the URL part from the 'src' attribute
+                            # Decode the URL-encoded characters (e.g., %CC%82) to handle special characters
+                            decoded_file_url = urllib.parse.unquote(file_url)  # Decode the URL
+                            decoded_file_url = decoded_file_url.split('#')[0]
+                            path_count = decoded_file_url.lstrip(
+                                '/media')  # Remove leading slash to get the actual file path
+                            # Construct the full file path
+                            path_count = os.path.join(settings.MEDIA_ROOT, path_count)
+                            if default_storage.exists(path_count):
+                                course_material.word_count = count_words_in_pdf(path_count)
+                        course_material.expect_duration = course_material.word_count / 250
+                        youtube_links = re.findall(
+                            r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
+                            reading_material.content
+                        )
+                        for link in youtube_links:
+                            course_material.expect_duration += get_youtube_video_duration(link) / 60
+                    course_material.save()
 
         # Handle manual reading materials
         reading_material_titles = request.POST.getlist('reading_material_title[]')
         reading_material_contents = request.POST.getlist('reading_material_content[]')
         reading_material_types = request.POST.getlist('reading_material_type[]')
-        for title, content, material_type in zip(reading_material_titles, reading_material_contents, reading_material_types):
+        material_expect_duration = request.POST.getlist('material_duration[]')
+        for title, content, material_type, duration in zip(reading_material_titles, reading_material_contents,
+                                                           reading_material_types, material_expect_duration):
             if title and content and material_type:
                 reading_material = ReadingMaterial.objects.create(
                     title=title,
@@ -1280,10 +1402,24 @@ def course_content_edit(request, pk, session_id):
                     material_id=reading_material.id,
                     material_type=material_type,
                     title=reading_material.title,
-                    order=CourseMaterial.objects.count() + 1  # Increment order automatically
+                    order=CourseMaterial.objects.count() + 1,
+                    expect_duration=duration if duration else None,  # Skip calculation if provided
                 )
                 reading_material.material = course_material
                 reading_material.save()
+
+                if not duration:
+                    plain_text = re.sub(r'<[^>]+>', '', reading_material.content)
+                    course_material.word_count = len(plain_text.split())
+                    print(course_material.word_count)
+                    course_material.expect_duration = course_material.word_count / 250
+                    youtube_links = re.findall(
+                        r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
+                        reading_material.content
+                    )
+                    for link in youtube_links:
+                        course_material.expect_duration += get_youtube_video_duration(link) / 60
+                course_material.save()
 
         # Save selected assessment
         for assessment_id in selected_assessment_ids:

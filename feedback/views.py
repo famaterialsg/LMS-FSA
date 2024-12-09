@@ -74,8 +74,12 @@ def feedback_list(request):
         course_feedbacks_all = course_feedbacks_all.order_by('average_rating')
 
     # Pagination for Course Feedback Tab
+    course_page_number = request.GET.get('course_page', 1)
     course_paginator = Paginator(course_feedbacks_all, 8)
-    course_page_obj = course_paginator.get_page(request.GET.get('course_page'))
+    try:
+        course_page_obj = course_paginator.page(course_page_number)
+    except:
+        course_page_obj = course_paginator.page(1)
 
     # Filter instructor feedback
     instructor_feedbacks_all = InstructorFeedback.objects.all()
@@ -107,15 +111,21 @@ def feedback_list(request):
         instructor_feedbacks_all = instructor_feedbacks_all.order_by('average_rating')
 
     # Pagination for Instructor Feedback Tab
+    instructor_page_number = request.GET.get('instructor_page', 1)
     instructor_paginator = Paginator(instructor_feedbacks_all, 8)
-    instructor_page_obj = instructor_paginator.get_page(request.GET.get('instructor_page'))
+    try:
+        instructor_page_obj = instructor_paginator.page(instructor_page_number)
+    except:
+        instructor_page_obj = instructor_paginator.page(1)
 
     # Render data for all tabs
     return render(request, 'feedback_list.html', {
         'courses': courses,
         'instructors': instructors,
-        'instructor_page_obj': instructor_page_obj,  # For Instructor Feedback Tab
-        'course_page_obj': course_page_obj,  # For Course Feedback Tab
+        'course_page_obj': course_page_obj,
+        'instructor_page_obj': instructor_page_obj,
+        'course_feedbacks_all': course_page_obj.object_list,
+        'instructor_feedbacks_all': instructor_page_obj.object_list,
     })
 
 

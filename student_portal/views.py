@@ -423,7 +423,7 @@ def count_words_in_pdf(pdf_path):
         print(f"Error processing PDF: {e}")
     return word_count
 
-import urllib.parse
+
 from googleapiclient.discovery import build
 
 YOUTUBE_API_KEY = 'AIzaSyAzxLp14NgigkY99iNz684GG4iM4_lLfoI'
@@ -616,22 +616,27 @@ def course_detail(request, pk):
                     file_path = decoded_file_url.lstrip('/media')  # Remove leading slash to get the actual file path
                     file_path = os.path.join(settings.MEDIA_ROOT, file_path)
                     if default_storage.exists(file_path):
-                        word_count = count_words_in_pdf(file_path)
-                        material.expect_duration = word_count / 250
+                        if material.word_count == 0:
+                            material.word_count = count_words_in_pdf(file_path)
+                            if not material.expect_duration:
+                                material.expect_duration = material.word_count / 250
                         youtube_links = re.findall(
                             r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
                             reading.content)
                         print("This is the link:", youtube_links, "of the reading number", reading.title)
                         for link in youtube_links:
                             youtube_total_duration += get_youtube_video_duration(link)
-                            material.expect_duration += get_youtube_video_duration(link)/60
+                            if not material.expect_duration:
+                                material.expect_duration += get_youtube_video_duration(link)/60
                             print("This is the total duration:", youtube_total_duration)
                     else:
                         print(f"File does not exist: {file_path}")
                 else:
-                    plain_text = re.sub(r'<[^>]+>', '', reading.content)
-                    word_count = len(plain_text.split())
-                    material.expect_duration = word_count / 250
+                    if material.word_count == 0:
+                        plain_text = re.sub(r'<[^>]+>', '', reading.content)
+                        material.word_count = len(plain_text.split())
+                        if not material.expect_duration:
+                            material.expect_duration = material.word_count / 250
 
                     youtube_links = re.findall(
                         r'(https?://(?:www\.)?youtube\.com/(?:watch\?v=[\w-]+|embed/[\w-]+)(?:\?[\w=&-]*)?)',
@@ -639,7 +644,8 @@ def course_detail(request, pk):
                     print("This is the link:", youtube_links, "of the reading number", reading.title)
                     for link in youtube_links:
                         youtube_total_duration += get_youtube_video_duration(link)
-                        material.expect_duration += get_youtube_video_duration(link)/60
+                        if not material.expect_duration:
+                            material.expect_duration += get_youtube_video_duration(link)/60
                         print("This is the total duration:", youtube_total_duration)
 
                 material.save()

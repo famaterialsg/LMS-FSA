@@ -169,14 +169,22 @@
                                 <div style="flex-grow: 1;">
                                     <input type="text" name="reading_material_title[]" class="form-control" value="{{ selected_session.name }}" placeholder="Reading Material Title">
                                     <textarea name="reading_material_content[]" class="form-control ckeditor" placeholder="Content"></textarea>
-                                    <select name="reading_material_type[]" class="form-control" style="margin-top: 0.625rem;">
-                                        <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
-                                        {% for key, value in material_types.items %}
-                                            {% if key != 'assessments' %} <!-- Exclude "Assessments" option -->
-                                                <option value="{{ key }}" {% if key == 'lectures' %}selected{% endif %}>{{ value }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <div style="flex: 1; margin-right: 1rem;">
+                                            <select name="reading_material_type[]" class="form-control" style="margin-top: 0; height: calc(2.25rem + 2px);">
+                                                <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
+                                                {% for key, value in material_types.items %}
+                                                    {% if key != 'assessments' %} <!-- Exclude "Assessments" option -->
+                                                        <option value="{{ key }}" {% if key == 'lectures' %}selected{% endif %}>{{ value }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <input type="text" name="material_duration[]" class="form-control" placeholder="Optional" style="height: calc(2.25rem + 2px);">
+                                            <span style="margin-left: 0.5rem; font-weight: normal; font-size: 1rem;">minutes</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <span class="delete-reading-material" style="cursor: pointer; color: red; margin-left: 0.625rem;">&times;</span>
                             </div>
@@ -196,14 +204,24 @@
                                     {% else %}
                                         <input type="hidden" name="edit_reading_material_content[]" value="{{ editing_material.content }}">
                                     {% endif %}
-                                    <select name="edit_reading_material_type[]" class="form-control" style="margin-top: 0.625rem;">
-                                        <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
-                                        {% for key, value in material_types.items %}
-                                            {% if key != 'assessments' %}
-                                                <option value="{{ key }}" {% if key == editing_material.material.material_type %}selected{% endif %}>{{ value }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <div style="flex: 1; margin-right: 1rem;">
+                                            <select name="edit_reading_material_type[]" class="form-control" style="margin-top: 0; height: calc(2.25rem + 2px);">
+                                                <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
+                                                {% for key, value in material_types.items %}
+                                                    {% if key != 'assessments' %}
+                                                        <option value="{{ key }}" {% if key == editing_material.material.material_type %}selected{% endif %}>{{ value }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                    <!-- Duration Field with "minutes" -->
+                                        <div style="display: flex; align-items: center;">
+                                            <input type="text" name="edit_material_duration[]" class="form-control" value="{{ editing_material.material.expect_duration }}" placeholder="Optional" style="height: calc(2.25rem + 2px);">
+                                            <span style="margin-left: 0.5rem; font-weight: normal; font-size: 1rem;">minutes</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -317,14 +335,22 @@
             <div style="flex-grow: 1; width: 100%;">
             <input type="text" name="reading_material_title[]" class="form-control" value="${sessionName}" placeholder="Reading Material Title">
                 <textarea name="reading_material_content[]" class="form-control ckeditor" placeholder="Content"></textarea>
-                <select name="reading_material_type[]" class="form-control" style="margin-top: 10px;">
-                    <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
-                    {% for key, value in material_types.items %}
-                        {% if key != 'assessments' %}
-                            <option value="{{ key }}" {% if key == 'lectures' %}selected{% endif %}>{{ value }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+                <div class="d-flex align-items-center mt-2">
+                    <div style="flex: 1; margin-right: 1rem;">
+                        <select name="reading_material_type[]" class="form-control" style="margin-top: 0; height: calc(2.25rem + 2px);">
+                            <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
+                            {% for key, value in material_types.items %}
+                                {% if key != 'assessments' %} <!-- Exclude "Assessments" option -->
+                                    <option value="{{ key }}" {% if key == 'lectures' %}selected{% endif %}>{{ value }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <input type="text" name="material_duration[]" class="form-control" placeholder="Optional" style="height: calc(2.25rem + 2px);">
+                        <span style="margin-left: 0.5rem; font-weight: normal; font-size: 1rem;">minutes</span>
+                    </div>
+                </div>
             </div>
             <span class="delete-new-reading-material" style="cursor: pointer; color: red; margin-left: 10px;">&times;</span>
         `;
@@ -356,14 +382,22 @@
         newEntry.innerHTML = `
             <div style="flex-grow: 1; margin-bottom: 5px;">
                 <input type="file" name="uploaded_material_file[]" class="form-control" accept="application/pdf" style="margin-bottom: 5px;" multiple>
-                <select name="uploaded_material_type[]" class="form-control" style="margin-bottom: 5px;">
-                    <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
-                    {% for key, value in material_types.items %}
-                        {% if key != 'assessments' %} <!-- Exclude "Assessments" option -->
-                            <option value="{{ key }}" {% if key == 'lectures' %}selected{% endif %}>{{ value }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+                <div class="d-flex align-items-center mt-2">
+                    <div style="flex: 1; margin-right: 1rem;">
+                        <select name="uploaded_material_type[]" class="form-control" style="margin-top: 0; height: calc(2.25rem + 2px);">
+                            <option value="" disabled {% if material_types|length == 0 %}selected{% endif %}>Select Material Type</option>
+                            {% for key, value in material_types.items %}
+                                {% if key != 'assessments' %} <!-- Exclude "Assessments" option -->
+                                    <option value="{{ key }}" {% if key == 'lectures' %}selected{% endif %}>{{ value }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <input type="text" name="pdf_material_duration[]" class="form-control" placeholder="Optional" style="height: calc(2.25rem + 2px);">
+                        <span style="margin-left: 0.5rem; font-weight: normal; font-size: 1rem;">minutes</span>
+                    </div>
+                </div>
             </div>
             <span class="delete-pdf-upload" style="cursor: pointer; color: red; margin-left: 10px;">&times;</span>
         `;

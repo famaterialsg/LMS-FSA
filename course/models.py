@@ -121,6 +121,7 @@ class CourseMaterial(models.Model):
     order = models.PositiveIntegerField()  # Order of appearance
     title = models.CharField(max_length=255)
     expect_duration = models.FloatField(null=True, blank=True)
+    word_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f'session id: {self.session.id}   title: {self.title}'
