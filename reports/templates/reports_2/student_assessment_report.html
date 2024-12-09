@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="report-container">
+    <h1>Student Report for Assessment: {{ assessment.title }}</h1>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Quiz Score</th>
+                <th>Assignment Score</th>
+                <th>Notes</th>
+                <th>Attempt Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attempt in attempts %}
+            <tr>
+                <td>
+                    {% if attempt.user %}
+                        {{ attempt.user.username }}
+                    {% else %}
+                        Anonymous
+                    {% endif %}
+                </td>
+                <td>{{ attempt.email }}</td>
+                <td>{{ attempt.score_quiz }}</td>
+                <td>{{ attempt.score_ass }}</td>
+                <td>{{ attempt.note }}</td>
+                <td>{{ attempt.attempt_date|date:"M d, Y, h:i a" }}</td>
+                <td>
+                    <a href="{% url 'reports:view_student_answers' assessment.id attempt.id %}?email={{ attempt.email }}" class="btn btn-secondary">
+                        Report Student Answers
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .report-container {
+        max-width: 90%;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 1em;
+    }
+    .report-table th, .report-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .report-table th {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .report-table tr:hover {
+        background-color: #f1f1f1;
+    }
+    .btn.btn-secondary {
+        color: #fff;
+        background-color: #007bff;
+        padding: 6px 12px;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.9em;
+        transition: background-color 0.3s ease;
+    }
+    .btn.btn-secondary:hover {
+        background-color: #0056b3;
+    }
+</style>
+{% endblock %}

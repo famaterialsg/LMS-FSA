@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="report-container">
+    <h1 class="report-title">Assessment Report</h1>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Title</th>
+                <th>Assessment Type</th>
+                <th>Invited Count</th>
+                <th>Assessed Count</th>
+                <th>Qualifying Score</th>
+                <th>Created At</th>
+                <th>Create By</th>
+                <th>Invite Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assessment in assessments %}
+            <tr>
+                <td>{{ assessment.course }}</td>
+                <td>
+                    <button onclick="window.location.href='{% url 'reports:assessment_detail' assessment.id %}'" class="btn btn-link">
+                        {{ assessment.title }}
+                    </button>
+                </td>
+                <td>{{ assessment.assessment_type }}</td>
+                <td>{{ assessment.invited_count }}</td>
+                <td>{{ assessment.assessed_count }}</td>
+                <td>{{ assessment.qualifying_score }}</td>
+                <td>{{ assessment.created_at|date:"M d, Y, h:i a" }}</td>
+                <td>{{ assessment.created_by }}</td>
+                <td>
+                    <a href="{% url 'reports:assessment_email_list' assessment.course.course_name  %}" class="btn btn-primary">Show Email</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+    }
+    .report-container {
+        max-width: 90%;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .report-title {
+        text-align: center;
+        font-size: 2em;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 1em;
+    }
+    .report-table th, .report-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .report-table th {
+        background-color: #4CAF50;
+        color: white;
+        text-transform: uppercase;
+    }
+    .report-table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    .email-list {
+        margin-top: 10px;
+        padding: 5px;
+        background-color: #e8e8e8;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+</style>
+
+<script>
+    function toggleEmails(emailId) {
+        const emailDiv = document.getElementById(emailId);
+        if (emailDiv) {
+            if (emailDiv.style.display === "none") {
+                emailDiv.style.display = "block";
+            } else {
+                emailDiv.style.display = "none";
+            }
+        } else {
+            console.error("Email div not found for ID:", emailId);
+        }
+    }
+</script>
+{% endblock %}

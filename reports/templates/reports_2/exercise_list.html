@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Exercise List</h2>
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Language</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exercise in exercises %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ exercise.title }}</td>
+                <td>{{ exercise.description }}</td>
+                <td>{{ exercise.language }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

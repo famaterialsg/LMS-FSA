@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Student Scores for "{{ course.course_name }}"</h1>
+
+    {% if results %}
+        {% for assessment, student_results in results.items %}
+            <div class="mb-5">
+                <h3 class="bg-success text-white p-2 rounded">{{ assessment.title }}</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle mt-3">
+                        <thead class="bg-success text-white">
+                            <tr class="text-center">
+                                <th style="width: 5%;">#</th>
+                                <th style="width: 30%;">Student Name</th>
+                                <th style="width: 25%;">Email</th>
+                                <th style="width: 15%;">Score</th>
+                                <th style="width: 25%;">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in student_results %}
+                                <tr class="text-center">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ result.user.get_full_name|default:"None" }}</td>
+                                    <td>{{ result.email|default:"None" }}</td>
+                                    <td>{{ result.score_quiz|default:"0" }}</td>
+                                    <td>{{ result.attempt_date|date:"F j, Y, g:i a" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center text-muted">No assessments or student scores available for this course.</p>
+    {% endif %}
+</div>
+{% endblock %}

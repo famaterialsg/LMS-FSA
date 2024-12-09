@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .code-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-width: 600px;
+        width: 90%;
+        max-height: 70%;
+        overflow: hidden;
+    }
+
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .modal-header {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        text-align: center;
+        color: #333;
+    }
+
+    .code-container {
+        background-color: #f8f9fa; /* Nền xám nhạt */
+        border: 1px solid #dee2e6; /* Viền nhạt */
+        border-radius: 5px;
+        padding: 15px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 14px;
+        color: #333;
+        overflow: auto; /* Hiển thị thanh cuộn nếu nội dung vượt quá */
+        max-height: 300px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .close-btn {
+        display: block;
+        margin-top: 10px;
+        text-align: right;
+    }
+
+    .close-btn button {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2>User Exercise Report</h2>
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Exercise Title</th>
+                <th>Assessment</th>
+                <th>Email</th>
+                <th>Language</th>
+                <th>Score</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in report_data %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ entry.exercise_title }}</td>
+                <td>{{ entry.assessment }}</td>
+                <td>{{ entry.email }}</td>
+                <td>{{ entry.language }}</td>
+                <td>{{ entry.score }}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm show-code-btn" data-code="{{ entry.code }}">
+                        Show Code
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal hiển thị code -->
+<div class="modal-overlay"></div>
+<div class="code-modal">
+    <div class="modal-header">Code:</div>
+    <div class="code-container" id="code-content"></div>
+    <div class="close-btn">
+        <button id="close-modal">Close</button>
+    </div>
+</div>
+
+<script>
+    // Lấy các thành phần
+    const showCodeButtons = document.querySelectorAll('.show-code-btn');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const codeModal = document.querySelector('.code-modal');
+    const codeContent = document.querySelector('#code-content');
+    const closeModalButton = document.querySelector('#close-modal');
+
+    // Gắn sự kiện click cho các nút "Show Code"
+    showCodeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const code = button.getAttribute('data-code'); // Lấy code từ thuộc tính data-code
+            codeContent.textContent = code; // Hiển thị code trong container
+            modalOverlay.style.display = 'block'; // Hiển thị overlay
+            codeModal.style.display = 'block'; // Hiển thị modal
+        });
+    });
+
+    // Gắn sự kiện click cho nút "Close"
+    closeModalButton.addEventListener('click', () => {
+        modalOverlay.style.display = 'none'; // Ẩn overlay
+        codeModal.style.display = 'none'; // Ẩn modal
+    });
+
+    // Đóng modal khi click ra ngoài
+    modalOverlay.addEventListener('click', () => {
+        modalOverlay.style.display = 'none';
+        codeModal.style.display = 'none';
+    });
+</script>
+{% endblock %}

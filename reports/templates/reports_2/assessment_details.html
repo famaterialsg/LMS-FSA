@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="detail-container">
+    <h1>Assessment Report: {{ assessment.title }}</h1>
+    <p><strong>Course:</strong> {{ assessment.course }}</p>
+    <p><strong>Assessment Type:</strong> {{ assessment.assessment_type }}</p>
+    <p><strong>Invited Count:</strong> {{ assessment.invited_count }}</p>
+    <p><strong>Assessed Count:</strong> {{ assessment.assessed_count }}</p>
+    <p><strong>Qualifying Score:</strong> {{ assessment.qualify_score }}</p>
+    <p><strong>Created At:</strong> {{ assessment.created_at|date:"M d, Y, h:i a" }}</p>
+    <p><strong>Created By:</strong> {{ assessment.created_by }}</p>
+    <p><strong>Time Limit:</strong> {{assessment.time_limit}}</p>
+    <p><strong>Report Student</strong>
+        <button onclick="window.location.href='{% url 'reports:student_assessment_report' assessment.title %}'" class="btn btn-primary">
+            View
+        </button>
+    </p>
+</div>
+
+<style>
+    .detail-container {
+        max-width: 80%;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-size: 1.1em;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Report{% endblock %}
+
+<style>
+    .pagination-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #f8f9fa;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        padding: 10px 0;
+        z-index: 1000;
+    }
+
+    .pagination-container .pagination {
+        margin: 0;
+    }
+
+    .pagination-container .page-item .page-link {
+        color: #007bff;
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination-container .page-item .page-link:hover {
+        background-color: #e9ecef;
+        text-decoration: none;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+</style>
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center text-primary mb-4">Course Report</h1>
+
+    <!-- Bảng hiển thị thông tin -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Course Name</th>
+                    <th>Course Code</th>
+                    <th>Description</th>
+                    <th>Instructor</th>
+                    <th>Creator</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if page_obj %}
+                    {% for report in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ report.course.course_name }}</td>
+                        <td>{{ report.course.course_code }}</td>
+                        <td>{{ report.course.description|truncatewords:10 }}</td>
+                        <td>
+                            {% if report.course.instructor %}
+                                {{ report.course.instructor.get_full_name }}
+                            {% else %}
+                                <span class="text-danger">No Instructor</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ report.course.creator }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="showUsers('{{ report.course.id }}')">Show Users</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No reports available.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Phần nút phân trang -->
+<div class="pagination-container">
+    <div class="d-flex justify-content-center">
+        <nav aria-label="Pagination">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<script>
+    function showUsers(courseId) {
+        fetch(`/reports/enrolled-users/${courseId}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.users && data.users.length > 0) {
+                    let userList = data.users.map(user => `- ${user.name}`).join('\n');
+                    alert(`Enrolled Users:\n${userList}`);
+                } else {
+                    alert('No users enrolled in this course.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+                alert('An error occurred while fetching users.');
+            });
+    }
+</script>
+{% endblock %}
