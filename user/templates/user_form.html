@@ -4,266 +4,288 @@
 {% block title %}{{ form.instance.pk|yesno:"Edit User, Add New User" }}{% endblock %}
 
 {% block content %}
-<div class="container mt-2">
-    <div class="card shadow-lg p-4 bg-gradient-light rounded pt-3">
-        <h2 class="text-center text-primary fw-bold mb-4"> <!-- Cập nhật lớp cho font-weight -->
-            {% if form.instance.pk %}
-                <i class="fas fa-edit"></i> Edit User
-            {% else %}
-                <i class="fas fa-plus"></i> Add User
-            {% endif %}
-        </h2>        
-        
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                <strong>Invalid form</label>
-                <ul class="errorlist">
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
-
-        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-            {% csrf_token %}
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="h5 mt-2">{{ form.first_name.label }}</label>
-                    {{ form.first_name|add_class:"form-control" }}
-                    {% if form.first_name.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.first_name.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label class="h5 mt-2">{{ form.last_name.label_tag }}</label>
-                    {{ form.last_name|add_class:"form-control" }}
-                    {% if form.last_name.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.last_name.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="h5 mt-2">{{ form.username.label_tag }}</label>
-                    {{ form.username|add_class:"form-control" }}
-                    {% if form.username.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.username.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label class="h5 mt-2">{{ form.email.label_tag }}</label>
-                    {{ form.email|add_class:"form-control" }}
-                    {% if form.email.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.email.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if request.user.is_authenticated %}
+<form method="post" enctype="multipart/form-data" style="max-width: 100%; max-height: 100vh; transition: all 0.3s ease-in-out;" class="needs-validation" novalidate>
+    {% if messages %}
+        <div class="alert alert-success">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="p-4 justify-content-center text-center bg-gradient-light rounded pt-3">
                 <div class="form-group">
-                    {{ form.role.label_tag }}
-                    {% if request.user.is_superuser or request.user.profile.role.role_name == 'Manager' and request.user.pk != user.pk %}
-                        {{ form.role|add_class:"form-control" }} <!-- Editable for Manager editing other users -->
-                    {% else %}
-                        <input type="text" class="form-control" value="{{ request.user.profile.role.role_name }}" readonly> <!-- Readonly for normal users -->
-                        <input type="hidden" name="role" value="{{ request.user.profile.role.id }}"> <!-- Hidden input to keep the role ID valid -->
-                    {% endif %}
-                    {% if form.role.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.role.errors %}
+                    <label class="h5 mt-2 mb-2">Profile Picture</label>
+                    <div class="avatar-wrapper d-flex justify-content-center align-items-center mb-2">
+                        <img 
+                            src="{% if form.instance.pk and user.profile.profile_picture_url %}{{ user.profile.profile_picture_url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}" 
+                            class="img-fluid rounded-circle" 
+                            style="width: 10vw; height: 20vh; object-fit: cover;" 
+                            alt="{% if form.instance.pk %}{{ user.username }}{% else %}Default Profile{% endif %}">
+                    </div>
+                
+                    {% if form.profile_picture_url.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.profile_picture_url.errors %}
                                 <li>{{ error }}</li>
                             {% endfor %}
-                        </ul>
+                        </div>
                     {% endif %}
                 </div>
                 
-                <!-- Trường student_code, ẩn theo mặc định -->
-                <div class="form-group" id="student-code-group" style="display: none;">
-                    {{ form.student_code.label_tag }}
-                    {{ form.student_code|add_class:"form-control" }}
-                    {% if form.student_code.errors %}
+                <div class="text-center mt-3">
+                    {% if request.user.is_authenticated %}
+                        {% if form.instance.pk %}
+                            <button type="button" class="btn btn-warning" id="togglePasswordChange">Change Password</button>
+                        {% else %}
+                            <button type="button" class="btn btn-warning" id="togglePasswordChange">Create Password</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <!-- Password change fields, hidden by default -->
+                <div id="passwordChangeSection" class="mt-1" style="display: none; text-align: center;">
+                    <div class="row" style="max-width: 100vw;">
+                        <div class="col-md-6">
+                            <label class="h6">{{ form.password1.label }}</label> <!-- In đậm tiêu đề -->
+                            {{ form.password1|add_class:"form-control" }}
+                            {% if form.password1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password1.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="h6">{{ form.password2.label }}</label> <!-- In đậm tiêu đề -->
+                            {{ form.password2|add_class:"form-control" }}
+                            {% if form.password2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password2.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div class="col-md-9">
+            <div class="card shadow-lg p-4 bg-gradient-light rounded pt-3">
+                <h2 class="text-center text-primary fw-bold mb-4"> <!-- Cập nhật lớp cho font-weight -->
+                    {% if form.instance.pk %}
+                        <i class="fas fa-edit"></i> Edit User
+                    {% else %}
+                        <i class="fas fa-plus"></i> Add User
+                    {% endif %}
+                </h2>        
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>Invalid form</label>
                         <ul class="errorlist">
-                            {% for error in form.student_code.errors %}
+                            {% for error in form.non_field_errors %}
                                 <li>{{ error }}</li>
                             {% endfor %}
                         </ul>
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            <div class="form-group text-center mb-3">
-                <label class="h5 mt-2">Profile Picture:</label>
-                <div class="avatar-wrapper d-flex justify-content-center align-items-center mb-2">
-                    <img src="{% if user.profile.profile_picture_url %}{{ user.profile.profile_picture_url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}" 
-                        class="img-fluid rounded-circle" style="width: 10rem; height: 10rem; object-fit: cover;" alt="{{ user.username }}">
-                </div>
-                <input type="url" name="profile_picture_url" id="id_profile_picture_url" class="form-control" placeholder="Enter profile picture URL" value="{{ form.fields.profile_picture_url.initial|default:'' }}">
-                {% if form.fields.profile_picture_url.initial %}
-                    <small class="form-text text-muted">Current: <a href="{{ form.fields.profile_picture_url.initial }}" target="_blank">{{ form.fields.profile_picture_url.initial }}</a></small>
-                {% endif %}
-                {% if form.profile_picture_url.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.profile_picture_url.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
                     </div>
                 {% endif %}
-            </div>
-        
-        
-            
-            <div class="form-group">
-                <label class="h5 mt-2">{{ form.bio.label_tag }}</label>
-                <textarea class="form-control" rows="3" name="bio">{{ form.bio.value|default:'' }}</textarea>
-                {% if form.bio.errors %}
-                    <ul class="errorlist">
-                        {% for error in form.bio.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
-                <label class="h5 mt-2">{{ form.interests.label_tag }}</label>
-                <textarea class="form-control" rows="3" name="interests">{{ form.interests.value|default:'' }}</textarea>
-                {% if form.interests.errors %}
-                    <ul class="errorlist">
-                        {% for error in form.interests.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>            
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="h5 mt-2">{{ form.learning_style.label_tag }}</label>
-                    {{ form.learning_style|add_class:"form-control" }}
-                    {% if form.learning_style.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.learning_style.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
+                
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="h5 mt-2">{{ form.first_name.label }}</label>
+                            {{ form.first_name|add_class:"form-control" }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.first_name.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="h5 mt-2">{{ form.preferred_language.label_tag }}</label>
-                    {{ form.preferred_language|add_class:"form-control" }}
-                    {% if form.preferred_language.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.preferred_language.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="h5 mt-2">{{ form.last_name.label_tag }}</label>
+                            {{ form.last_name|add_class:"form-control" }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.last_name.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
-            </div>
+                    </div>
 
-            <div class="text-center mt-3">
-                {% if request.user.is_authenticated %}
-                    {% if form.instance.pk %}
-                        <button type="button" class="btn btn-warning" id="togglePasswordChange">Change Password</button>
-                    {% else %}
-                        <button type="button" class="btn btn-warning" id="togglePasswordChange">Create Password</button>
-                    {% endif %}
-                {% endif %}
-            </div>
-            
-            <!-- Password change fields, hidden by default -->
-            <div id="passwordChangeSection" class="mt-3" style="display: none; text-align: center;">
-                <div class="form-group" style="max-width: 300px; margin: 0 auto;">
-                    <label class="h5 mt-2">{{ form.password1.label }}</label> <!-- In đậm tiêu đề -->
-                    {{ form.password1|add_class:"form-control" }}
-                    {% if form.password1.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.password1.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="h5 mt-2">{{ form.username.label_tag }}</label>
+                            {{ form.username|add_class:"form-control" }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.username.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
-            
-                <div class="form-group" style="max-width: 300px; margin: 0 auto;">
-                    <label class="h5 mt-2">{{ form.password2.label }}</label> <!-- In đậm tiêu đề -->
-                    {{ form.password2|add_class:"form-control" }}
-                    {% if form.password2.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.password2.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="h5 mt-2">{{ form.email.label_tag }}</label>
+                            {{ form.email|add_class:"form-control" }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
-            </div>
-            
+                    </div>
 
-            <div class="d-flex justify-content-between mt-4"> <!-- Sử dụng Flexbox -->
-                <div>
-                    <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow">{{ form.instance.pk|yesno:"Update,Create" }}</button>
-                </div>
-            
-                <div>
-                    <a href="{% url 'user:user_list' %}" class="btn btn-outline-dark btn-lg rounded-pill shadow-sm">
-                        <i class="fas fa-arrow-left"></i> Back to User List
-                    </a>
-                </div>
-            </div>
-        </form>
+                    {% if request.user.is_authenticated %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="h5 mt-2">{{ form.role.label_tag }}</label>
+                                {% if request.user.is_superuser or request.user.profile.role.role_name == 'Manager' and request.user.pk != user.pk %}
+                                    {{ form.role|add_class:"form-control" }} <!-- Editable for Manager editing other users -->
+                                {% else %}
+                                    <input type="text" class="form-control" value="{{ request.user.profile.role.role_name }}" readonly> <!-- Readonly for normal users -->
+                                    <input type="hidden" name="role" value="{{ request.user.profile.role.id }}"> <!-- Hidden input to keep the role ID valid -->
+                                {% endif %}
+                                {% if form.role.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.role.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
 
-        <script>
-            document.getElementById('togglePasswordChange').addEventListener('click', function() {
-                var passwordSection = document.getElementById('passwordChangeSection');
-                if (passwordSection.style.display === 'none') {
-                    passwordSection.style.display = 'block';
-                } else {
-                    passwordSection.style.display = 'none';
-                }
-            });
-        </script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const roleSelect = document.querySelector("#id_role");
-                const studentCodeGroup = document.getElementById("student-code-group");
-        
-                // Hiển thị hoặc ẩn trường student_code dựa vào giá trị role được chọn
-                function toggleStudentCode() {
-                    if (roleSelect.options[roleSelect.selectedIndex].text === "Student") {
-                        studentCodeGroup.style.display = "block"; // Hiển thị nếu là "Student"
-                    } else {
-                        studentCodeGroup.style.display = "none"; // Ẩn nếu không phải là "Student"
-                    }
-                }
-        
-                // Lắng nghe sự kiện thay đổi và gọi toggleStudentCode
-                roleSelect.addEventListener("change", toggleStudentCode);
-        
-                // Gọi hàm một lần để cài đặt ban đầu
-                toggleStudentCode();
-            });
-        </script>
+                            <!-- Trường student_code, ẩn theo mặc định -->
+                            <div class="col-md-6 mb-3" id="student-code-group" style="display: none;">
+                                <label class="h5 mt-2">{{ form.student_code.label_tag }}</label>
+                                {{ form.student_code|add_class:"form-control" }}
+                                {% if form.student_code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.student_code.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>  
+                    {% endif %}    
+                    <label class="h5 mt-2">Profile Picture:</label>
+                    <input type="url" name="profile_picture_url" id="id_profile_picture_url" class="form-control" placeholder="Enter profile picture URL" value="{{ form.fields.profile_picture_url.initial|default:'' }}"> 
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="h5 mt-2">{{ form.bio.label_tag }}</label>
+                            <textarea class="form-control" rows="5" name="bio">{{ form.bio.value|default:'' }}</textarea>
+                            {% if form.bio.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.bio.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="h5 mt-2">{{ form.interests.label_tag }}</label>
+                            <textarea class="form-control" rows="5" name="interests">{{ form.interests.value|default:'' }}</textarea>
+                            {% if form.interests.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.interests.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>            
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="h5 mt-2">{{ form.learning_style.label_tag }}</label>
+                            {{ form.learning_style|add_class:"form-control" }}
+                            {% if form.learning_style.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.learning_style.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="h5 mt-2" for="id_preferred_language">{{ form.preferred_language.label_tag }}</label>
+                            <input list="languages" name="preferred_language" class="form-control" id="id_preferred_language" 
+                                   value="{{ form.preferred_language.value|default:'' }}">
+                            <datalist id="languages">
+                                <option value="English">
+                                <option value="Vietnamese">
+                                <option value="Spanish">
+                            </datalist>
+                            {% if form.preferred_language.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.preferred_language.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>              
+                    </div>
+
+                    
+            </div>
+        </div>
     </div>
-</div>
+    <div class="d-flex justify-content-end mt-4"> <!-- Sử dụng Flexbox -->
+        <div>
+            <a href="{% url 'user:user_list' %}" class="btn btn-outline-dark btn-lg rounded-pill shadow-sm me-2">
+                <i class="fas fa-arrow-left"></i> Back to User List
+            </a>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow">{{ form.instance.pk|yesno:"Update,Create" }}</button>
+        </div>
+    </div>
+</form>
+<script>
+    document.getElementById('togglePasswordChange').addEventListener('click', function() {
+        var passwordSection = document.getElementById('passwordChangeSection');
+        if (passwordSection.style.display === 'none') {
+            passwordSection.style.display = 'block';
+        } else {
+            passwordSection.style.display = 'none';
+        }
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const roleSelect = document.querySelector("#id_role");
+        const studentCodeGroup = document.getElementById("student-code-group");
+
+        // Hiển thị hoặc ẩn trường student_code dựa vào giá trị role được chọn
+        function toggleStudentCode() {
+            if (roleSelect.options[roleSelect.selectedIndex].text === "Student") {
+                studentCodeGroup.style.display = "block"; // Hiển thị nếu là "Student"
+            } else {
+                studentCodeGroup.style.display = "none"; // Ẩn nếu không phải là "Student"
+            }
+        }
+
+        // Lắng nghe sự kiện thay đổi và gọi toggleStudentCode
+        roleSelect.addEventListener("change", toggleStudentCode);
+
+        // Gọi hàm một lần để cài đặt ban đầu
+        toggleStudentCode();
+    });
+</script>
 {% endblock %}

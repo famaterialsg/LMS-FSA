@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings 
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from user.models import User
 
 
 class Registration(models.Model):
@@ -38,12 +39,9 @@ class SiteStatus(models.Model):
     status = models.BooleanField(default=True)  # True: Mở, False: Khóa
 
     def __str__(self):
-        return "Mở" if self.status else "Khóa"
+        return "Open" if self.status else "Block"
     
 
-from django.db import models
-from user.models import User
-from django.utils import timezone
 class PasswordChangeRecord(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     change_count = models.IntegerField(default=0)
@@ -54,16 +52,13 @@ class PasswordChangeRecord(models.Model):
 
     @classmethod
     def get_or_create_record(cls, user):
-        """Lấy hoặc tạo bản ghi thay đổi mật khẩu cho người dùng."""
         record, created = cls.objects.get_or_create(user=user)
         return record
 
     def update_change_count(self):
-        """Cập nhật số lần thay đổi mật khẩu."""
         self.change_count += 1
         self.save()
 
     def reset_change_count(self):
-        """Đặt lại số lần thay đổi mật khẩu về 0."""
         self.change_count = 0
         self.save()

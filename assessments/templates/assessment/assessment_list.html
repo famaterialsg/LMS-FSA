@@ -1,110 +1,138 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block content %}
-<h2 class="text-center mb-4">Assessments</h2>
-    <!-- Assessment Filter Form -->
-    <form method="GET" action="{% url 'assessment:assessment_list' %}" class="form-inline justify-content-center mb-4">
-        <div class="row w-100">
-            <div class="col-md-3">
-                <select class="form-control w-100" id="courseSelect" name="course" onchange="this.form.submit()">
-                    <option value="">All Courses</option>
-                    {% for course in courses %}
-                        <option value="{{ course.id }}" {% if course.id|stringformat:"s" == selected_course %}selected{% endif %}>
-                            {{ course.course_name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-7">
-                <input type="text" class="form-control w-100" placeholder="Enter an assessment..." id="searchInput" onkeyup="search()">
-            </div>
-            <div class="col-md-2">
-                <a href="{% url 'assessment:assessment_create' %}" class="btn btn-primary w-100"><i class="fas fa-plus"></i> Create Assessment</a>
-            </div>
+
+
+<form method="GET" action="{% url 'assessment:assessment_list' %}" class="mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <select class="form-select" id="courseSelect" name="course" onchange="this.form.submit()">
+                <option value="">All Courses</option>
+                {% for course in courses %}
+                <option value="{{ course.id }}" {% if course.id|stringformat:"s" == selected_course|stringformat:"s" %}selected{% endif %}>
+                        {{ course.course_name }}
+                    </option>
+                {% endfor %}
+            </select>
+            
         </div>
-    </form>
+        <div class="col-md-7">
+            <input type="text" class="form-control" placeholder="Search assessments..." id="searchInput" onkeyup="search()">
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'assessment:assessment_create' %}" class="btn btn-primary w-100"><i class="fas fa-plus"></i> Create New</a>
+        </div>
+    </div>
+</form>
 
-    <!-- Assessment Cards Display -->
-    <div class="row" id="quizCards">
+<div>
+    <div class="row scrollable-table" id="quizCards">
         {% for item in assessments_with_counts %}
-        <div class="col-md-6">
-            <div class="quiz-card mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <h5 class="card-title mb-1">
-                                    {{ item.assessment.title }}
-                                    <span class="bg-secondary border p-1 rounded" style="font-size: 0.5em; margin-left: 10px; margin-bottom: 50px;">
-                                        {{ item.assessment.assessment_type }}
-                                    </span>
-                                </h5>
-                            </div>
-                            <div class="d-flex">
-                                <a href="{% url 'assessment:assessment_edit' item.assessment.pk %}" class="btn btn-outline-secondary btn-sm me-2">
-                                    <i class="fas fa-edit"></i> Edit
-                                </a>
-                                <a href="{% url 'assessment:assessment_detail' item.assessment.pk %}" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-arrow-right"></i> Open
-                                </a>
-                            </div>
+        <div class="col-md-4">
+            <div class="card mb-4 shadow">  
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0 fw-bold" style="font-family: 'Roboto', sans-serif; color: #333;">{{ item.assessment.title }}
+                            <span class="badge bg-light text-secondary ms-2 rounded-pill small px-2 py-1" style="font-size: 0.7rem; font-weight: 400;">{{ item.assessment.assessment_type }}</span>
+                        </h5>
+                        <div class="btn-group gap-2">
+                            <a href="{% url 'assessment:assessment_edit' item.assessment.pk %}" class="btn btn-sm btn-outline-primary" title="Edit assessment"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'assessment:assessment_detail' item.assessment.pk %}" class="btn btn-sm btn-outline-primary" title="Open"><i class="fas fa-arrow-right"></i></a>
                         </div>
+                    </div>
 
-                        <p class="mb-2"><strong>Course:</strong> {{ item.assessment.course }}</p>
+                    <p class="card-text mb-1 text-muted small">Course: {{ item.assessment.course }}</p>
 
-                        <!-- Progress bar and assessment stats -->
-                        <div class="row">
-                            <div class="col-md-8 d-flex align-items-center mb-3">
-                                <strong>Qualify:</strong>
-                                <div class="progress mx-2 w-100">
-                                    <div class="progress-bar" role="progressbar" style="width: {{ item.assessment.qualified_count }}%;" aria-valuenow="{{ item.assessment.qualified_count }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <strong>{{ item.assessment.qualified_count }}%</strong>
+                    <div class="row mb-2">
+                        <div class="col-md-8 d-flex align-items-center mb-2">
+                            <strong class="me-2 text-muted small">Qualified:</strong>
+                            <div class="progress flex-grow-1" style="height: 0.4rem;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ item.assessment.qualified_count }}%;" aria-valuenow="{{ item.assessment.qualified_count }}" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
-                            
-                            <div class="col-md-4 text-end">
-                                <p class="mb-1">{{ item.assessment.invited_count }} Invited <i class="fa-regular fa-circle"></i></p>
-                                <p class="mb-1">{{ item.assessment.assessed_count }} Assessed <i class="fa-solid fa-circle text-secondary"></i></p>
-                                <p class="mb-1">{{ item.assessment.qualified_count }} Qualified <i class="fa-regular fa-circle"></i></p>
-                            </div>
-                            
+                            <strong class="ms-2 small">{{ item.assessment.qualified_count }}%</strong>
                         </div>
-
-                        <div class="row text-center mb-3">
+                        <div class="col-md-4 text-end small text-muted">
+                            <p class="mb-0">{{ item.assessment.invited_count }} Invited</p>
+                            <p class="mb-0">{{ item.assessment.assessed_count }} Assessed</p>
+                            <p class="mb-0">{{ item.assessment.qualified_count }} Qualified</p>
+                        </div>
+                        <div class="row text-center mb-0">
                             <div class="col">
-                                <p class="mb-1">Exercises</p>
-                                <h5>{{ item.exercise_count }}</h5>
+                                <p class="card-text small text-muted mb-0">Exercises</p>
+                                <h6>{{ item.exercise_count }}</h6>
                             </div>
                             <div class="col">
-                                <p class="mb-1">Multiple Choice</p>
+                                <p class="card-text small text-muted mb-0">Questions</p>  <!-- Changed to Questions -->
                                 <h6>{{ item.question_count }}</h6>
                             </div>
-                        </div>                    
-                    </div>
-
-                    <!-- Card Footer with Action Buttons -->
-                    <div class="card-footer bg-light d-flex justify-content-between">
-                        <div class="btn-group  gap-2">
-                            <a href="{% url 'assessment:take_assessment' item.assessment.pk %}?preview=true" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-eye"></i> Preview
-                            </a>
-                            <a href="{% url 'assessment:invite_candidates' item.assessment.pk %}" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-envelope"></i> Invite
-                            </a>
-                            <a href="#" class="btn btn-outline-secondary btn-sm" onclick="copyInviteLink(event, '{{ item.assessment.invite_link }}')" title="Copy Invite Link">
-                                <i class="fas fa-copy"></i> Copy Link
-                            </a>
                         </div>
-                        <small class="text-muted">
-                            <i class="fas fa-user"></i> {{ item.assessment.created_by }} | {{ item.assessment.created_at|date:"Y-m-d" }}
-                        </small>
+                    </div>           
+                </div>
+
+                <div class="card-footer bg-light d-flex justify-content-between align-items-center small text-muted" style="margin-top: -0.9rem;">
+                    <div class="btn-group gap-2">
+                        <a href="{% url 'assessment:take_assessment' item.assessment.pk %}?preview=true" class="btn btn-sm btn-outline-secondary" title="Preview"><i class="fas fa-eye"></i></a>
+                        <a href="{% url 'assessment:invite_candidates' item.assessment.pk %}" class="btn btn-sm btn-outline-secondary" title="Invite"><i class="fas fa-envelope"></i></a>
+                        <a href="#" class="btn btn-outline-secondary btn-sm" onclick="copyInviteLink(event, '{{ item.assessment.id }}')" title="Copy Link"><i class="fas fa-copy"></i></a>
                     </div>
+                    <small><i class="fas fa-user me-1"></i> {{ item.assessment.created_by }} | {{ item.assessment.created_at|date:"Y-m-d" }}</small>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
+</div>
+
+<script>
+    function copyInviteLink(event, assessmentId) {
+        event.preventDefault(); 
+
+        // Sử dụng url tag để tạo URL với ID hợp lệ:
+        let url = "{% url 'assessment:copy_public_invite_link' 0 %}";
+        url = url.replace('0', assessmentId); // Thay thế 0 bằng assessmentId
+
+        fetch(url)
+            .then(response => {
+                console.log("Response status:", response.status); // Kiểm tra mã trạng thái
+                return response.json();
+            })
+            .then(data => {
+                if (data.invite_link) {
+                    navigator.clipboard.writeText(data.invite_link)
+                        .then(() => alert("Invite link copied to clipboard!"))
+                        .catch(err => {
+                            console.error("Failed to copy: ", err);
+                            alert("Failed to copy invite link. Please try again.");
+                        });
+                } else {
+                    alert("Invite link not found.");
+                }
+            })
+            .catch(err => {
+                console.error("Fetch error:", err);
+                alert("Failed to get invite link. Please try again.");
+            });
+    }
+
+    function search() {
+        var input, filter, cards, card, title, i;
+        input = document.getElementById("searchInput");
+        filter = input.value.toUpperCase();
+        cards = document.getElementById("quizCards").getElementsByClassName("col-md-6");
+
+        for (i = 0; i < cards.length; i++) {
+            card = cards[i];
+            title = card.getElementsByTagName("h5")[0]; // Get the title element (h5)
+            if (title) {
+                if (title.innerText.toUpperCase().indexOf(filter) > -1) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            }
+        }
+    }
 
 
+</script>
 {% endblock %}

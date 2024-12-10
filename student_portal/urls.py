@@ -15,6 +15,3 @@ urlpatterns = [
     path('instructor/<int:instructor_id>/', views.instructor_profile, name='instructor_profile'),
     path('<int:pk>/toggle-completion/', views.toggle_completion, name='toggle_completion'),
 ]
-
-
-

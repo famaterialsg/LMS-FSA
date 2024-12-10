@@ -1,0 +1,659 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 105.8%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position:fixed;
+            transform: translate(-2.5%, -3.5%);
+        }
+        .toggle-container {
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            top: 60px ;
+            left: -10px;
+            width: 200px;
+            height: 60px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .button--activity {
+            background-color: #3498db;
+        }
+        .button--activity:hover {
+            background-color: #2980b9;
+        }
+        .button--frog {
+            --main-color: #4CAF50;
+            --dark-color: #2E7D32;
+            --light-color: #81C784;
+            --spot-color: #1B5E20;
+            background-color: var(--main-color);
+        }
+        .button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .button__text {
+            font-family: 'Arial', sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        .button:hover .button__text {
+            transform: scale(1.1);
+        }
+        .frog {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.3s ease;
+        }
+        .frog__body {
+            width: 60px;
+            height: 36px;
+            background-color: var(--dark-color);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            overflow: hidden;
+        }
+        .frog__eyes {
+            position: absolute;
+            top: 6px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+        }
+        .frog__eye {
+            width: 12px;
+            height: 12px;
+            background-color: white;
+            border-radius: 50%;
+            position: relative;
+        }
+        .frog__eye::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 50%;
+            height: 50%;
+            background-color: black;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .frog__spots {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+        }
+        .frog__spot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--spot-color);
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+        .frog__legs {
+            position: absolute;
+            bottom: -6px;
+            left: 6px;
+            right: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .frog__leg {
+            width: 12px;
+            height: 18px;
+            background-color: var(--dark-color);
+            border-radius: 0 0 6px 6px;
+        }
+        .button:hover .frog {
+            transform: translateX(-50%) translateY(-10px);
+        }
+        .button:hover .frog__eye::after {
+            transform: scale(0.8);
+            animation: blink 3s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+        .button--frog::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-color: var(--light-color);
+            border-radius: 40%;
+            opacity: 0.4;
+            animation: rotate 6s linear infinite;
+            z-index: 1;
+        }
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+        iframe {
+            flex-grow: 1;
+            border: none;
+            width: 100%;
+        }
+
+        /* Dog styles */
+        .button-container {
+            position: relative;
+            display: inline-block;
+        }
+        .dog {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            top: -10px;
+            right: 1px;
+            transform: translate(0, 0) rotate(0);
+            transition: 0.3s transform cubic-bezier(0.33, 1, 0.68, 1);
+        }
+        .dog div {
+            position: absolute;
+        }
+        .dog .tail {
+            width: 10%;
+            height: 35%;
+            left: -50%;
+            bottom: -34%;
+            transform: rotate(-25deg);
+            transition: 0.1s opacity;
+            transition-delay: 0s;
+            opacity: 0;
+        }
+        .dog .tail::after {
+            content: '';
+            position: absolute;
+            transform-origin: bottom center;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50% 50% 0 0;
+            background-color: #E1A46E;
+            animation: tailSkew 0.3s infinite alternate cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        @keyframes tailSkew {
+            from { transform: skewX(15deg); }
+            to { transform: skewX(-15deg); }
+        }
+        .dog .body {
+            width: 70%;
+            height: 50%;
+            bottom: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #9F6A43;
+            border-radius: 50% 50% 0 0;
+        }
+        .dog .head {
+            width: 65%;
+            height: 70%;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 80% 80% 60% 60%;
+            background-color: #E1A46E;
+        }
+        .dog .nuzzle {
+            width: 70%;
+            height: 40%;
+            bottom: 0%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .dog .nuzzle::before,
+        .dog .nuzzle::after {
+            content: '';
+            width: 50%;
+            height: 100%;
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: #C28E5F;
+            border-radius: 70% 30% 50% 20%;
+            z-index: 1;
+        }
+        .dog .nuzzle::after {
+            left: auto;
+            right: 0;
+            transform: scaleX(-1);
+        }
+        .dog .mouth {
+            width: 50%;
+            height: 90%;
+            border-radius: 100%;
+            background-color: #111827;
+            left: 50%;
+            bottom: -20%;
+            transform: translateX(-50%);
+        }
+        .dog .tongue {
+            width: 50%;
+            height: 50%;
+            background-color: #ef4444;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 5%;
+            border-radius: 50%;
+            animation: tongueBounce 0.3s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
+        }
+        @keyframes tongueBounce {
+            from { bottom: 20%; }
+            to { bottom: 15%; }
+        }
+        .dog .nose {
+            width: 30%;
+            height: 20%;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        .dog .nose::before {
+            content: '';
+            width: 100%;
+            height: 60%;
+            top: -50%;
+            left: 0;
+            position: absolute;
+            display: inline-block;
+            background-color: #1f2937;
+            border-radius: 1000px 1000px 0 0;
+        }
+        .dog .nose::after {
+            content: '';
+            width: 100%;
+            height: 100%;
+            top: 10%;
+            left: 0;
+            position: absolute;
+            display: inline-block;
+            background-color: #1f2937;
+            border-radius: 0 0 1000px 1000px;
+        }
+        .dog .nose .nostrils {
+            width: 90%;
+            height: 100%;
+            top: 0;
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .dog .nose .nostrils::before,
+        .dog .nose .nostrils::after {
+            content: '';
+            display: inline-block;
+            width: 30%;
+            height: 100%;
+            position: absolute;
+            background-color: #000;
+            border-radius: 100%;
+        }
+        .dog .nose .nostrils::before {
+            left: 10%;
+        }
+        .dog .nose .nostrils::after {
+            right: 10%;
+        }
+        .dog .nose .highlight {
+            top: -50%;
+            left: 50%;
+            width: 80%;
+            height: 30%;
+            transform: translateX(-50%);
+            background-color: #fff;
+            border-radius: 1000px 1000px 0 0;
+            background: linear-gradient(#fff, rgba(255, 255, 255, 0));
+            opacity: 0.3;
+        }
+        .dog .eyes {
+            width: 80%;
+            height: 35%;
+            top: 25%;
+            transform: translateX(-50%);
+            left: 50%;
+        }
+        .dog .eyes .left,
+        .dog .eyes .right {
+            border-radius: 1000px;
+            background-color: #111;
+            width: 25%;
+            height: 52%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .dog .eyes .left::after,
+        .dog .eyes .right::after {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background-color: #fff;
+            opacity: 0.7;
+            border-radius: 1000px;
+            left: 15%;
+            top: 15%;
+        }
+        .dog .eyes .left {
+            left: 15%;
+        }
+        .dog .eyes .right {
+            right: 15%;
+        }
+        .dog .ears {
+            width: 90%;
+            height: 90%;
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .dog .ears div {
+            width: 30%;
+            height: 50%;
+            left: 0;
+            top: 0;
+            background-color: #9F6A43;
+            transform: rotate(15deg);
+            border-radius: 60% 20% 80% 10%;
+            z-index: 1;
+        }
+        .dog .ears div.right {
+            transform: rotate(-15deg) scaleX(-1);
+            left: auto;
+            right: 0;
+        }
+        .paw {
+            position: absolute;
+            right: -20px;
+            top: 15px;
+            overflow: hidden;
+            width: 20px;
+            height: 20px;
+            transition: .3s right cubic-bezier(0.33, 1, 0.68, 1);
+        }
+        .paw::after {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #E1A46E;
+            transition: .3s left cubic-bezier(0.33, 1, 0.68, 1);
+            transition-delay: .3s;
+        }
+        .paw.top {
+            transform: rotate(-90deg);
+            top: -20px;
+            right: 40px;
+            transition: .3s top cubic-bezier(0.33, 1, 0.68, 1);
+        }
+        .button-container:hover .dog {
+            transform: translate(20px, -55px) rotate(15deg);
+            transition-delay: 0.6s;
+        }
+        .button-container:hover .paw {
+            transition-delay: 0.3s;
+            right: -5px;
+        }
+        .button-container:hover .paw::after {
+            transition-delay: 0s;
+            left: 0;
+        }
+        .button-container:hover .paw.top {
+            transition-delay: 0.4s;
+            right: 40px;
+            top: -8px;
+        }
+        .button-container:hover .tail {
+            opacity: 1;
+            transition-delay: 0.6s;
+        }
+
+        /* Cat styles */
+        .cat {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            top: 118%;
+            right: -10px;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: 0.003s all cubic-bezier(0.33, 1, 0.68, 1);
+            pointer-events: none;
+        }
+        .cat div {
+            position: absolute;
+        }
+        .cat .head {
+            width: 70%;
+            height: 60%;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #0c0c0c;
+            border-radius: 50% 50% 40% 40%;
+        }
+        .cat .ears {
+            width: 100%;
+            height: 30%;
+            top: -5%;
+            left: 0;
+        }
+        .cat .ears::before,
+        .cat .ears::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 25px solid #000000;
+        }
+        .cat .ears::before {
+            left: 0;
+            transform: rotate(-30deg);
+        }
+        .cat .ears::after {
+            right: 0;
+            transform: rotate(30deg);
+        }
+        .cat .eyes {
+            width: 100%;
+            height: 30%;
+            top: 35%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .cat .eyes .eye {
+            width: 12px;
+            height: 12px;
+            background-color: #00FF00;
+            border-radius: 50%;
+            position: relative;
+        }
+        .cat .eyes .eye::after {
+            content: '';
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            background-color: #000;
+            border-radius: 50%;
+            top: 25%;
+            left: 25%;
+        }
+        .cat .nose {
+            width: 10px;
+            height: 5px;
+            background-color: #FFC0CB;
+            border-radius: 50%;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .cat .tail {
+            width: 10%;
+            height: 40%;
+            right: -10%;
+            bottom: 0;
+            background-color: #808080;
+            border-radius: 0 0 50% 50%;
+            transform-origin: top;
+            animation: tailWag 2s infinite alternate;
+        }
+        @keyframes tailWag {
+            0% { transform: rotate(-20deg); }
+            100% { transform: rotate(20deg); }
+        }
+        .button-container:hover .cat {
+            opacity: 1;
+            right: -80px;
+            transition-delay: 0.72s;
+        }
+    </style>
+</head>
+<body>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="{% url 'activity:activity_view' %}">View</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'activity:activity_dashboard_view' %}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'activity:fetch_activity_logs' %}">Fetch</a>
+        </li>
+    </ul>
+    <div>
+        <div class="toggle-container">
+            <div class="button-container">
+                <button id="activityButton" class="button button--activity">
+                    <span class="button__text">Activity Log</span>
+                    <div class="dog">
+                        <div class="tail"></div>
+                        <div class="body"></div>
+                        <div class="head">
+                          <div class="eyes">
+                            <div class="left"></div>
+                            <div class="right"></div>
+                          </div>
+                          <div class="nuzzle">
+                            <div class="mouth">
+                              <div class="tongue"></div>
+                            </div>
+                            <div class="nose">
+                              <div class="nostrils"></div>
+                              <div class="highlight"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="ears">
+                          <div class="left"></div>
+                          <div class="right"></div>
+                        </div>
+                      </div>
+                      <div class="paw"></div>
+                      <div class="paw top"></div>
+                </button>
+                <div class="cat">
+                    <div class="body"></div>
+                    <div class="head">
+                        <div class="ears"></div>
+                        <div class="eyes">
+                            <div class="eye"></div>
+                            <div class="eye"></div>
+                        </div>
+                        <div class="nose"></div>
+                    </div>
+                    <div class="tail"></div>
+                </div>
+            </div>
+            <button id="dashboardButton" class="button button--frog">
+                <span class="button__text">Dashboard</span>
+                <div class="frog">  
+                    <div class="frog__body">
+                        <div class="frog__eyes">
+                            <div class="frog__eye"></div>
+                            <div class="frog__eye"></div>
+                        </div>
+                        <div class="frog__spots">
+                            <div class="frog__spot"></div>
+                            <div class="frog__spot"></div>
+                            <div class="frog__spot"></div>
+                        </div>
+                    </div>
+                    <div class="frog__legs">
+                        <div class="frog__leg"></div>
+                        <div class="frog__leg"></div>
+                    </div>
+                </div>
+            </button>
+        </div>
+        <iframe id="contentFrame" src="{% url 'activity:activity_dashboard_view' %}" title="Content Frame"></iframe>
+    </div>
+
+    <script>
+        const activityButton = document.getElementById('activityButton');
+        const dashboardButton = document.getElementById('dashboardButton');
+        const contentFrame = document.getElementById('contentFrame');
+
+        activityButton.addEventListener('click', function() {
+            contentFrame.src = "{% url 'activity:activity_view' %}";
+            activityButton.setAttribute('aria-pressed', 'true');
+            dashboardButton.setAttribute('aria-pressed', 'false');
+        });
+
+        dashboardButton.addEventListener('click', function() {
+            contentFrame.src = "{% url 'activity:activity_dashboard_view' %}";
+            dashboardButton.setAttribute('aria-pressed', 'true');
+            activityButton.setAttribute('aria-pressed', 'false');
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

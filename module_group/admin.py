@@ -26,3 +26,4 @@ class ModuleGroupAdmin(ImportExportModelAdmin):
 class ModuleAdmin(ImportExportModelAdmin):
     resource_class = ModuleResource
     list_display = ('module_name', 'module_url', 'icon', 'module_group')  # Customize the list display
+    search_fields = ['module_name']

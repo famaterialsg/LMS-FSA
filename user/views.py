@@ -1,18 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from role.models import Role
 from .models import Profile, User, Student, Instructor
-import pandas as pd
-import bcrypt
-from openpyxl import Workbook
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
-from user.forms import UserForm, RoleForm, ExcelImportForm
+from user.forms import UserForm, ExcelImportForm
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q
-from .forms import UserEditForm
-from functools import wraps
 from django.contrib.auth.decorators import login_required
-from django import forms
 from .forms import UserCourseProgress
 from course.models import Enrollment
 from quiz.models import StudentQuizAttempt
@@ -21,36 +15,25 @@ from django.contrib.auth.hashers import check_password
 from import_export.formats.base_formats import XLSX
 from .admin import UserProfileResource
 from tablib import Dataset
-from io import StringIO
 from django.utils import timezone
 from datetime import timedelta
 from module_group.models import ModuleGroup
-from main.module_utils import get_grouped_modules
 from course.models import Course
 from django.contrib.auth import logout
 from main.models import PasswordChangeRecord
-
+from import_export.formats.base_formats import XLSX, JSON, YAML, CSV, TSV
+from django.core.files.uploadedfile import UploadedFile
+from django.views.decorators.csrf import csrf_protect
+from django.core.mail import send_mail
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.urls import reverse
 
 @login_required
 def user_list(request):
     is_superuser = request.user.is_superuser
     module_groups = ModuleGroup.objects.all()  # Thay đổi theo cách bạn lấy dữ liệu
-    grouped_modules = {group: group.modules.all() for group in module_groups}
-
-    # Kiểm tra xem người dùng có profile hay không, nếu không là superuser thì hiện thông báo lỗi
-    if not is_superuser and (not hasattr(request.user, 'profile') or request.user.profile is None):
-        messages.error(request, "Bạn không có quyền.")
-        return redirect('user:user_list')
-
-    user_role_permissions = request.user.profile.role.permissions.values_list('codename', flat=True) if not is_superuser else []
-
-    # Kiểm tra quyền
-    can_detail_user = 'can_detail_user' in user_role_permissions or is_superuser
-    can_add_user = 'can_add_user' in user_role_permissions or is_superuser
-    can_edit_user = 'can_edit_user' in user_role_permissions or is_superuser
-    can_delete_user = 'can_delete_user' in user_role_permissions or is_superuser
-    can_import_users = 'can_import_users' in user_role_permissions or is_superuser
-    can_export_users = 'can_export_users' in user_role_permissions or is_superuser
 
     # Lấy các thông tin tìm kiếm từ request
     query = request.GET.get('q', '')
@@ -112,8 +95,6 @@ def user_list(request):
         except User.DoesNotExist:
             messages.error(request, "Người dùng không tồn tại.")
 
-    module_groups, grouped_modules = get_grouped_modules(request.user, request.session.get('temporary_role'))
-
     return render(request, 'user_list.html', {
         'users': users,
         'query': query,
@@ -121,17 +102,9 @@ def user_list(request):
         'selected_role': selected_role,
         'not_found': not_found,
         'form': form,
-        'can_detail_user': can_detail_user,
-        'can_add_user': can_add_user,
-        'can_edit_user': can_edit_user,
-        'can_delete_user': can_delete_user,
-        'can_import_users': can_import_users,
-        'can_export_users': can_export_users,
         'page_obj': users,
         'module_groups': module_groups,
-        'grouped_modules': grouped_modules,
     })
-
 
 @login_required
 def student_list(request):
@@ -155,10 +128,6 @@ def student_list(request):
         students = paginator.page(1)
     except EmptyPage:
         students = paginator.page(paginator.num_pages)
-
-
-
-
     
     return render(request, 'student_list.html', {
         'students': students,
@@ -172,17 +141,6 @@ def user_detail(request, pk):
     # Lấy thông tin người dùng
     user = get_object_or_404(User, pk=pk)
     is_superuser = request.user.is_superuser
-
-    # Kiểm tra quyền truy cập
-    if not is_superuser:
-        if not hasattr(request.user, 'profile') or not request.user.profile:
-            messages.error(request, "Bạn không có quyền.")
-            return redirect('user:user_list')
-        
-        user_role_permissions = request.user.profile.role.permissions.values_list('codename', flat=True)
-        if 'can_detail_user' not in user_role_permissions:
-            messages.error(request, "Bạn không có quyền.")
-            return redirect('user:user_list')
 
     # Lấy thông tin tiến trình học tập
     course_progress = UserCourseProgress.objects.filter(user=user)
@@ -249,13 +207,7 @@ def user_add(request):
     if not is_superuser and (not hasattr(request.user, 'profile') or request.user.profile is None):
         messages.error(request, "Bạn không có quyền.")  # Thông báo lỗi
         return redirect('user:user_list')  # Chuyển hướng đến danh sách người dùng
-    
-    # Lấy quyền hạn của người dùng
-    user_role_permissions = request.user.profile.role.permissions.values_list('codename', flat=True) if not is_superuser else []
 
-    if 'can_add_user' not in user_role_permissions and not is_superuser:
-        messages.error(request, "Bạn không có quyền.")  # Thông báo lỗi
-        return redirect('user:user_list')  # Chuyển hướng đến danh sách người dùng
 
     if request.method == 'POST':
         form = UserForm(request.POST)
@@ -311,22 +263,9 @@ def user_add(request):
     return render(request, 'user_form.html', {'form': form, 'is_superuser': is_superuser})
 
 
-
-@login_required
 def user_edit(request, pk):
     is_superuser = request.user.is_superuser
     user = get_object_or_404(User, pk=pk)
-
-    # Kiểm tra profile của người dùng
-    if not is_superuser and (not hasattr(request.user, 'profile') or request.user.profile is None):
-        messages.error(request, "Bạn không có quyền.")
-        return redirect('user:user_list')
-
-    user_role_permissions = request.user.profile.role.permissions.values_list('codename', flat=True) if not is_superuser else []
-
-    if 'can_edit_user' not in user_role_permissions and request.user.pk != user.pk and not is_superuser:
-        messages.error(request, "Bạn không có quyền chỉnh sửa người dùng này.")
-        return redirect('user:user_list')
 
     profile, created = Profile.objects.get_or_create(user=user)
     old_role = profile.role
@@ -367,7 +306,7 @@ def user_edit(request, pk):
 
             # Kiểm tra và thay đổi vai trò nếu cần
             new_role_name = form.cleaned_data.get('role')  # lấy tên vai trò
-            if new_role_name and new_role_name != old_role.role_name:  # so sánh với tên vai trò cũ
+            if new_role_name and (old_role is None or new_role_name != old_role.role_name): # so sánh với tên vai trò cũ
                 try:
                     # Truy vấn Role dựa trên tên vai trò
                     new_role = Role.objects.get(role_name = new_role_name)
@@ -428,7 +367,7 @@ def user_edit(request, pk):
                 request.session['preferred_language'] = profile.preferred_language
 
             messages.success(request, f"Người dùng {user.username} đã được cập nhật thành công.")
-            return redirect('user:user_detail', pk=user.pk)
+            return redirect('user:user_edit', pk=user.pk)
         else:
             messages.error(request, "Vui lòng sửa các lỗi bên dưới.")
     else:
@@ -446,7 +385,6 @@ def user_edit(request, pk):
     if not (is_superuser or (request.user.profile and request.user.profile.role and request.user.profile.role.role_name == 'Manager' and request.user.pk == user.pk)):
         form.fields['role'].widget.attrs['readonly'] = True
 
-
     # Hiển thị trường student_code không bị ẩn
     form.fields['student_code'].initial = student_code if profile.role and profile.role.role_name == 'Student' else ''
 
@@ -456,7 +394,7 @@ def user_edit(request, pk):
 def user_delete(request):
     is_superuser = request.user.is_superuser
 
-    if not is_superuser and 'can_delete_user' not in request.user.profile.role.permissions.values_list('codename', flat=True):
+    if not is_superuser:
         messages.error(request, "Bạn không có quyền xóa người dùng.")
         return redirect('user:user_list')
 
@@ -482,7 +420,8 @@ def user_delete(request):
             messages.error(request, "Không có người dùng nào được xóa.")
 
     return redirect(f'user:{origin}')
-from import_export.formats.base_formats import XLSX, JSON, YAML, CSV, TSV
+
+
 
 @login_required
 def export_users(request):
@@ -493,14 +432,14 @@ def export_users(request):
         messages.error(request, "Bạn không có quyền.")
         return redirect('user:user_list')
 
-    user_role_permissions = request.user.profile.role.permissions.values_list('codename', flat=True) if not is_superuser else []
-
-    if 'can_export_users' not in user_role_permissions and not is_superuser:
-        messages.error(request, "Bạn không có quyền xuất dữ liệu người dùng.")
-        return redirect('user:user_list')
 
     # Lấy định dạng file từ request (mặc định là xlsx)
     export_format = request.GET.get('format', 'xlsx').lower()
+
+    # Kiểm tra định dạng hợp lệ
+    valid_formats = ['csv', 'json', 'yaml', 'tsv', 'xlsx']
+    if export_format not in valid_formats:
+      return JsonResponse({"error": "Invalid format specified"}, status=400)
 
     # Tạo resource và dataset
     resource = UserProfileResource()
@@ -523,8 +462,8 @@ def export_users(request):
         'xlsx': (XLSX(), XLSX().get_content_type()),
     }
 
-    dataset_format, content_type = formats.get(export_format, formats['xlsx'])
-    file_extension = export_format if export_format in formats else 'xlsx'
+    dataset_format, content_type = formats[export_format]
+    file_extension = export_format
 
     response = HttpResponse(content_type=content_type)
     safe_role = "".join(c for c in selected_role if c.isalnum() or c in ['_', '-'])
@@ -534,45 +473,37 @@ def export_users(request):
     
     return response
 
-from django.core.files.uploadedfile import UploadedFile
-from django.views.decorators.csrf import csrf_protect
 
 @csrf_protect
 @login_required
-
 def import_users(request):
     is_superuser = request.user.is_superuser
 
-    # Kiểm tra quyền của người dùng
+    # Check user permissions
     if not is_superuser and (not hasattr(request.user, 'profile') or request.user.profile is None):
-        messages.error(request, "Bạn không có quyền.")
+        messages.error(request, "You do not have permission.")
         return redirect('user:user_list')
 
-    user_role_permissions = request.user.profile.role.permissions.values_list('codename', flat=True) if not is_superuser else []
-
-    if 'can_import_users' not in user_role_permissions and not is_superuser:
-        messages.error(request, "Bạn không có quyền nhập dữ liệu người dùng.")
-        return redirect('user:user_list')
 
     resource = UserProfileResource()
 
     if request.method == 'POST':
-        # Lấy file được tải lên qua form (drag-and-drop hoặc chọn file)
+        # Get the uploaded file via form (drag-and-drop or file select)
         uploaded_file = request.FILES.get('file')
 
-        # Kiểm tra xem file có được tải lên không
+        # Check if file is uploaded
         if not isinstance(uploaded_file, UploadedFile):
-            messages.error(request, "Không tìm thấy tệp tin để nhập.")
+            messages.error(request, "No file found to import.")
             return redirect('user:user_list')
 
-        if uploaded_file.size == 0:  # Kiểm tra nếu tệp rỗng
-            messages.error(request, "Tệp không được để trống.")
+        if uploaded_file.size == 0:  # Check if the file is empty
+            messages.error(request, "The file cannot be empty.")
             return redirect('user:user_list')
 
         file_format = uploaded_file.name.split('.')[-1].lower()
         dataset = Dataset()
 
-        # Xử lý định dạng tệp
+        # Handle file formats
         formats = {
             'csv': lambda: dataset.load(uploaded_file.read().decode('utf-8'), format='csv'),
             'json': lambda: dataset.load(uploaded_file.read().decode('utf-8'), format='json'),
@@ -583,29 +514,31 @@ def import_users(request):
 
         try:
             if file_format in formats:
-                formats[file_format]()  # Gọi hàm xử lý định dạng
+                formats[file_format]()  # Call the respective format handler
             else:
-                messages.error(request, "Định dạng tệp không hợp lệ. Hỗ trợ các định dạng: csv, json, yaml, tsv, xlsx.")
+                messages.error(request, "Invalid file format. Supported formats: csv, json, yaml, tsv, xlsx.")
                 return redirect('user:user_list')
         except Exception as e:
-            messages.error(request, f"Lỗi khi đọc tệp: {e}")
+            messages.error(request, f"Error reading file: {e}")
             return redirect('user:user_list')
 
-        # Kiểm tra và nhập dữ liệu
+        # Check and import data
         result = resource.import_data(dataset, dry_run=True)
 
-        if not result.has_validation_errors():
-            resource.import_data(dataset, dry_run=False)
-            messages.success(request, "Người dùng đã được nhập thành công!")
-        else:
+        if result.has_validation_errors():
+            print(f"Validation Errors: {result.errors}")
             invalid_rows = result.invalid_rows
-            error_messages = [f"Lỗi tại hàng {row['row']}: {row['error']}" for row in invalid_rows]
-            messages.error(request, "Có lỗi khi nhập người dùng:\n" + "\n".join(error_messages))
+            error_messages = [f"Error at row {row.number}: {row.error}" for row in invalid_rows]
+            messages.error(request, "There were errors importing users:\n" + "\n".join(error_messages))
+        else:
+            resource.import_data(dataset, dry_run=False)
+            messages.success(request, "Users have been successfully imported!")
 
         return redirect('user:user_list')
 
-    messages.error(request, "Không thể nhập người dùng.")
+    messages.error(request, "Unable to import users.")
     return redirect('user:user_list')
+
 
 def user_edit_password(request, user_id):
     user = get_object_or_404(User, pk=user_id)
@@ -619,7 +552,8 @@ def user_edit_password(request, user_id):
             return render(request, 'user_detail.html', {'user': user, 'error_message': error_message})
 
     return render(request, 'user_detail.html', {'user': user})
-# View để hiển thị danh sách giảng viên
+
+
 @login_required
 def instructor_list(request):
     query = request.GET.get('q', '')
@@ -648,3 +582,42 @@ def instructor_list(request):
         'form': form,
         'page_obj': instructors
     })
+
+
+
+@csrf_exempt
+def send_email_to_users(request):
+    if request.method == 'POST':
+        try:
+            # Lấy danh sách người dùng từ dữ liệu JSON trong body của yêu cầu
+            data = json.loads(request.body)
+            selected_users = data.get('selected_users', [])
+
+            if not selected_users:
+                return JsonResponse({'success': False, 'message': 'No users selected.'})
+
+            # Lấy danh sách người dùng từ ID đã chọn
+            users = User.objects.filter(id__in=selected_users)
+
+            subject = "Notification from Django"
+            # Gửi email cho từng người dùng
+            for user in users:
+                confirm_link = request.build_absolute_uri(reverse('user:user_detail', args=[user.id]))
+                send_mail(
+                        subject,
+                        f"Your email account field is already set up.\n\n"
+                        f"Account: {user.email}\n\n"
+                        f"Password: 123@\n\n"
+                        f"Please follow this link to change your password because all the information: {confirm_link}",
+                        settings.EMAIL_HOST_USER, # send email address
+                        [user.email], # Receive email address
+                        fail_silently=False,
+                        )
+
+            return JsonResponse({'success': True, 'message': 'Emails sent successfully.'})
+
+        except Exception as e:
+            # Gửi phản hồi lỗi nếu có lỗi xảy ra
+            return JsonResponse({'success': False, 'message': str(e)})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})

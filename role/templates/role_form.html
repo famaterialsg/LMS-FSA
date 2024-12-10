@@ -3,7 +3,7 @@
 {% block title %}{{ form.instance.pk|yesno:"Edit Role, Add New Role" }}{% endblock %}
 
 {% block content %}
-<div class="container mt-1">
+<div class="mt-4">
     <h2>{{ form.instance.pk|yesno:"Edit Role, Add New Role" }}</h2>
     <form method="post">
         {% csrf_token %}
@@ -14,83 +14,72 @@
             {{ form.role_name }}
         </div>
 
-        <!-- Permissions Section -->
-        <div class="row">
-            <div class="col-md-5">
-                <h5>Available Permissions</h5>
-                <input type="text" id="searchAvailablePermissions" class="form-control mb-2" placeholder="Search Permissions..." oninput="filterOptions('searchAvailablePermissions', 'availablePermissions')">
-                <select id="availablePermissions" class="form-select" size="10" multiple>
-                    {% for permission in all_permissions %}
-                        {% if permission not in selected_permissions %}
-                            <option value="{{ permission.id }}">{{ permission.name }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
-                <button type="button" class="btn btn-primary mb-2" onclick="moveSelected('availablePermissions', 'selectedPermissions')">Add ></button>
-                <button type="button" class="btn btn-outline-danger" onclick="moveSelected('selectedPermissions', 'availablePermissions')">< Remove</button>
-            </div>
-
-            <div class="col-md-5">
-                <h5>Selected Permissions</h5>
-                <input type="text" id="searchSelectedPermissions" class="form-control mb-2" placeholder="Search Selected Permissions..." oninput="filterOptions('searchSelectedPermissions', 'selectedPermissions')">
-                <select name="permissions" id="selectedPermissions" class="form-select" size="10" multiple>
-                    {% for permission in selected_permissions %}
-                        <option value="{{ permission.id }}" selected>{{ permission.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-
-        <!-- Modules Section -->
-        <div class="row">
+        <div class="row mb-5">
+            <!-- Available Modules -->
             <div class="col-md-5">
                 <h5>Available Modules</h5>
-                <input type="text" id="searchAvailableModules" class="form-control mb-2" placeholder="Search Modules..." oninput="filterOptions('searchAvailableModules', 'availableModules')">
+                <input type="text" id="searchAvailableModules" class="form-control mb-2" placeholder="Search Available Modules..." oninput="filterOptions('searchAvailableModules', 'availableModules')">
                 <select id="availableModules" class="form-select" size="10" multiple>
                     {% for module in all_modules %}
-                        {% if module not in selected_modules %}
+                        {% if module.id not in selected_modules %}
                             <option value="{{ module.id }}">{{ module.module_name }}</option>
                         {% endif %}
                     {% endfor %}
                 </select>
             </div>
-
+        
+            <!-- Buttons to move items -->
             <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
-                <button type="button" class="btn btn-primary mb-2" onclick="moveSelected('availableModules', 'selectedModules')">Add ></button>
+                <button type="button" class="btn btn-outline-primary mb-2" onclick="moveSelected('availableModules', 'selectedModules')">Add ></button>
                 <button type="button" class="btn btn-outline-danger" onclick="moveSelected('selectedModules', 'availableModules')">< Remove</button>
             </div>
-
+        
+            <!-- Selected Modules -->
             <div class="col-md-5">
                 <h5>Selected Modules</h5>
                 <input type="text" id="searchSelectedModules" class="form-control mb-2" placeholder="Search Selected Modules..." oninput="filterOptions('searchSelectedModules', 'selectedModules')">
                 <select name="modules" id="selectedModules" class="form-select" size="10" multiple>
-                    {% for module in selected_modules %}
-                        <option value="{{ module.id }}" selected>{{ module.module_name }}</option>
+                    {% for module in all_modules %}
+                        {% if module.id in selected_modules %}
+                            <option value="{{ module.id }}" selected>{{ module.module_name }}</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>
         </div>
 
-        <!-- Nút lưu và trở về danh sách role -->
+        <!-- Save and Back Buttons -->
         <button type="submit" class="btn btn-primary mt-3">Save</button>
         <a href="{% url 'role:role_list' %}" class="btn btn-secondary mt-3">Back to Role List</a>
     </form>
 </div>
 
-<!-- JavaScript để di chuyển các mục giữa hai danh sách -->
+<!-- JavaScript -->
 <script>
-function moveSelected(sourceId, targetId) {
-    var source = document.getElementById(sourceId);
-    var target = document.getElementById(targetId);
-    var selectedOptions = Array.from(source.selectedOptions);
+    // Hàm di chuyển các mục giữa Available Modules và Selected Modules
+    function moveSelected(sourceId, targetId) {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        const selectedOptions = Array.from(source.selectedOptions);
 
-    selectedOptions.forEach(function(option) {
-        target.appendChild(option);
-    });
-}
+        selectedOptions.forEach(option => {
+            target.appendChild(option);
+        });
+    }
+
+    // Hàm lọc danh sách theo từ khóa tìm kiếm
+    function filterOptions(searchInputId, listId) {
+        const searchInput = document.getElementById(searchInputId).value.toLowerCase();
+        const list = document.getElementById(listId).options;
+
+        for (const option of list) {
+            const text = option.textContent.toLowerCase();
+            if (text.includes(searchInput)) {
+                option.style.display = ''; // Hiển thị mục
+            } else {
+                option.style.display = 'none'; // Ẩn mục
+            }
+        }
+    }
 </script>
-
 {% endblock %}

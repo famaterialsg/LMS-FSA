@@ -15,7 +15,6 @@
             <ul class="navbar-nav ms-auto">
                 {% include 'notification_bell.html' %}
                 {% if user.is_superuser %}
-                
                 <a class="nav-link" href="{% url 'student_portal:course_list' %}">
                     <i class="fas fa-user-graduate"></i> Go to Learn &nbsp;|&nbsp;
                 </a>
@@ -36,7 +35,7 @@
                                 <select name="role" class="form-select" onchange="this.form.submit()">
                                     <option value="" class="text-muted" disabled selected>Select Role</option>
                                     {% for role in roles %}
-                                    <option value="{{ role.role_name }}" {% if role.role_name == request.user.profile.role.role_name or role.role_name == request.session.temporary_role %}selected{% endif %}>
+                                    <option value="{{ role.role_name }}" {% if role.role_name == request.user.profile.role.role_name or role.role_name == temporary_role %}selected{% endif %}>
                                         {{ role.role_name }}
                                     </option>
                                     {% endfor %}
@@ -52,11 +51,11 @@
                         </li>
                     </ul>
                 </li>
-                <!-- <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link" href="{% url 'main:home' %}" target="_blank">
                         <i class="fas fa-user-shield"></i> Admin LMS
                     </a>
-                </li> -->
+                </li>
 
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'admin:index' %}" target="_blank">
@@ -69,28 +68,31 @@
                         {% if request.user.profile.profile_picture_url %}
                             <img src="{{ request.user.profile.profile_picture_url }}" class="img-fluid rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
                         {% else %}
-                            <i class="fas fa-user rounded-circle; mt-1"></i>
+                            <i class="fas fa-user rounded-circle mt-1"></i>
                         {% endif %}
                     </a>
-                    
                     <ul class="dropdown-menu dropdown-menu-end text-center" aria-labelledby="navbarUserDropdown">
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="{% url 'mylearning:index' %}">
-                                <i class="fas fa-user-graduate me-2"></i> My learning
-                            </a>
-                        </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center" href="{% url 'user:user_detail' request.user.id %}">
                                 {% if request.user.profile.profile_picture_url %}
                                     <img src="{{ request.user.profile.profile_picture_url }}" class="img-fluid rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                                 {% else %}
-                                    <i class="fas fa-user rounded-circle; me-2"></i>
+                                    <i class="fas fa-user rounded-circle me-2"></i>
                                 {% endif %}
                                 Profile
-                                <!-- {{ request.user.get_full_name|default:request.user.username }} -->
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
+                
+                        <!-- My Learning -->
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="{% url 'mylearning:index' %}">
+                                <i class="fas fa-user-graduate me-2"></i> My Learning
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                
+                        <!-- Logout -->
                         <li>
                             <form action="{% url 'main:logout' %}" method="post" style="display: inline;">
                                 {% csrf_token %}
@@ -101,7 +103,7 @@
                         </li>
                     </ul>
                 </li>
-            </ul>
+                
             {% else %}
             <a class="navbar-brand" href="{% url 'main:home' %}">FSA</a>
             <ul class="navbar-nav ms-auto">

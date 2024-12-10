@@ -160,7 +160,8 @@ class Take_assessment(View):
             'is_preview': False,
             'anonymous': not request.user.is_authenticated,
             'email': attempt.email,
-            'attempt': attempt  # This will be None for GET request
+            'attempt': attempt,  # This will be None for GET request
+            'attempt_id': attempt_id,
         })
     
 
@@ -181,7 +182,10 @@ class Take_assessment(View):
         except:
             return redirect('/')
         attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
-
+        # Nếu đã nộp, trả về lỗi hoặc redirect
+        if attempt.is_submitted:
+            return JsonResponse({'message': 'Attempt already submitted'}, status=200)
+        
         correct_answers = 0
         duration = round(
             datetime.datetime.now().timestamp()
@@ -537,3 +541,29 @@ class Assessment_report(View):
     #     except Exception as e:
     #         print(f"Error: {str(e)}")
     #         return render(request, 'assessment/error.html', {'error': 'Attempt not found. Please ensure you have provided a valid email.'})
+
+class Copy_public_invite_link(View):
+    @method_decorator(login_required)
+    def get(self, request, pk):
+        try:
+            assessment = Assessment.objects.get(pk=pk)
+
+            # Tạo và lưu InvitedCandidate "dummy"
+            invited_candidate = InvitedCandidate.objects.create(
+                assessment=assessment, 
+                email=f"public_invite_{assessment.pk}@example.com"
+            )
+            invited_candidate.set_expiration_date(days=7)
+            invited_candidate.save()
+
+            token = invite_token_generator.make_token(invited_candidate)
+            uid = urlsafe_base64_encode(force_bytes(invited_candidate.pk))
+
+            invite_link = request.build_absolute_uri(
+                reverse('assessment:assessment_invite_accept', kwargs={'uidb64': uid, 'token': token})
+            )
+
+            return JsonResponse({'invite_link': invite_link})
+
+        except Assessment.DoesNotExist:
+            return JsonResponse({'error': 'Assessment not found'}, status=404)

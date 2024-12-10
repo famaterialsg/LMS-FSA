@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
-
-{% block title %}Student Activity Log{% endblock %}
-
-{% block extra_css %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
     :root {
         --primary-color: #3498db;
@@ -23,12 +22,20 @@
         line-height: 1.6;
         color: var(--text-color);
         background-color: var(--background-color);
+        overflow: hidden;
+    }
+
+    thead {
+        position: sticky;
+        top: 0;
+        background-color: white; /* Ensure the header background is visible */
+        z-index: 1; /* Makes sure the header stays on top of the body content */
     }
 
     .container {
-        max-width: 1200px;
+        max-width: 100%;
         margin: 2rem auto;
-        padding: 0 1rem;
+        padding: 0 2rem;
     }
 
     h2 {
@@ -75,6 +82,7 @@
 
     .activity-table {
         width: 100%;
+        table-layout: fixed;
         border-collapse: collapse;
         background-color: white;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -92,6 +100,10 @@
         color: white;
         font-weight: bold;
     }
+    .activity-table th:nth-child(1) { width: 10%; }
+    .activity-table th:nth-child(2) { width: 20%; }
+    .activity-table th:nth-child(3) { width: 50%; }
+    .activity-table th:nth-child(4) { width: 20%; }
 
     .activity-table tr:nth-child(even) {
         background-color: #f8f9fa;
@@ -173,8 +185,8 @@
 
     .button {
         position: absolute;
-        top: 80px;
-        left: 1000px;
+        top: 10px;
+        left: 500px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -423,51 +435,85 @@
     @keyframes fly8 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-80px, 100px) rotate(-360deg); } }
     @keyframes fly9 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(90px, -80px) rotate(360deg); } }
     @keyframes fly10 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-110px, 70px) rotate(-360deg); } }
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="container">
-    <div class="header-container">
-        <h2>Student Activity Log</h2>
-        <a href="{% url 'activity:activity_dashboard_view' %}" class="button button--frog">
-            <div class="button__wrapper">
-                <span class="button__text">Dashboard</span>
-            </div>
-            <div class="frog">  
-                <div class="frog__body">
-                    <div class="frog__eyes">
-                        <div class="frog__eye"></div>
-                        <div class="frog__eye"></div>
-                    </div>
-                    <div class="frog__spots">
-                        <div class="frog__spot"></div>
-                        <div class="frog__spot"></div>
-                        <div class="frog__spot"></div>
-                    </div>
-                </div>
-                <div class="frog__legs">
-                    <div class="frog__leg"></div>
-                    <div class="frog__leg"></div>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="butterfly-container">
-        <div class="butterfly butterfly-1"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-2"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-3"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-4"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-5"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-6"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-7"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-8"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-9"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-        <div class="butterfly butterfly-10"><div class="wings"><div class="wing left"></div><div class="wing right"></div></div><div class="body"></div></div>
-    </div>
-    
-    <form method="get" class="search-form">
-        <input type="text" name="search" placeholder="Search activity details..." value="{{ search_query }}">
+    /*import-export*/
+    .import-export-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+    }
+
+    .action-button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        margin-left: 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .action-button:hover {
+        background-color: var(--dark-color);
+    }
+
+    .button-text {
+        font-weight: bold;
+    }
+
+    #importModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        border-radius: 5px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+
+</style>
+
+
+<div>
+    <h1 class="text-center">Activity Log</h1>    
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="{% url 'activity:activity_view' %}">View</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'activity:activity_dashboard_view' %}">Dashboard</a>
+        </li>
+    </ul>
+
+    <form method="get" class="search-form" style="display: flex; align-items: center; gap: 10px;">
+        <input type="text" name="search" placeholder="Search activity details..." value="{{ search_query }}" style="flex: 1;">
         
         <label for="from_date">From:</label>
         <input type="date" id="from_date" name="from_date" value="{{ from_date }}">
@@ -476,33 +522,40 @@
         <input type="date" id="to_date" name="to_date" value="{{ to_date }}">
         
         <button type="submit">Search</button>
+        
+        <a href="{% url 'activity:export_data' %}?search={{ request.GET.search|default:'' }}&from_date={{ request.GET.from_date|default:'' }}&to_date={{ request.GET.to_date|default:'' }}" style="text-decoration: none;">
+            <button type="button" id="exportBtn" class="action-button">
+                <span class="button-text">Export</span>
+            </button>
+        </a>
     </form>
-
-    <table class="activity-table">
-        <thead>
-            <tr>
-                <th>NO</th>
-                <th>Activity Type</th>
-                <th>Details</th>
-                <th>Timestamp</th>
-            </tr>
-        </thead>
-        <tbody id="activity-table-body">
-            {% for log in activity_logs %}
+    
+    <div style="max-height: 27rem; width: 100%; overflow: auto;">
+        <table class="activity-table">
+            <thead>
                 <tr>
-                    <td>{{ forloop.counter0|add:activity_logs.start_index }}</td>
-                    <td>{{ log.get_activity_type_display }}</td>
-                    <td>{{ log.activity_details }}</td>
-                    <td>{{ log.activity_timestamp }}</td>
+                    <th>NO</th>
+                    <th>Activity Type</th>
+                    <th>Details</th>
+                    <th>Timestamp</th>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="4">No activity records found.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+            </thead>
+            <tbody id="activity-table-body">
+                {% for log in activity_logs %}
+                    <tr>
+                        <td>{{ forloop.counter0|add:activity_logs.start_index }}</td>
+                        <td>{{ log.get_activity_type_display }}</td>
+                        <td>{{ log.activity_details }}</td>
+                        <td>{{ log.activity_timestamp }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No activity records found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <nav aria-label="Activity log pagination">
         <div class="pagination-container">
             <ul class="pagination" id="pagination">
@@ -569,6 +622,19 @@
             </ul>
         </div>
     </nav>
+</div>
+
+<!-- Import Modal -->
+<div id="importModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Import Data</h2>
+        <form id="importForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="import_file" accept=".csv,.json" required>
+            <button type="submit" class="action-button">Import</button>
+        </form>
+    </div>
 </div>
 
 <script>
@@ -677,6 +743,11 @@
         return li;
     }
 
+    function exportData() {
+        const url = `{% url 'activity:export_data' %}?search=${encodeURIComponent(searchQuery)}&from_date=${fromDate}&to_date=${toDate}`;
+        window.location.href = url;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Get initial search parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -688,12 +759,27 @@
         // Initial fetch of activity logs
         fetchActivityLogs(true);
 
-        // Set up periodic fetching every 10 seconds
+        // Set up periodic fetching every 10 minutes
         setInterval(() => fetchActivityLogs(true), 600000);
+
+        // Event listeners for import and export buttons
+        document.getElementById('exportBtn').addEventListener('click', exportData);
+
+        // Close modal when clicking on <span> (x)
+        document.querySelector('.close').addEventListener('click', function() {
+            document.getElementById('importModal').style.display = 'none';
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target == document.getElementById('importModal')) {
+                document.getElementById('importModal').style.display = 'none';
+            }
+        });
     });
 
     // Event listener for search form submission
-    document.querySelector('.search-form').addEventListener('submit', function(event) {
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
         event.preventDefault();
         searchQuery = document.querySelector('input[name="search"]').value;
         fromDate = document.querySelector('input[name="from_date"]').value;

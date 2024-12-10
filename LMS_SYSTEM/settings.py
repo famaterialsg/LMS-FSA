@@ -78,7 +78,6 @@ CKEDITOR_CONFIGS = {
 # Application definition
 
 INSTALLED_APPS = [
-    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -101,7 +100,7 @@ INSTALLED_APPS = [
     'exercises', #Binh_Thang
     #ngattt
     'assessments', 'reports', 'group_enrollment', 'mylearning', 'certification', 
-    'learning_path', 'backup', 'student_portal', 'survey_app', #'quiz_generator',
+    'learning_path', 'backup', 'student_portal', #'quiz_generator',
 
     #group01
     'user', 'role', 'department', 'team',
@@ -113,25 +112,31 @@ INSTALLED_APPS = [
     'quiz', 'tools', # 'std_course', 'course_Truong', 'std_quiz', 
 
     #group04
-    'chat', 'chatapp', 'thread', 'collaboration_group', 'notifications', 'Application',
+    'chat', 'chatapp', 'thread', 'collaboration_group', 
 
     #group05 
     'activity', 'analytics_report', 'book', 'progress_notification',
     'achievement', 'quiz_bank', # -- add this app
     'cheat_logger',
+    'notifications',
+    'Application',
 ]
 
 MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',  # Add this line
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'activity.activity_tracking_middleware.ActivityTrackingMiddleware'
+    'activity.activity_tracking_middleware.ActivityTrackingMiddleware',
 
+    # caching with redis if exist
+    # 'django.middleware.cache.UpdateCacheMiddleware',
+    # 'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
+    # 'main.middleware.SiteLockMiddleware',
 ]
 
 ROOT_URLCONF = 'LMS_SYSTEM.urls'
@@ -147,6 +152,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'main.context_processors.site_status',
+                'role.context_processors.user_roles',
+                'module_group.module_context_processors.module_context',
+                'main.context_processors.breadcrumb',
             ],
         },
     },
@@ -154,8 +163,8 @@ TEMPLATES = [
 
 
 WSGI_APPLICATION = 'LMS_SYSTEM.wsgi.application'
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-XS_SHARING_ALLOWED_METHODS = ['POST','GET','OPTIONS', 'PUT', 'DELETE']
+
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -213,7 +222,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 TIME_ZONE = 'Asia/Ho_Chi_Minh'
-USE_TZ = False
+USE_TZ = True
 USE_I18N = True
 
 
@@ -236,6 +245,28 @@ else:
         }
     }
 
+if os.getenv("USING_REDIS"):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': 'redis://redis:6379/1',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'django_backend',
+        }
+    }
+
+    CACHE_TTL = 60 * 15
+
+    # use cache for session
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+
+    # Cache settings
+    CACHE_MIDDLEWARE_SECONDS = 60 * 15  # 15'
+    CACHE_MIDDLEWARE_KEY_PREFIX = 'lms_system'
+
 
 logging.basicConfig(
     level=logging.INFO, format='%(levelname)-4s - "%(name)s": %(message)s'
@@ -247,17 +278,15 @@ logging.basicConfig(
 # SECURE_HSTS_SECONDS = 31536000  # 1 year
 # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
-CSRF_TRUSTED_ORIGINS = ['https://lms.truong51972.id.vn']
+# SECURE_SSL_REDIRECT=False
+# SESSION_COOKIE_SECURE=False
+# CSRF_COOKIE_SECURE=False
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000/'] #https://*.truong51972.id.vn
+
+
 
 AI_API_SERVER = {
     "HOST": os.environ.get("AI_API_SERVER_HOST"),
     "PORT": os.environ.get("AI_API_SERVER_PORT"),
 }
-
-
-LANGUAGES = [
-    ('en', 'English'),
-    ('es', 'Spanish'),
-    ('fr', 'French'),
-    # Add more languages as needed
-]

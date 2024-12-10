@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Exercise{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="row" style="height: 100%; width:100%;">
+        <main role="main" class="col-md-10 px-0 d-flex flex-column" style="height: 100vh;">
+            {% block left_content %}
+            <!-- This block will be replaced by specific content in child templates -->
+            {% endblock %}
+        </main>
+
+        <nav class="col-md-2 px-0 sidebar border-start" style="height: 100vh; background-color: #f8f9fa;">
+            <div class="d-flex flex-column h-100">
+                <!-- Timer and Time Limit Section -->
+                <div class="card text-bg-light mb-3">
+                    <div class="card-header text-center">
+                        <h5 class="card-title mb-2">Assessment Timer</h5>
+                        <div id="time_start" time_start="{{ attempt.attempt_date|date:'Y-m-d H:i:s' }}"></div>
+                        <div id="time_limit" value="{{ assessment.time_limit }}">
+                            Time Limit: <span class="fw-bold">{{ assessment.time_limit }} seconds</span>
+                        </div>
+                        <div id="timer" class="text-danger fw-bold">Time Left: 00:00:00</div>
+                    </div>
+                </div>
+        
+                <!-- Camera and Dropdown Section -->
+                <div class="card text-bg-light mb-3">
+                    <div class="card-header text-center">
+                        <h5 class="card-title mb-2">Camera Feed</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <video id="video" class="w-100" autoplay></video>
+                    </div>
+                    <div class="card-footer">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle w-100 text-truncate" id="dropdown-camera-menu-button" 
+                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Select Camera
+                            </button>
+                            <ul class="dropdown-menu" id="dropdown-camera-menu-item"></ul>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Actions Section -->
+                <div class="card-footer mt-auto">
+                    {% if is_preview %}
+                        <div class="alert alert-warning text-center mb-2">
+                            <p class="mb-0">This is a preview of the assessment.</p>
+                            <small>You will not be able to submit your answers.</small>
+                        </div>
+                        <div class="text-center">
+                            <a href="{% url 'assessment:assessment_list' %}" class="btn btn-secondary w-100">Back</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            {% if assessment_id %}
+                                <a href="{% url 'assessment:take_assessment' assessment_id=assessment_id %}" 
+                                    class="btn btn-secondary w-100 mb-2">
+                                    <i class="fa-solid fa-backward"></i> Back
+                                </a>
+                            {% endif %}
+                            <button id="submit_btn" type="submit" form="asm-form" 
+                                    class="btn btn-success submit-btn w-100">
+                                Submit
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+        
+                <!-- Exercises Menu -->
+                <div class="btn-group-vertical btn-group-md mt-3">
+                    {% for ex in exercises %}
+                        <a href="{% url 'exercises:exercise_detail' ex.id assessment_id attempt_id %}" 
+                            class="btn {% if ex.id == exercise.id %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                            {{ forloop.counter }}. {{ ex.title }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Optional JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    {% load static %}
+    <script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
+    <script type="text/javascript" src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
+
+    <script src="{% static 'js/time_converter.js' %}"></script>
+    <script src="{% static 'js/get_cookie.js' %}"></script>
+    <script src="{% static 'js/face_behavior_logger.js' %}"></script>
+    <script src="{% static 'js/tab_behavior_logger.js' %}"></script>
+    <script src="{% static 'js/timer.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

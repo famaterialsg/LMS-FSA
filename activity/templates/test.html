@@ -1,0 +1,18 @@
+<audio id="backgroundMusic" preload="auto" loop>
+    <source src="{% static 'jingle-bells-christmas-classic-piano-melody_100bpm_G_major.wav' %}" type="audio/wav">
+    Your browser does not support the audio element.
+</audio>
+<button id="audioControl">Play Music</button>
+
+<script>
+    const audio = document.getElementById('backgroundMusic');
+    const audioControl = document.getElementById('audioControl');
+
+    audioControl.addEventListener('click', function() {
+        if (audio.paused) {
+            audio.play().catch(error => console.error('Error playing audio:', error));
+        } else {
+            audio.pause();
+        }
+    });
+</script>

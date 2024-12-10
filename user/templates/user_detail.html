@@ -13,8 +13,6 @@
                     <img src="{% if user.profile.profile_picture_url %}{{ user.profile.profile_picture_url }}{% else %}{% static 'images/avatar.png' %}{% endif %}" 
                          class="img-fluid rounded-circle" style="width: 10rem; height: 10rem; object-fit: cover;" alt="{{ user.username }}">
                 </div>
-                
-                
 
                 <h5 class="text-center">{{ user.first_name }} {{ user.last_name }}</h5>
 
@@ -46,10 +44,53 @@
                             <i class="fas fa-edit me-2"></i> Edit Profile
                         </a>
                     </li>
+                    <li class="list-group-item">
+                        <!-- Cài đặt -->
+                        <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="collapse" data-bs-target="#settingsCollapse" aria-expanded="true" aria-controls="settingsCollapse">
+                            <i class="fas fa-cogs me-2"></i> Settings and privacy
+                            <i class="fas fa-chevron-down ms-2"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Thả xuống Cài đặt -->
+                    <ul class="collapse dropdown-menu-end ms-2" id="settingsCollapse">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="collapse" data-bs-target="#twoFAOptions" aria-expanded="true" aria-controls="twoFAOptions">
+                                <i class="fas fa-shield-alt me-2"></i> Security 2FA
+                                <i class="fas fa-chevron-down ms-2"></i>
+                            </a>
+                        </li>
+                    
+                        <ul class="collapse list-unstyled" id="twoFAOptions">
+                            {% if not user.is_superuser %}  <!-- Kiểm tra nếu không phải là superuser -->
+                                <li>
+                                    <form action="{% url 'main:toggle_2fa' pk=user.pk %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item d-flex align-items-center">
+                                            <i class="fas {% if user.profile.two_fa_enabled %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>
+                                            {% if user.profile.two_fa_enabled %}
+                                                <span class="text-success">Off 2FA</span>
+                                            {% else %}
+                                                <span class="text-danger">On 2FA</span>
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endif %}
+                    
+                            <li class="dropdown-item">
+                                {% if user.profile.two_fa_enabled %}
+                                    <i class="fas fa-check-circle text-success me-2"></i> 2FA is on
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger me-2"></i> 2FA is off
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </ul>
+                    
                 </ul>
             </div>
-
-        </div>
+        </div>        
 
         <!-- Phần chính với thông tin chi tiết -->
         <div class="col-md-9">

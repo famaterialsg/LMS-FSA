@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Role List{% endblock %}
 {% block content %}
-<div class="container mt-4">
+<div class="mt-4">
     <h2>Roles</h2>
 
     <!-- Hiển thị thông báo nếu có -->
@@ -22,9 +22,12 @@
             <i class="fas fa-file-import"></i> Import
         </button>
         
-        <a href="{% url 'role:export_roles' %}" class="btn btn-secondary" title="Export Roles to Excel" data-toggle="tooltip">
+        <a href="{% url 'role:export_roles' %}" class="btn btn-info" title="Export Roles to Excel" data-toggle="tooltip">
             <i class="fas fa-file-export"></i> Export
         </a>
+        <button class="btn btn-warning" title="Refresh Page" onclick="location.reload();" data-toggle="tooltip">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
     </div>
 
     <table class="table table-striped">
@@ -32,7 +35,6 @@
             <tr>
                 <th>#</th>
                 <th>Role Name</th>
-                <th>Permissions</th>
                 <th>Modules</th>
                 <th>Actions</th>
             </tr>
@@ -45,31 +47,14 @@
                 <td>
                     <div>
                         <ul class="list-unstyled mb-0">
-                            {% for permission in role.permissions.all|slice:":3" %}
-                            <li>{{ permission.name }}</li>
+                            {% for role_module in role.rolemodule_set.all|slice:":3" %}
+                                <li>{{ role_module.module.module_name }}</li>
                             {% endfor %}
                         </ul>
-                        {% if role.permissions.all|length > 3 %}
-                        <ul class="list-unstyled d-none" id="permissions-list-{{ forloop.counter }}">
-                            {% for permission in role.permissions.all|slice:"3:" %}
-                            <li>{{ permission.name }}</li>
-                            {% endfor %}
-                        </ul>
-                        <button class="btn btn-link p-0" onclick="togglePermissions({{ forloop.counter }})" id="permissions-toggle-{{ forloop.counter }}">See more...</button>
-                        {% endif %}
-                    </div>
-                </td>
-                <td>
-                    <div>
-                        <ul class="list-unstyled mb-0">
-                            {% for module in role.modules.all|slice:":3" %}
-                            <li>{{ module.module_name }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% if role.modules.all|length > 3 %}
+                        {% if role.rolemodule_set.all|length > 3 %}
                         <ul class="list-unstyled d-none" id="modules-list-{{ forloop.counter }}">
-                            {% for module in role.modules.all|slice:"3:" %}
-                            <li>{{ module.module_name }}</li>
+                            {% for role_module in role.rolemodule_set.all|slice:"3:" %}
+                                <li>{{ role_module.module.module_name }}</li>
                             {% endfor %}
                         </ul>
                         <button class="btn btn-link p-0" onclick="toggleModules({{ forloop.counter }})" id="modules-toggle-{{ forloop.counter }}">See more...</button>
@@ -152,9 +137,7 @@
         });
     });
 </script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -295,6 +278,24 @@
             filePreview.style.display = 'block';
             confirmImportButton.disabled = false; // Kích hoạt nút xác nhận nhập
         }
+
+        function displayYAMLPreview(content) {
+            try {
+                const yamlData = jsyaml.load(content); // Sử dụng thư viện js-yaml
+                const headers = Object.keys(yamlData[0]); // Giả định YAML là một danh sách các đối tượng
+                const rows = yamlData.map(row => headers.map(header => row[header]));
+        
+                // Hiển thị tiêu đề và dữ liệu trong bảng
+                previewHeader.innerHTML = headers.map(header => `<th>${header}</th>`).join('');
+                previewBody.innerHTML = rows.map(row => `<tr>${row.map(cell => `<td>${cell || ''}</td>`).join('')}</tr>`).join('');
+                filePreview.style.display = 'block';
+                confirmImportButton.disabled = false; // Kích hoạt nút xác nhận nhập
+            } catch (e) {
+                alert("Không thể phân tích tệp YAML. Vui lòng kiểm tra định dạng.");
+            }
+        }
+        
+
     });
     function togglePermissions(roleIndex) {
         const list = document.getElementById(`permissions-list-${roleIndex}`);

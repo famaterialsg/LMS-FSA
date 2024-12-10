@@ -4,9 +4,10 @@ from user.models import User
 #from ckeditor.widgets import CKEditorWidget
 # Form for creating and editing courses
 class CourseForm(forms.ModelForm):
+    course_code = forms.CharField(max_length=20, required=True)
     creator = forms.ModelChoiceField(queryset=User.objects.all(), required=False, empty_label="Select Creator")
     instructor = forms.ModelChoiceField(queryset=User.objects.all(), required=False, empty_label="Select Instructor")
-    prerequisites = forms.ModelMultipleChoiceField(queryset=Course.objects.all(),required=False,widget=forms.CheckboxSelectMultiple)
+    prerequisites = forms.ModelMultipleChoiceField(queryset=Course.objects.all(), required=False, widget=forms.CheckboxSelectMultiple)
     integer_field = forms.IntegerField(required=False)  # mới thêm
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
@@ -23,8 +24,8 @@ class CourseForm(forms.ModelForm):
         self.fields['image'].required = False
 
 class SessionForm(forms.ModelForm):
-    session_name = forms.CharField(max_length=50, required=False, label="Session Name")
-    session_quantity = forms.IntegerField(min_value=1, required=False, label="Number of Sessions")
+    session_name = forms.CharField(max_length=50, required=True, label="Session Name", initial="Session")
+    session_quantity = forms.IntegerField(min_value=1, required=True, label="Number of Sessions", initial=1)
     class Meta:
         model = Session
         fields = ['name', 'order', 'course']

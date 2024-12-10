@@ -59,7 +59,7 @@
                 </div>
 
                 <!-- Add New Sessions -->
-                <div id="new-sessions-container" style="max-width: 37.5rem;"></div>
+                <div id="new-sessions-container" style="display: flex; flex-direction: column; max-width: 37.5rem;"></div>
                 <button type="button" id="add-new-session" class="btn btn-secondary" style="margin-top: 0.625rem;">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -156,9 +156,9 @@
         $('#add-new-session').click(function() {
             newSessionCount++;
             const newSessionHtml = `
-                <div class="session-item new-session">
-                    <input type="text" name="new_session_names" class="form-control" placeholder="New Session Name">
-                    <button type="button" class="delete-session">
+                <div class="session-item new-session" style="display: flex; align-items: center; margin-bottom: 0.625rem; gap: 0.625rem;">
+                    <input type="text" name="new_session_names" class="form-control" placeholder="New Session Name" style="flex: 1; max-width: 31.25rem;">
+                    <button type="button" class="delete-session" style="background: none; border: none; color: #dc3545; padding: 0.3125rem; cursor: pointer;">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>

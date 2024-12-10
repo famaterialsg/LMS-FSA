@@ -80,10 +80,6 @@ def location_list(request):
     return render(request, 'location_list.html', {'page_obj': page_obj, 'query': query,'module_groups': module_groups,
         'grouped_modules': grouped_modules})
 
-@login_required
-def location_detail(request, pk):
-    location = get_object_or_404(Location, pk=pk)
-    return render(request, 'location_detail.html', {'location': location})
 
 @login_required
 def location_create(request):

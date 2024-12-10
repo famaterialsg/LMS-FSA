@@ -23,7 +23,7 @@
                 <div class="card mb-4 shadow-sm question-card">
                     <div class="card-body">
                         <div class="d-flex align-items-start">
-                            <h5 class="mr-2 question-number"><strong>{{ forloop.counter }}. </strong></h5>
+                            <h5 class="me-2 question-number"><strong>{{ forloop.counter }}. </strong></h5>
                             <p class="question-text">{{ question.question_text|linebreaksbr }}</p>
                         </div>
 
@@ -64,9 +64,9 @@
                     <div class="card-body">
                         <h6 class="exercise-title btn btn-light">Exercise {{ forloop.counter }}.
                             {% if is_preview %}
-                            <a href="{% url 'exercises:exercise_detail' exercise.id 0 %}">{{ exercise.title }}</a>
+                            <a href="{% url 'exercises:exercise_detail' exercise.id 0 0 %}?preview=true">{{ exercise.title }}</a>
                             {% else %}
-                            <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id %}?email={{ email }}">{{ exercise.title }}</a>
+                            <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id attempt_id %}?email={{ email }}">{{ exercise.title }}</a>
                             {% endif %}
                         </h6>
                     </div>
@@ -91,7 +91,7 @@
             <div id="time_limit" value="{{ assessment.time_limit }}">Time Limit: <span
                     class='time'>{{ assessment.time_limit }}</span></div>
 
-            <div id="timer">Time Left: 00:00:00</div>
+            <div id="timer" class="text-danger fw-bold">Time Left: 00:00:00</div>
         </div>
     </div>
     <div class="card-body">

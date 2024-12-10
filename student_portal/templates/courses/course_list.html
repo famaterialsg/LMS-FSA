@@ -1,140 +1,187 @@
+
 <!-- course_list.html -->
 {% extends 'basePortal.html' %}
 {%load static%}
+{% load last_accessed_filter %}
 {% block title %}Courses{% endblock %}
 {% block content %}
-<div class="pe-5 ps-5">
-    <style>
-        .text-warning {
-        color: #ffc107 !important; /* Bootstrap's yellow color */
-    }
-    </style>
-    <h1 class="mb-4">Available Courses</h1>
-    <form method="get" class="form-inline mb-3 d-flex align-items-end">
-        <div class="input-group">
-            <input type="text" name="q" class="form-control rounded-5 me-2" placeholder="Search courses" value="{{ request.GET.q }}">
-            <button type="submit" class="btn btn-outline-primary rounded-circle">
-                <i class="fas fa-search text-blue"></i>
-            </button>
-        </div>
-    </form>
-    
-    <div class="row">
-        {% for course in courses %}
-        <div class="col-md-3 col-lg-3 mb-3">
-            <div class="card h-100 shadow-sm rounded-4 border-1" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 16px rgba(0, 0, 0, 0.5)'; this.style.transition='transform 0.3s ease';" onmouseout="this.style.transform='scale(1)';">
-                <div class="ratio ratio-16x9"> <!-- Aspect Ratio Wrapper -->
-                    <a href="{% url 'student_portal:course_content_no_session' course.id %}">
-                        {% if course.image %}
-                            <img title="Click here to learn" src="{{ course.image.url }}" class="card-img-top h-100 rounded-4 p-2" alt="{{ course.course_name }}">
-                        {% else %}
-                            <img title="Click here to learn" src="{% static 'course/images/chotbg.png' %}" alt="Default Image" class="card-img-top h-100 rounded-4 p-2">
-                        {% endif %}
-                    </a>
-                </div>            
-                
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">{{ course.course_name }}</h5>
-                    <p class="card-text flex-grow-1">{{ course.description|truncatewords:20 }}</p>
-     
-                    <!-- Star Rating Display -->
-                        <div class="d-flex align-items-center">
-                            <strong>Rating:</strong>
-                            {% for i in "12345"|make_list %}
-                                {% if course.average_rating|floatformat:1|add:"0.0" >= i %}
-                                    <i class="fas fa-star text-warning"></i> <!-- Full Yellow Star -->
-                                {% else %}
-                                    <i class="far fa-star text-muted"></i> <!-- Empty Star -->
-                                {% endif %}
-                            {% endfor %}
-                            <span class="ms-2">({{ course.average_rating|floatformat:1 }} / 5)</span>
-                        </div>
-                    <div class="d-flex justify-content-center mt-2">
-                        <!-- Button to view course details if user is not enrolled -->
-                        <a href="{% url 'student_portal:course_detail' course.id %}" class="btn btn-outline-secondary me-1">
-                            <i class="fas fa-info-circle me-2"></i> <!-- Info icon -->
-                            View Details
-                        </a>
-                        {% if course.user_enrolled %}
-                            <!-- Button to go directly to course content if user is enrolled -->
-                            <a href="{% url 'student_portal:course_content_no_session' course.id %}" class="btn btn-primary">
-                                <i class="fas fa-book-open me-2"></i> <!-- Book open icon -->
-                                Study
-                            </a>
-                        {% endif %}    
+<div class="container-fluid py-5 bg-light">
+    <!-- Hero Section -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-dark mb-3">Discover Your Next Course</h1>
+        <p class="lead text-dark mb-4">Expand your knowledge with our carefully curated courses</p>
+
+        <!-- Enhanced Search Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="get" class="mb-4">
+                    <div class="input-group input-group-lg">
+                        <input type="text" name="q" class="form-control border-2"
+                               placeholder="What do you want to learn today?"
+                               value="{{ request.GET.q }}"
+                               style="font-style: italic; font-size: 0.875rem;">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
-    {% endfor %}
     </div>
-    
-    <!-- Pagination Controls -->
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if courses.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="First">
-                        <span aria-hidden="true">&laquo;&laquo;</span>
+
+    <!-- Main Courses Section -->
+    <div class="row g-4">
+        {% for course in courses %}
+        <div class="col-md-3">
+            <div class="card border-0 bg-white h-100">
+                <div class="position-relative">
+                    <a href="{% url 'student_portal:course_content_no_session' course.id %}"
+                       class="text-decoration-none">
+                        <div class="ratio ratio-16x9">
+                            {% if course.image %}
+                                <img src="{{ course.image.url }}"
+                                     class="card-img-top object-fit-cover"
+                                     alt="{{ course.course_name }}">
+                            {% else %}
+                                <img src="{% static 'course/images/chotbg.png' %}"
+                                     class="card-img-top object-fit-cover"
+                                     alt="Default Image">
+                            {% endif %}
+                        </div>
+                        {% if course.user_enrolled %}
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Enrolled
+                            </span>
+                        </div>
+                        {% endif %}
                     </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ courses.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-            {% endif %}
-    
-            {% for num in courses.paginator.page_range %}
-                {% if num == courses.number %}
-                    <li class="page-item active">
-                        <a class="page-link" href="#">{{ num }}</a>
-                    </li>
-                {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-    
-            {% if courses.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ courses.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ courses.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Last">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-    
-    <!-- Recommended Courses Section -->
-    <h2 class="mt-5 mb-4">Recommended Courses</h2>
-    <div class="row">
-        {% for recommended_course in recommended_courses %}
-        <div class="col-md-3 mb-3">
-            <div class="card h-100 shadow-sm border-1" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 16px rgba(0, 0, 0, 0.5)'; this.style.transition='transform 0.3s ease';" onmouseout="this.style.transform='scale(1)';">
-                <div class="ratio ratio-16x9"> <!-- Aspect Ratio Wrapper -->
-                    {% if course.image %}
-                        <img src="{{ course.image.url }}" class="card-img-top rounded-4 p-2" alt="{{ course.course_name }}" style="object-fit: cover;">
-                    {% else %}
-                        <img src="{% static 'course/images/chotbg.png' %}" alt="Default Image" class="card-img-top rounded-4 p-2" alt="Placeholder Image" style="object-fit: cover;">
-                    {% endif %}
                 </div>
+
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">{{ recommended_course.course_name }}</h5>
-                    <p class="card-text flex-grow-1">{{ recommended_course.description|truncatewords:20 }}</p>
+                    <h5 class="card-title fw-bold mb-3">{{ course.course_name }}</h5>
+                    <p class="card-text text-muted mb-3">{{ course.instructor.username }} </p>
+                    <!-- {{ course.description|truncatewords:15 }} -->
+
+                    <!-- Rating Section -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            {% for i in "12345"|make_list %}
+                                {% if course.average_rating|floatformat:1|add:"0.0" >= i %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ms-2 text-muted">({{ course.average_rating|floatformat:1 }})</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
                     <div class="mt-auto">
-                        <a href="{% url 'student_portal:course_detail' recommended_course.id %}" class="btn btn-outline-secondary">View Details</a>
+                        <div class="d-grid gap-2">
+                            {% if course.user_enrolled %}
+                                {% with last_access_data|default_if_none:''|get_item:course.id as access_data %}
+                                    {% if access_data.material %}
+                                        <a href="{% url 'student_portal:course_content' course.pk access_data.session.id %}?file_id={{ access_data.material.id }}&file_type={{ access_data.material.material_type }}"
+                                           class="btn btn-primary">
+                                            <i class="fas fa-play-circle me-2"></i>Continue Learning
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'student_portal:course_detail' course.id %}"
+                                           class="btn btn-outline-primary">
+                                            <i class="fas fa-info-circle me-2"></i>View Details
+                                        </a>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <a href="{% url 'student_portal:course_detail' course.id %}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-info-circle me-2"></i>View Details
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
+    </div>
+
+    <!-- Enhanced Pagination -->
+    <nav class="my-5">
+        <ul class="pagination pagination-lg justify-content-center">
+            {% if courses.has_previous %}
+                <li class="page-item">
+                    <a class="page-link rounded-start"
+                       href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in courses.paginator.page_range %}
+                {% if num == courses.number %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if courses.has_next %}
+                <li class="page-item">
+                    <a class="page-link rounded-end"
+                       href="?page={{ courses.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Recommended Courses Section -->
+    <div class="mt-5 pt-5 border-top">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold text-dark">Recommended For You</h2>
+            <p class="lead text-dark">Based on your interests and learning history</p>
+        </div>
+
+        <div class="row g-4">
+            {% for recommended_course in recommended_courses %}
+            <div class="col-md-3">
+                <div class="card border-0 bg-white h-100">
+                    <div class="ratio ratio-16x9">
+                        {% if recommended_course.image %}
+                            <img src="{{ recommended_course.image.url }}"
+                                 class="card-img-top object-fit-cover"
+                                 alt="{{ recommended_course.course_name }}">
+                        {% else %}
+                            <img src="{% static 'course/images/chotbg.png' %}"
+                                 class="card-img-top object-fit-cover"
+                                 alt="Default Image">
+                        {% endif %}
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold">{{ recommended_course.course_name }}</h5>
+                        <p class="card-text text-muted">{{ recommended_course.description|truncatewords:15 }}</p>
+                        <div class="mt-auto">
+                            <a href="{% url 'student_portal:course_detail' recommended_course.id %}"
+                               class="btn btn-outline-primary w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Learn More
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

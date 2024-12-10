@@ -7,17 +7,19 @@ from django.conf.urls.static import static
 app_name = 'user'
 
 urlpatterns = [
-    path('users/', views.user_list, name='user_list'),
-    path('users/<int:pk>/', views.user_detail, name='user_detail'),
+    path('', views.user_list, name='user_list'),
+    path('<int:pk>/', views.user_detail, name='user_detail'),
     path('add/', views.user_add, name='user_add'),
     path('edit/<int:pk>/', views.user_edit, name='user_edit'),
     path('detail/<int:pk>/', views.user_detail, name='user_detail'),
     path('import/', views.import_users, name='import_users'),
     path('export/', views.export_users, name='export_users'),
     path('users/delete/', views.user_delete, name='user_delete'),
-    path('user/<int:user_id>/edit-password/', user_edit_password, name='user_edit_password'),
+    path('<int:user_id>/edit-password/', user_edit_password, name='user_edit_password'),
     path('students/', views.student_list, name='student_list'),
     path('instructors/', views.instructor_list, name='instructor_list'),
+    path('send_email_to_users/', views.send_email_to_users, name='send_email_to_users'),
+
 ]
 
 if settings.DEBUG:

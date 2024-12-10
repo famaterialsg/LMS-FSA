@@ -6,6 +6,8 @@ from django.conf.urls.static import static
 app_name = 'course'
 urlpatterns = [
     path('', views.course_list, name='course_list'),
+    path('import-courses/', views.import_course_folder_view, name='import_courses'),
+    path('save_last_accessed_material/', views.save_last_accessed_material, name='save_last_accessed_material'),
     path('add/', views.course_add, name='course_add'),
     path('edit/<int:pk>/details/', views.course_edit_detail, name='course_edit_detail'),
     path('edit/<int:pk>/sessions/', views.course_edit_session, name='course_edit_session'),
@@ -21,10 +23,10 @@ urlpatterns = [
     path('<int:pk>/content/edit/<int:session_id>/', views.course_content_edit, name='course_content_edit'),
     path('course/<int:pk>/toggle_publish/', views.toggle_publish, name='toggle_publish'),
     path('<int:pk>/toggle-completion/', views.toggle_completion, name='toggle_completion'),
+    path('end_viewing_ajax/', views.end_viewing_ajax, name='end_viewing_ajax'),
     # Material
     path('edit/<int:pk>/reorder/<int:session_id>/', views.reorder_course_materials, name='reorder_course_materials'),
     path('reading-material/<int:id>/', views.reading_material_detail, name='reading_material_detail'),
-    path('<int:pk>/content/edit/<int:session_id>/<int:reading_material_id>/edit/', views.edit_reading_material, name='edit_reading_material'),
     # Certificate
     path('<int:pk>/generate-certificate/', views.generate_certificate_png, name='generate_certificate'),
     # Topic URLs
@@ -36,4 +38,6 @@ urlpatterns = [
     path('tags/add/', views.tag_add, name='tag_add'),
     path('tags/edit/<int:pk>/', views.tag_edit, name='tag_edit'),
     path('tags/delete/<int:pk>/', views.tag_delete, name='tag_delete'),
+    # Discount
+    path('apply-discount/', views.apply_discount, name='apply_discount'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

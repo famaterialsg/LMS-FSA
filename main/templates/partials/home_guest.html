@@ -1,0 +1,167 @@
+{% load static %}
+
+<!-- Thêm một lớp chứa phần trên trang để dễ dàng thêm background -->
+
+<h1 class="text-center mb-3 mt-2 display-5 fw-bold text-primary">Learning Management System</h1>
+
+<div class="row position-relative">
+    <div id="courseCarousel" class="d-flex flex-nowrap overflow-hidden" style="scroll-behavior: smooth;">
+        {% for course in courses %}
+        <!-- Sử dụng col-12 cho màn hình nhỏ, col-md-4 cho màn hình vừa và lớn -->
+        <div class="col-12 col-md-4 col-lg-4 col-xl-4 mb-4 course-item flex-shrink-0">
+            <div class="card shadow-lg border-light rounded-lg d-flex flex-column h-100">
+                <div class="ratio ratio-16x9">
+                    {% if course.image %}
+                        <img 
+                            src="{{ course.image.url }}" 
+                            alt="{{ course.course_name }}" 
+                            class="card-img-top rounded-lg"
+                            style="object-fit: cover; transition: transform 0.3s ease-in-out;" 
+                            onmouseover="this.style.transform='scale(1.1)'" 
+                            onmouseout="this.style.transform='scale(1)'">
+                    {% else %}
+                        <img 
+                            src="{% static 'course/images/chotbg.png' %}" 
+                            alt="Default Image" 
+                            class="card-img-top rounded-lg"
+                            style="object-fit: cover; transition: transform 0.3s ease-in-out;" 
+                            onmouseover="this.style.transform='scale(1.1)'" 
+                            onmouseout="this.style.transform='scale(1)'">
+                    {% endif %}
+                </div>
+                <div class="card-body d-flex flex-column align-items-center flex-grow-1">
+                    <h5 class="card-title">{{ course.course_name }}</h5>
+                    <p class="card-text flex-grow-1">{{ course.description|truncatewords:20 }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Nút mũi tên trái -->
+    <button class="carousel-control-prev rounded-circle position-absolute top-50 start-0 translate-middle-y btn btn-dark btn-sm p-2 w-auto h-auto" 
+        id="prevBtn">
+        <span class="carousel-control-prev-icon text-dark" aria-hidden="true"></span>
+    </button>
+
+    <!-- Nút mũi tên phải -->
+    <button class="carousel-control-next rounded-circle position-absolute top-50 end-0 translate-middle-y btn btn-dark btn-sm p-2 w-auto h-auto" 
+        id="nextBtn">
+        <span class="carousel-control-next-icon text-dark" aria-hidden="true"></span>
+    </button>
+</div>
+
+
+
+
+<!-- Bảng Giới Thiệu về nền tảng -->
+<div class="container my-3">
+    <h2 class="text-center text-primary mb-4">About Our Platform</h2>
+    <p class="text-center">We provide high-quality online courses across various fields to help you achieve your learning goals. Our courses are designed by experts and come with lifetime access, certificates, and job support.</p>
+</div>
+
+<!-- Bảng Chứng Chỉ và Lợi Ích -->
+<div class="container my-3">
+    <h2 class="text-center text-primary mb-4">Certificates and Benefits</h2>
+    <div class="row">
+        <div class="col-md-3 offset-md-3">
+            <ul>
+                <li><i class="fas fa-certificate text-success"></i> Official Certificate upon completion</li>
+                <li><i class="fas fa-graduation-cap text-success"></i> Learn at your own pace</li>
+                <li><i class="fas fa-briefcase text-success"></i> Job support and career guidance</li>
+            </ul>
+        </div>
+        <div class="col-md-5 offset-md-1">
+            <ul>
+                <li><i class="fas fa-laptop text-success"></i> 24/7 Access to course materials</li>
+                <li><i class="fas fa-users text-success"></i> Join a community of learners</li>
+                <li><i class="fas fa-headset text-success"></i> Expert guidance and mentorship</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const courseCarousel = document.getElementById("courseCarousel");
+        const courseItems = courseCarousel.querySelectorAll(".course-item");
+
+        // Hàm tính toán bề rộng cuộn dựa trên kích thước của một phần tử
+        function getScrollAmount() {
+            return courseItems[0].offsetWidth; // Luôn cuộn 1 khóa học
+        }
+
+        let scrollAmount = getScrollAmount(); // Lấy giá trị cuộn ban đầu
+        let autoScrollInterval;
+        let isScrolling = false; // Biến kiểm tra trạng thái cuộn tự động
+        let scrollingRight = true; // Bắt đầu cuộn từ trái sang phải
+
+        // Hàm cuộn tự động
+        function autoScroll() {
+            if (isScrolling) return; // Ngừng cuộn tự động nếu đang cuộn thủ công
+
+            if (scrollingRight) {
+                courseCarousel.scrollLeft += scrollAmount;
+
+                // Kiểm tra nếu đã cuộn hết sang bên phải thì đổi hướng sang trái
+                if (courseCarousel.scrollLeft >= (courseCarousel.scrollWidth - courseCarousel.clientWidth)) {
+                    scrollingRight = false;
+                }
+            } else {
+                courseCarousel.scrollLeft -= scrollAmount;
+
+                // Kiểm tra nếu đã cuộn hết sang bên trái thì đổi hướng sang phải
+                if (courseCarousel.scrollLeft <= 0) {
+                    scrollingRight = true;
+                }
+            }
+        }
+
+        // Bắt đầu tự động cuộn
+        function startAutoScroll() {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval); // Xóa interval trước khi bắt đầu lại
+            }
+            autoScrollInterval = setInterval(autoScroll, 3500); // Cuộn tự động mỗi giây
+        }
+
+        // Dừng tự động cuộn
+        function stopAutoScroll() {
+            clearInterval(autoScrollInterval);
+        }
+
+        // Gắn sự kiện click cho các nút
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+
+        // Sự kiện nhấn vào nút trái
+        prevBtn.addEventListener("click", function () {
+            courseCarousel.scrollLeft -= scrollAmount;
+            stopAutoScroll(); // Dừng tự động cuộn khi thao tác thủ công
+            startAutoScroll();
+        });
+
+        // Sự kiện nhấn vào nút phải
+        nextBtn.addEventListener("click", function () {
+            courseCarousel.scrollLeft += scrollAmount;
+            stopAutoScroll(); // Dừng tự động cuộn khi thao tác thủ công
+            startAutoScroll();
+        });
+
+        // Lắng nghe sự thay đổi kích thước cửa sổ để cập nhật lại số lượng khóa học cuộn
+        window.addEventListener("resize", function () {
+            scrollAmount = getScrollAmount(); // Cập nhật giá trị cuộn mỗi khi thay đổi kích thước
+        });
+
+        // Dừng cuộn tự động khi hover vào carousel
+        courseCarousel.addEventListener("mouseenter", stopAutoScroll);
+
+        // Bắt đầu lại cuộn tự động khi hover ra ngoài carousel
+        courseCarousel.addEventListener("mouseleave", startAutoScroll);
+
+        // Bắt đầu tự động cuộn khi tải trang
+        startAutoScroll();
+    });
+</script>
+
+

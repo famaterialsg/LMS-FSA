@@ -5,7 +5,7 @@
 {% block title %}Department List{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="mt-4">
     <ul class="nav nav-tabs mt-3">
         <li class="nav-item">
             <a class="nav-link active" href="{% url 'department:department_list' %}">Department </a>
@@ -16,32 +16,30 @@
     </ul>
     <div class="mt-3">
         <div class="d-flex justify-content-between align-items-center">
-            <form method="GET" action="{% url 'department:department_list' %}" class="d-flex">
-                <div class="input-group">
-                    <input type="text" name="search" value="{{ query|default_if_none:'' }}" class="form-control" placeholder="Search departments..." aria-label="Search departments">
-                    <button type="submit" class="btn btn-outline-primary ms-2">Search</button>
-                </div>
-            </form>
             <div class="mt-3">
-                
-                <button type="button" id="delete_button" class="btn btn-outline-danger" title="Delete Selected Departments" data-bs-toggle="tooltip">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </button>
-                <button class="btn btn-outline-primary" title="Import Departments from Excel" data-bs-toggle="modal" data-bs-target="#importModal" data-bs-toggle="tooltip">
-                    <i class="fas fa-file-import"></i> Import
-                </button>
-                <button class="btn btn-outline-primary" title="Export Departments" data-bs-toggle="modal" data-bs-target="#exportModal" data-bs-toggle="tooltip">
-                    <i class="fas fa-file-export"></i> Export
-                </button>
-                <a href="{% url 'department:department_list' %}" class="btn btn-outline-primary" title="Refresh Department List" id="refresh_button">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </a>
                 <a href="{% url 'department:department_create' %}" class="btn btn-primary" title="Add New Department">
                     <i class="fas fa-plus"></i> Add
                 </a>
+                <button type="button" id="delete_button" class="btn btn-danger" title="Delete Selected Departments" data-bs-toggle="tooltip">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
+                <button class="btn btn-success" title="Import Departments from Excel" data-bs-toggle="modal" data-bs-target="#importModal" data-bs-toggle="tooltip">
+                    <i class="fas fa-file-import"></i> Import
+                </button>
+                <button class="btn btn-info" title="Export Departments" data-bs-toggle="modal" data-bs-target="#exportModal" data-bs-toggle="tooltip">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
+                <a href="{% url 'department:department_list' %}" class="btn btn-warning" title="Refresh Department List" id="refresh_button">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </a>
             </div>
 
-           
+            <form method="GET" action="{% url 'department:department_list' %}" class="d-flex">
+                <div class="input-group">
+                    <input type="text" name="search" value="{{ query|default_if_none:'' }}" class="form-control" placeholder="Search departments..." aria-label="Search departments">
+                    <button type="submit" class="btn btn-outline-success ms-2">Search</button>
+                </div>
+            </form>
         </div>
 
         <form id="delete_form" method="POST" action="{% url 'department:department_delete' %}">

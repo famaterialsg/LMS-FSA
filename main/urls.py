@@ -1,5 +1,4 @@
 from django.urls import path
-from django.contrib.auth import views as auth_views
 from . import views
 from django.contrib.auth.views import LogoutView
 
@@ -21,10 +20,11 @@ urlpatterns = [
     
     #2FA
     path('verify-2fa/', views.verify_2fa, name='verify_2fa'),      
-    path('toggle_2fa/', views.toggle_2fa, name='toggle_2fa'),   
+    path('toggle_2fa/<int:pk>/', views.toggle_2fa, name='toggle_2fa'),
+    path('confirm_2fa/<str:token>/', views.confirm_2fa, name='confirm_2fa'),
     
-
     #lock_wed
-    path('lock-site/', views.lock_site, name='lock_site'),  # Khóa trang web
-    path('unlock-site/', views.unlock_site, name='unlock_site'),  # Mở khóa trang web
+    path('lock-site/', views.lock_site, name='lock_site'),
+    path('unlock-site/', views.unlock_site, name='unlock_site'),
+    path('check-username/', views.check_username, name='check_username'),
 ]

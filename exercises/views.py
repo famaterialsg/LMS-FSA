@@ -1,10 +1,12 @@
 import json  # To parse JSON data
 
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode, urlencode
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from cheat_logger.utils.encryption_handler import Data_Encryption
 from django.core.paginator import Paginator
 from .libs.submission import grade_submission, precheck
@@ -71,13 +73,47 @@ def exercise_add(request):
     return render(request, 'exercise_add.html', {'form': form})
 
 @login_required
-def exercise_detail(request, exercise_id, assessment_id=None):
+def delete_exercise(request, exercise_id):
     exercise = get_object_or_404(Exercise, id=exercise_id)
-    is_preview = assessment_id is None  # Check if it's preview mode
-    email = request.GET.get('email') or request.session.get('email')
     
+    if request.method == "POST":
+        exercise.delete()
+        messages.success(request, 'The exercise has been deleted.')
+        return redirect('exercises:exercise_list')
+
+    return render(request, 'error.html', {'error': 'Invalid request method.'})
+
+@login_required
+def delete_exercises_bulk(request):
+    if request.method == "POST":
+        ids = request.POST.getlist('ids')
+        if ids:
+            exercises = Exercise.objects.filter(id__in=ids)
+            exercises_deleted_count = exercises.count()
+            exercises.delete()
+            messages.success(request, f"{exercises_deleted_count} exercises have been deleted.")
+            return redirect('exercises:exercise_list')
+        else:
+            messages.error(request, "No exercises selected for deletion.")
+            return redirect('exercises:exercise_list')
+    return render(request, 'error.html', {'error': 'Invalid request method.'})
+
+def exercise_detail(request, exercise_id, assessment_id=None, attempt_id=None):
+    exercise = get_object_or_404(Exercise, id=exercise_id)
+    # Lấy thông tin attempt từ attempt_id
+    if attempt_id:
+        attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
+    else:
+        attempt_id = request.session.get('attempt_id')  # Nếu không có attempt_id trong URL, lấy từ session
+        if not attempt_id:
+            return render(request, 'error.html', {'error': 'Attempt not found.'})
+        attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
+
+    is_preview = request.GET.get('preview', 'false').lower() == 'true'  # Check if it's preview mode
+    email = request.GET.get('email') or request.session.get('email')
+
     if assessment_id is not None:
-        base_template = "assessment/take_assessment.html"
+        base_template = "base_exercise.html"
     else:
         base_template = "base_generic.html"
 
@@ -97,6 +133,9 @@ def exercise_detail(request, exercise_id, assessment_id=None):
     if not is_preview and assessment_id:
         assessment = get_object_or_404(Assessment, id=assessment_id)
         submission_filter['assessment'] = assessment
+        exercises = Exercise.objects.filter(assessment=assessment).order_by('id')
+    else:
+        exercises = [exercise]
 
     # Retrieve the latest submission using the filter
     submission = Submission.objects.filter(exercise=exercise, **submission_filter).last()
@@ -150,15 +189,37 @@ def exercise_detail(request, exercise_id, assessment_id=None):
     return render(request, 'exercise_form.html', {
         'base_template': base_template,
         'exercise': exercise,
+        'exercises': exercises,
+        'assessment': assessment,
+        'attempt': attempt,
+        'attempt_id': attempt_id,
         'form': form,
         'language': language,
         'input_example': input_example, 
         'output_example': output_example,
-        'is_preview': is_preview,
+        'is_preview': True if is_preview else False,
         'submission_flEmail': submission_flEmail,
         'assessment_id': assessment_id,  # Pass assessment_id for further processing if needed
         'email': email if not request.user.is_authenticated else None,  # Pass email if the user is anonymous
     })
+
+def load_exercise(request, exercise_id):
+    # Lấy thông tin bài tập
+    exercise = get_object_or_404(Exercise, id=exercise_id)
+    assessment = exercise.assessment  # Lấy assessment liên quan
+
+    if request.is_ajax():
+        # Render template cho phần nội dung bài tập
+        html = render_to_string("exercise_form.html", {
+            "exercise": exercise,
+            "assessment": assessment,
+            "input_example": exercise.input_example,
+            "output_example": exercise.output_example,
+            "form": ExerciseForm(instance=exercise),
+        }, request)
+        return HttpResponse(html)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 @login_required
 def submit_code(request, exercise_id, assessment_id):

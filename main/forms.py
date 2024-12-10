@@ -4,29 +4,35 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 
 class EmailForm(forms.Form):
-    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Nhập email'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email'}))
 
 class ConfirmationCodeForm(forms.Form):
-    confirmation_code = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập mã xác thực'}))
+    confirmation_code = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter confirmation code'}))
 
 class RegistrationForm(forms.ModelForm):
-    password1 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Nhập mật khẩu'}))
-    password2 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Xác nhận mật khẩu'}))
-    first_name = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập họ'}))
-    last_name = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập tên'}))
+    password1 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter password'}))
+    password2 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm password'}))
+    first_name = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter first name'}))
+    last_name = forms.CharField(max_length=255, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter last name'}))
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2', 'first_name', 'last_name']
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập tên người dùng'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter username'}),
         }
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Username already exists.")
+        return username
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            raise forms.ValidationError("Mật khẩu không khớp")
+            raise forms.ValidationError("Passwords do not match.")
         return password2
 
     def save(self, commit=True):
@@ -54,7 +60,7 @@ class PasswordResetForm(forms.Form):
         confirm_password = cleaned_data.get("confirm_password")
 
         if password and confirm_password and password != confirm_password:
-            raise forms.ValidationError("Password and Confirm password is not match.")
+            raise forms.ValidationError("Password and Confirm password do not match.")
 
 class CustomLoginForm(forms.Form):
     username = forms.CharField(
@@ -84,12 +90,12 @@ class CustomLoginForm(forms.Form):
             except User.DoesNotExist:
                 self.add_error('username', "Username does not exist.")
             
-            # Kiểm tra mật khẩu
+            # Check password
             user = authenticate(username=username, password=password)
             if user is None:
                 self.add_error('password', "Password is incorrect.")
             
-            # Kiểm tra nếu tài khoản bị khóa
+            # Check if the account is locked
             if hasattr(user, 'is_locked') and user.is_locked:
                 self.add_error('username', "Your account has been locked. Please contact the administrator.")
 

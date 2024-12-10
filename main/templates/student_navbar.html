@@ -64,44 +64,7 @@
                             <i class="fas fa-user-shield"></i> Admin LMS
                         </a>
                     </li>
-                {%endif%}
-
-                <!-- Cài đặt -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-cogs"></i> Cài đặt bảo mật
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="settingsDropdown">
-                        <li>
-                            <form action="{% url 'main:toggle_2fa' %}" method="post">
-                                {% csrf_token %}
-                                <!-- Bật/Tắt 2FA Toggle Button -->
-                                <button type="submit" class="dropdown-item d-flex align-items-center">
-                                    <i class="fas {% if user.profile.two_fa_enabled %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>
-                                    {% if user.profile.two_fa_enabled %}
-                                        <span class="text-success">Tắt 2FA</span>
-                                    {% else %}
-                                        <span class="text-danger">Bật 2FA</span>
-                                    {% endif %}
-                                </button>
-                            </form>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <!-- Optional Item: Display Status -->
-                        <li class="dropdown-item">
-                            {% if user.profile.two_fa_enabled %}
-                                <i class="fas fa-check-circle text-success me-2"></i> 2FA đang bật
-                            {% else %}
-                                <i class="fas fa-times-circle text-danger me-2"></i> 2FA chưa bật
-                            {% endif %}
-                        </li>
-                    </ul>
-                </li>
-
-                <a class="nav-link" href="{% url 'mylearning:index' %}">
-                    <i class="fas fa-user-graduate"></i> My learning
-                </a>
-                
+                {%endif%}              
                 <a class="nav-link" href="{% url 'student_portal:course_list' %}">
                     <i class="fas fa-user-graduate"></i> Go to Learn &nbsp;|&nbsp;
                 </a>
@@ -110,22 +73,31 @@
                         {% if request.user.profile.profile_picture_url %}
                             <img src="{{ request.user.profile.profile_picture_url }}" class="img-fluid rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
                         {% else %}
-                            <i class="fas fa-user rounded-circle; mt-1"></i>
+                            <i class="fas fa-user rounded-circle mt-1"></i>
                         {% endif %}
                     </a>
-                    
                     <ul class="dropdown-menu dropdown-menu-end text-center" aria-labelledby="navbarUserDropdown">
                         <li>
                             <a class="dropdown-item d-flex align-items-center" href="{% url 'user:user_detail' request.user.id %}">
                                 {% if request.user.profile.profile_picture_url %}
                                     <img src="{{ request.user.profile.profile_picture_url }}" class="img-fluid rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                                 {% else %}
-                                    <i class="fas fa-user rounded-circle; me-2"></i>
+                                    <i class="fas fa-user rounded-circle me-2"></i>
                                 {% endif %}
-                                {{ request.user.get_full_name|default:request.user.username }}
+                                Profile
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
+                
+                        <!-- My Learning -->
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="{% url 'mylearning:index' %}">
+                                <i class="fas fa-user-graduate me-2"></i> My Learning
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                
+                        <!-- Logout -->
                         <li>
                             <form action="{% url 'main:logout' %}" method="post" style="display: inline;">
                                 {% csrf_token %}
@@ -136,7 +108,6 @@
                         </li>
                     </ul>
                 </li>
-            </ul>
             {% else %}
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item"><a class="nav-link" href="{% url 'main:register_email' %}">Register</a></li>

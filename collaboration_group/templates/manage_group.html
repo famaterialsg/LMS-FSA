@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class=" mt-5">
     {% if request.user.is_superuser %}
     <h1 class="mb-4 text-center">Admin Collaboration Groups</h1>
     {% else %}
@@ -51,7 +51,7 @@
 </ul>
 
 <!-- Main Content -->
-<div class="container mt-5">
+<div class=" mt-5">
     <h1 class="mb-4">Manage Group: <span class="text-primary">{{ group.group_name }}</span></h1>
 
     <!-- Members Table -->

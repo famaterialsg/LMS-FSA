@@ -1,45 +1,42 @@
 from module_group.models import Module, ModuleGroup
-from role.models import Role
+from role.models import Role, RoleModule
 
 def get_grouped_modules(user, temporary_role_id=None):
-    all_modules = Module.objects.all()
-    user_modules = Module.objects.none(); #all_modules
+    """
+    Hàm lấy danh sách các module theo nhóm dựa trên role của người dùng.
+    """
+    all_modules = Module.objects.all()  # Lấy tất cả các modules
+    user_modules = Module.objects.all()  # Mặc định không có modules nào
 
     if user.is_authenticated:
         if user.is_superuser:
             # Nếu là superuser, kiểm tra role tạm thời
             if temporary_role_id:
                 try:
-                    user_role = Role.objects.get(role_name=temporary_role_id)
-                    user_modules = all_modules.filter(role_modules=user_role).distinct()
+                    temporary_role = Role.objects.get(role_name=temporary_role_id)
+                    user_modules = all_modules.filter(rolemodule__role=temporary_role).distinct()
                 except Role.DoesNotExist:
                     user_modules = Module.objects.none()
             else:
                 user_modules = all_modules
         else:
             # Người dùng không phải superuser
-            user_profile = getattr(user, 'profile', None)
-            user_role = getattr(user_profile, 'role', None)
+            user_profile = getattr(user, 'profile', None)  # Giả định user có profile
+            user_role = getattr(user_profile, 'role', None)  # Giả định profile có role
             if user_role:
-                user_modules = all_modules.filter(role_modules=user_role).distinct()
+                user_modules = all_modules.filter(rolemodule__role=user_role).distinct()
             else:
                 user_modules = Module.objects.none()
-
-    from collections import defaultdict
-
-    module_groups = ModuleGroup.objects.all()
-    grouped_modules = defaultdict(list)
-
-    for module in user_modules:
-        grouped_modules[module.module_group].append(module)
-
     
-    # module_groups = ModuleGroup.objects.all()
-    # grouped_modules = {}
-    # for module in user_modules:
-    #     group = module.module_group
-    #     if group not in grouped_modules:
-    #         grouped_modules[group] = []
-    #     grouped_modules[group].append(module)
+    # Lấy danh sách các nhóm module
+    module_groups = ModuleGroup.objects.all()
+    grouped_modules = {}
+    
+    # Nhóm các module theo group
+    for module in user_modules:
+        group = module.module_group
+        if group not in grouped_modules:
+            grouped_modules[group] = []
+        grouped_modules[group].append(module)
     
     return module_groups, grouped_modules

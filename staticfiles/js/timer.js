@@ -16,6 +16,7 @@ function startTimer(duration, display) {
 
         if (diff <= 0) {
             document.querySelector('#submit_btn').click();
+            //clearInterval(time_id);
         }
     };
     // Run the timer function every second

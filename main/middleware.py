@@ -7,10 +7,11 @@ class SiteLockMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Bỏ qua các yêu cầu vào trang admin hoặc trang mở khóa
+        # Bỏ qua các yêu cầu vào trang admin, trang mở khóa và nếu là admin
         if request.path.startswith(reverse('admin:index')) or \
            request.path.startswith('/admin/') or \
-           request.path.startswith('/unlock-site/'):
+           request.path.startswith('/unlock-site/') or \
+           request.user.is_staff:  # Kiểm tra xem người dùng có phải là admin không
             return self.get_response(request)
 
         # Kiểm tra trạng thái khóa/mở khóa trang web

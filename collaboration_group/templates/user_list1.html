@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
+<div class=" mt-5">
     {% if request.user.is_superuser %}
     <h1 class="mb-4 text-center">Admin Collaboration Groups</h1>
     {% else %}
@@ -46,7 +46,7 @@
     {% endif %}
 </ul>
 </div>
-    <div class="container mt-4">
+    <div class=" mt-4">
         <h1 class="mb-4 ">Add Users to Group: <strong>{{ group.group_name }}</strong></h1>
 
         <!-- Search and Date Range Filter Form -->

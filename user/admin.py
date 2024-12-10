@@ -2,15 +2,9 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-from .models import User, Profile, Role, Student
 from .forms import UserForm, UserEditForm
-
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from import_export import resources
-from import_export.admin import ImportExportModelAdmin
 from .models import User, Profile, Role, Student, Instructor
-
 #Resource cho User
 class UserProfileResource(resources.ModelResource):
     student_code = resources.Field()
@@ -185,7 +179,7 @@ class StudentResource(resources.ModelResource):
         fields = ('id', 'student_code', 'user__username', 'user__first_name', 'user__last_name', 'user__email', 'enrolled_courses')
         export_order = ('id', 'student_code', 'user__username', 'user__first_name', 'user__last_name', 'user__email', 'enrolled_courses')
 
-class StudentAdmin(ImportExportModelAdmin):
+class StudentAdmin(admin.ModelAdmin):
     model = Student
     list_display = ('student_code', 'user', 'enrolled_courses_display')
     search_fields = ('student_code', 'user__username', 'user__email')
@@ -195,3 +189,20 @@ class StudentAdmin(ImportExportModelAdmin):
     enrolled_courses_display.short_description = 'Enrolled Courses'
 
 admin.site.register(Student, StudentAdmin)
+
+class InstructorAdmin(admin.ModelAdmin):
+    model = Instructor
+    list_display = ('user', 'total_taught_courses', 'total_enrolled_courses')
+    search_fields = ('user__username', 'user__email', 'taught_courses__course_name', 'enrolled_courses__course_name')
+    filter_horizontal = ('taught_courses', 'enrolled_courses')
+
+    def total_taught_courses(self, obj):
+        return obj.taught_courses.count()
+    total_taught_courses.short_description = 'Taught Courses'
+
+    def total_enrolled_courses(self, obj):
+        return obj.enrolled_courses.count()
+    total_enrolled_courses.short_description = 'Enrolled Courses'
+
+# Đăng ký admin
+admin.site.register(Instructor, InstructorAdmin)

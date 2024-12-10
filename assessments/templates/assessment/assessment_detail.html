@@ -7,13 +7,15 @@
 
 <style>
     /* Define specific widths for each column */
-    .table th:nth-child(1), .table td:nth-child(1) { width: 10%; } /* First column */
-    .table th:nth-child(2), .table td:nth-child(2) { width: 20%; } /* Second column */
-    .table th:nth-child(3), .table td:nth-child(3) { width: 15%; } /* Third column */
+    .table th:nth-child(1), .table td:nth-child(1) { width: 3%; } /* First column */
+    .table th:nth-child(2), .table td:nth-child(2) { width: 16%; } /* Second column */
+    .table th:nth-child(3), .table td:nth-child(3) { width: 16%; } /* Third column */
     .table th:nth-child(4), .table td:nth-child(4) { width: 15%; } /* Fourth column */
     .table th:nth-child(5), .table td:nth-child(5) { width: 15%; } /* Fifth column */
-    .table th:nth-child(6), .table td:nth-child(6) { width: 15%; } /* Fifth column */
-    .table th:nth-child(7), .table td:nth-child(7) { width: 10%; } /* Fifth column */
+    .table th:nth-child(6), .table td:nth-child(6) { width: 15%; } /* Sixth column */
+    .table th:nth-child(7), .table td:nth-child(7) { width: 10%; } /* Seventh column */
+    .table th:nth-child(8), .table td:nth-child(8) { width: 10%; } /* Eighth column */
+    .table th:nth-child(9), .table td:nth-child(9) { width: 10%; } /* Ninth column */
     /* Default to 80vh */
     .custom-max-height {
         max-height: 75vh;
@@ -22,10 +24,27 @@
     /* Apply 50vh for screens with a max height of around 14 inches (typically 900px in height or below) */
     @media (max-height: 900px) {
         .custom-max-height {
-            max-height: 55vh;
+            max-height: 72vh;
         }
     }
-
+    .table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .table th, td {
+        border: 1px solid #dddddd;
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px;
+        background-color: #96D4D4;
+    }
+    .table thead {
+        position: sticky; 
+        top: 0; 
+        z-index: 1020; 
+        background: white;
+    }
 </style>
 <div class="mt-2">
     <!-- Assessment Details Section -->
@@ -68,7 +87,7 @@
                             {% for exercise in assessment.exercises.all %}
                             <li class="list-group-item">
                             
-                                <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id %}" target="_blank">{{ exercise.title }}</a>
+                                <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id 0 %}" target="_blank">{{ exercise.title }}</a>
                                 
                             </li>
                             {% empty %}
@@ -99,65 +118,6 @@
 
         </div>
 
-        <!-- Quiz Results -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Quiz Results</h5>
-            </div>
-            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                <ul class="list-group">
-                    {% for answer in user_answers %}
-                        <li class="list-group-item">
-                            <strong>{{ forloop.counter }}. </strong> {{ answer.question.question_text }}<br>
-                            <ul class="list-group">
-                                {% for option in answer.question.answer_options.all %}
-                                    <li class="list-group-item 
-                                        {% if option in answer.selected_options.all %}
-                                            {% if option.is_correct %}list-group-item-success{% else %}list-group-item-danger{% endif %}
-                                        {% endif %}
-                                    ">
-                                        - {{ option.option_text }} 
-                                        {% if option in answer.selected_options.all %}
-                                            {% if option.is_correct %}
-                                                <span class="badge bg-success">Your Answer: Correct</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">Your Answer: Incorrect</span>
-                                            {% endif %}
-                                        {% elif option.is_correct %}
-                                            <span class="badge bg-success">Correct Answer</span>
-                                        {% endif %}
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item text-muted">No quiz answers found.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <!-- Exercise Submissions -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Exercise Submissions</h5>
-            </div>
-            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                <ul class="list-group">
-                    {% for submission in user_submissions %}
-                        <li class="list-group-item">
-                            <strong>Exercise:</strong> {{ submission.exercise.title }}<br>
-                            <strong>Code Submitted:</strong>
-                            <pre class="bg-light p-2">{{ submission.code }}</pre>
-                            <strong>Score:</strong> {{ submission.score }}
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item text-muted">No submissions found.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
         <!-- Invited Candidates Section at the Bottom -->
         
         <div class="card">
@@ -165,61 +125,67 @@
                 <h5>Invited Candidates</h5>
             </div>
             <div class="card-body">
-                <table class="table table-striped">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>#</th>
-                            <!-- <th>Candidate</th> -->
-                            <th>Email</th>
-                            <th>Invitation Date</th>
-                            <!-- <th>Expiration Date</th> -->
-                            <th>Quiz Score</th>
-                            <th title="Assignment Score">Challenge Score</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                </table>
-
-                <!-- Scrollable second table (content) -->
-                <div class="overflow-auto" style="max-height: 53vh;"> <!-- Adjust height as needed -->
-                    <table class="table table-striped">
-                    <tbody>
-                        
-                        {% with found_candidates=False %}
-                            {% for attempt in registered_attempts %}
+                <div class="table-responsive" style="max-height: 53vh; overflow-y: auto; border: 1px solid #dee2e6;">
+                    <table class="table table-striped table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Ordinal</th>
+                                <!-- <th>Candidate</th> -->
+                                <th>Email</th>
+                                <th>Invitation Date</th>
+                                <!-- <th>Expiration Date</th> -->
+                                <th>Quiz Score</th>
+                                <th title="Assignment Score">Challenge Score</th>
+                                <th>Cheating Check</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <!-- Scrollable second table (content) -->
+                        <tbody>
+                            {% if invited_candidates %}
                                 {% for candidate in invited_candidates %}
-                                    {% if attempt.email == candidate.email and candidate.assessment == attempt.assessment%}
-                                        {% if not found_candidates %}
-                                            {% with found_candidates=True %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td style="text-align: left;">{{ candidate.email }}</td>
+                                        <td>{{ candidate.invitation_date|date:"d/m/Y" }}</td>
+                                        <td>
+                                            {% with quiz_score=None %}
+                                                {% for attempt in registered_attempts %}
+                                                    {% if attempt.email == candidate.email and candidate.assessment == attempt.assessment %}
+                                                        {% with quiz_score=attempt.score_quiz %}
+                                                        {% endwith %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {{ quiz_score|default:"-"|floatformat:0 }}
                                             {% endwith %}
-                                        {% endif %}
-                                        <tr>
-                                            <td>{{ forloop.parentloop.counter }}</td>  <!-- Sử dụng giá trị count từ context -->
-                                            <!-- <td>&nbsp;{{ name }}</td> -->
-                                            <td>{{ candidate.email }}</td>
-                                            <td>{{ candidate.invitation_date|date:"d/m/Y" }}</td>
-                                            <!-- <td>{{ candidate.expiration_date }}</td> -->
-                                            <td>{{ attempt.score_quiz|floatformat:0 }}</td>
-                                            <td>{{ attempt.score_ass|floatformat:0 }}</td>
-                                            <td>
-                                                <a href="{% url 'assessment:assessment_report' assessment.id attempt.id candidate.email %}">View report</a>
-                                            </td>
-                                        </tr>
-                                        
-                                    {% endif %}
+                                        </td>
+                                        <td>
+                                            {% with ass_score=None %}
+                                                {% for attempt in registered_attempts %}
+                                                    {% if attempt.email == candidate.email and candidate.assessment == attempt.assessment %}
+                                                        {% with ass_score=attempt.score_ass %}
+                                                        {% endwith %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {{ ass_score|default:"-"|floatformat:0 }}
+                                            {% endwith %}
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <a href="{% url 'assessment:assessment_report' assessment.id candidate.id candidate.email %}">View report</a>
+                                        </td>
+                                    </tr>
                                 {% endfor %}
-                            {% endfor %}
-                            {% if not found_candidates %}
+                            {% else %}
                                 <tr>
                                     <td colspan="8" class="text-center text-muted">No candidates have been invited yet.</td>
                                 </tr>
                             {% endif %}
-                        {% endwith %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 </div>
 {% endblock %}

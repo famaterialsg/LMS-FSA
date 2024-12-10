@@ -41,7 +41,7 @@ urlpatterns = [
     path('learning_path/', include('learning_path.urls')),
     path('backup/', include('backup.urls')),
     path('student_portal/', include('student_portal.urls')),
-    path('survey/', include('survey_app.urls')),
+    #path('survey/', include('survey_app.urls')),
     #path('quiz_generator/', include('quiz_generator.urls')),
     
     #group01

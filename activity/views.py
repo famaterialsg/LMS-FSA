@@ -1,23 +1,43 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import UserActivityLog
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils.dateparse import parse_date
-from datetime import datetime, timedelta
 from django.utils import timezone
+from datetime import datetime as dt_timezone
 from django.db.models import Count
-from datetime import timedelta
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.db.models.functions import TruncDate
 import json 
 import logging 
-from module_group.models import ModuleGroup
+from openpyxl import Workbook, load_workbook
+from .forms import ExcelImportForm
+from django.conf import settings
+from django.core.mail import send_mail
+
+
+def monitor_activity_limit(request):
+    user_activity_count = UserActivityLog.objects.filter(
+        user=request.user,
+        activity_timestamp__gte=timezone.now() - timezone.timedelta(minutes= 5)
+    ).count()
+
+    # Trigger an alert if activity count exceeds 30 within the time period
+    if user_activity_count >= 30:
+        send_mail(
+            subject="Security Alert: High Activity Detected",
+            message=f"User {request.user.username} has performed {user_activity_count} activities within the last 5 minutes.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_EMAIL],
+        )
 
 @login_required
 def activity_view(request):
+    # monitor_activity_limit(request)
+    
     # Get search and date filter parameters
     search_query = request.GET.get('search', '')
     from_date = request.GET.get('from_date', '')
@@ -34,7 +54,7 @@ def activity_view(request):
             activity_details="Accessed activity_view",
             activity_timestamp=timezone.now()
         )
-        request.session['activity_page_accessed'] = True  # Set the flag to prevent further logging
+        request.session['activity_page_accessed'] = True
 
     if search_query or from_date or to_date:
         # Log the search/filter activity
@@ -48,17 +68,20 @@ def activity_view(request):
     # Filter activity logs based on search query and date range
     if search_query:
         activity_logs = activity_logs.filter(activity_details__icontains=search_query)
-
+    date_format = "%y/%m/%d"
     if from_date:
-        from_date_parsed = parse_date(from_date)
-        if from_date_parsed:
-            activity_logs = activity_logs.filter(activity_timestamp__gte=from_date_parsed)
+        try:
+            from_date_parsed = dt_timezone.strptime(from_date, date_format).date()
+            activity_logs = activity_logs.filter(activity_timestamp__date__gte=from_date_parsed)
+        except ValueError:
+            pass  # Handle invalid date format or show an error message
 
     if to_date:
-        to_date_parsed = parse_date(to_date)
-        if to_date_parsed:
-            to_date_with_time = datetime.combine(to_date_parsed, datetime.max.time())
-            activity_logs = activity_logs.filter(activity_timestamp__lte=to_date_with_time)
+        try:
+            to_date_parsed = dt_timezone.strptime(to_date, date_format).date()
+            activity_logs = activity_logs.filter(activity_timestamp__date__lte=to_date_parsed)
+        except ValueError:
+            pass
 
     # Pagination setup
     page_number = request.GET.get('page', 1)
@@ -69,24 +92,16 @@ def activity_view(request):
     # Calculate the page range for pagination display
     page_range_start = max(activity_logs_page.number - 2, 1)
     page_range_end = min(activity_logs_page.number + 2, paginator.num_pages)
-    page_range = range(page_range_start, page_range_end + 1)  # Include end page
+    page_range = range(page_range_start, page_range_end + 1)
 
-    # Calculate the start index for the current page
-    activity_logs_page.start_index = (activity_logs_page.number - 1) * page_size + 1
-
-    module_groups = ModuleGroup.objects.all()  # Thay đổi theo cách bạn lấy dữ liệu
-    grouped_modules = {group: group.modules.all() for group in module_groups}
     # Render the template with context data
     return render(request, 'activity.html', {
-        'module_groups': module_groups,
-        'grouped_modules': grouped_modules,
         'activity_logs': activity_logs_page,
         'search_query': search_query,
         'from_date': from_date,
         'to_date': to_date,
         'page_range': page_range,
     })
-
 
 logger = logging.getLogger(__name__)
 
@@ -121,22 +136,34 @@ def activity_dashboard_view(request):
             to_date = request.GET.get('to_date')
             view_type = request.GET.get('view_type', 'activity_type')
 
+        
         # Apply date filters if provided
         if from_date:
             try:
-                from_date = datetime.strptime(from_date, "%Y-%m-%d")
+                from_date = dt_timezone.strptime(from_date, "%Y-%m-%d")
                 activities = activities.filter(activity_timestamp__gte=from_date)
             except ValueError:
                 logger.error(f"Invalid from_date format: {from_date}")
 
+    
         if to_date:
             try:
-                to_date = datetime.strptime(to_date, "%Y-%m-%d")
-                to_date = to_date.replace(hour=23, minute=59, second=59)
-                activities = activities.filter(activity_timestamp__lte=to_date)
+                to_date = dt_timezone.strptime(to_date, "%Y-%m-%d")
             except ValueError:
                 logger.error(f"Invalid to_date format: {to_date}")
+        else:
+            # Set current day as to_date without timezone
+            to_date = dt_timezone.now().replace(hour=23, minute=59, second=59)
+            logger.info("to_date was None, set to current day")
 
+        # Ensure to_date has the correct time even if parsed
+        to_date = to_date.replace(hour=23, minute=59, second=59)
+
+        activities = activities.filter(activity_timestamp__lte=to_date)
+
+        print("come here")
+        print(view_type)
+        print(activities)
         # Process data based on view type
         if view_type == 'activity_details':
             recent_activities = activities.values('activity_details').annotate(count=Count('log_id'))
@@ -171,12 +198,13 @@ def activity_dashboard_view(request):
         if request.method == "POST":
             return JsonResponse(response_data)
         
+        print("come herre")
         # For GET request, render the activity dashboard template
         return render(request, 'activity_dashboard.html', {
             **response_data,
             'view_type': view_type,
-            'from_date': from_date.strftime('%Y-%m-%d') if isinstance(from_date, datetime) else '',
-            'to_date': to_date.strftime('%Y-%m-%d') if isinstance(to_date, datetime) else '',
+            'from_date': from_date.strftime('%Y-%m-%d') if isinstance(from_date, dt_timezone) else '',
+            'to_date': to_date.strftime('%Y-%m-%d') if isinstance(to_date, dt_timezone) else '',
         })
 
     except Exception as e:
@@ -252,4 +280,72 @@ def fetch_activity_logs(request):
     }
 
     return JsonResponse(response_data)
+
+
+@login_required
+def export_data(request):
+    # Get search, from_date, and to_date from GET parameters
+    search_query = request.GET.get('search', '')
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
+    # Base queryset for UserActivityLog
+    queryset = UserActivityLog.objects.filter(user=request.user)
+
+    # Apply search filter if a search query is provided
+    if search_query:
+        queryset = queryset.filter(
+            Q(activity_type__icontains=search_query) |
+            Q(activity_details__icontains=search_query)
+        )
+
+    # Apply date filters if 'from_date' and 'to_date' are provided
+    if from_date:
+        from_date_parsed = dt_timezone.strptime(from_date, '%Y-%m-%d')
+        from_date_parsed = timezone.make_aware(from_date_parsed)  # Convert to timezone-aware datetime
+        queryset = queryset.filter(activity_timestamp__gte=from_date_parsed)
+
+    if to_date:
+        to_date_parsed = dt_timezone.strptime(to_date, '%Y-%m-%d')
+        to_date_parsed = timezone.make_aware(to_date_parsed)  # Convert to timezone-aware datetime
+        queryset = queryset.filter(activity_timestamp__lte=to_date_parsed)
+
+    # Check if queryset has results
+    if queryset.exists():
+        # Create an Excel workbook
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = 'Activity Logs'
+
+        # Define headers for the Excel file
+        headers = ['Activity Type', 'Details', 'Timestamp']
+        worksheet.append(headers)
+
+        # Populate rows with filtered data
+        for log in queryset:
+            timestamp = log.activity_timestamp.replace(tzinfo=None)  # Remove timezone for Excel compatibility
+            row = [log.get_activity_type_display(), log.activity_details, timestamp]
+            worksheet.append(row)
+
+        # Construct the file name
+        if from_date and to_date:
+            file_name = f'activity_logs_{from_date}_to_{to_date}.xlsx'
+        elif from_date:
+            file_name = f'activity_logs_from_{from_date}.xlsx'
+        elif to_date:
+            file_name = f'activity_logs_until_{to_date}.xlsx'
+        else:
+            file_name = 'activity_logs.xlsx'
+
+        # Set the response for file download
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        workbook.save(response)
+        return response
+    else:
+        # If no data found, return an error message or empty response
+        return HttpResponse('No data available for the given search and date filters.', status=404)
+
+def tag_view(request):
+    return render(request, 'tag.html')
 

@@ -4,11 +4,36 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Are you sure you want to delete the role "{{ role.role_name }}"?</h2>
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Delete</button>
-        <a href="{% url 'role:role_list' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+    <div class="card shadow-sm p-4">
+        <h2 class="text-center text-danger">Are you sure you want to delete the role "<strong>{{ role.role_name }}</strong>"?</h2>
+
+        {% if users_with_role %}
+            <h4 class="mt-4">Users with this role:</h4>
+            <ul class="list-group" style="max-height: 30vh; overflow-y: auto;">
+                {% for user in users_with_role %}
+                    <li class="list-group-item d-flex">
+                        <span class="badge bg-secondary rounded-pill me-3">{{ forloop.counter }}</span>
+                        {{ user.username }} ({{ user.first_name }})
+                    </li>
+                {% endfor %}
+            </ul>
+            
+            <div class="alert alert-warning mt-3">
+                <strong>Warning:</strong> Deleting this role will remove it from all the users listed above.
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No users are currently assigned to this role.
+            </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between mt-4">
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-lg">Delete</button>
+            </form>
+            <a href="{% url 'role:role_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+        </div>
+    </div>
 </div>
 {% endblock %}

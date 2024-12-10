@@ -24,7 +24,7 @@ urlpatterns = [
     path('anonymous_info/<int:invited_candidate_id>/', operations.Handle_anonymous_info.as_view(), name='handle_anonymous_info'),  # Add this line
     path('create_asm_attempt/<int:assessment_id>/', operations.Create_asm_attempt.as_view(), name='create_asm_attempt'),
     path('<int:assessment_id>/take/', operations.Take_assessment.as_view(), name='take_assessment'),
-
+    path('<int:pk>/copy_invite_link/', operations.Copy_public_invite_link.as_view(), name='copy_public_invite_link'),
     path('<int:assessment_id>/result/attempt-id=<int:attempt_id>/', operations.Assessment_result.as_view(), name='assessment_result'),
     
     path('report/<int:assessment_id>/<int:attempt_id>/<str:email>/', operations.Assessment_report.assessment_report, name='assessment_report'),

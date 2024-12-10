@@ -3,7 +3,7 @@
 {% block title %}Feedback{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class=" mt-5">
     {% if request.user.is_superuser %}
     <h1 class="mb-4 text-center">Admin Collaboration Groups</h1>
     {% else %}
@@ -47,7 +47,7 @@
     {% endif %}
 </ul>
 </div>
-<div class="container mt-5">
+<div class=" mt-5">
     <h2>Leave Feedback</h2>
     <form method="post">
         {% csrf_token %}

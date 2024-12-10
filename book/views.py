@@ -5,7 +5,7 @@ from django.shortcuts import render
 def book_search_view(request):
     query = request.GET.get('q', '')
     book_type = request.GET.get('book_type', 'free')
-    books_per_page = 5 
+    books_per_page = 6 
 
     books = []
     total_items = 0
