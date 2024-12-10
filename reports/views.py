@@ -762,3 +762,73 @@ def course_users_report(request):
         'selected_course': selected_course,
         'selected_user': selected_user,
     })
+
+
+def material_duration_report(request):
+    selected_course = request.GET.get('course', None)
+    selected_user = request.GET.get('user', None)
+
+    # Fetch all sessions, optionally filtered by selected course
+    sessions = Session.objects.all()
+
+    if selected_course:
+        sessions = sessions.filter(course__id=selected_course)
+
+    # Prepare data for the report
+    report_data = []
+    for session in sessions:
+        course = session.course
+        session_name = session.name
+
+        # Fetch all course materials for the current session
+        course_materials = CourseMaterial.objects.filter(session=session)
+
+        for material in course_materials:
+            material_name = material.title
+
+            # Filter MaterialViewingDuration based on material and user (if selected)
+            duration_query = MaterialViewingDuration.objects.filter(material=material)
+
+            if selected_user:
+                duration_query = duration_query.filter(user__id=selected_user)
+
+            # Initialize variables for time-related fields
+            total_time_spent = duration_query.aggregate(total_time=Sum(F('time_spent')))['total_time']
+            total_time_hours = total_time_spent.total_seconds() / 3600 if total_time_spent else 0
+            come_back_count = duration_query.aggregate(total_come_backs=Sum('come_back'))['total_come_backs'] or 0
+
+            # If no durations found, set start_time and end_time to None
+            start_time = None
+            end_time = None
+
+            # If there are duration records, get the first and last times
+            if duration_query.exists():
+                start_time = duration_query.first().start_time
+                end_time = duration_query.last().end_time
+
+            users = list(duration_query.values_list('user__username', flat=True).distinct())
+            user_list = ", ".join(users) if users else "No user data"
+
+            # Prepare data for each material in the session
+            report_data.append({
+                'user': user_list,
+                'material': material_name,
+                'course': course.course_name,
+                'session': session_name,
+                'total_time_spent': round(total_time_hours, 2),
+                'start_time': start_time,
+                'end_time': end_time,
+                'come_back_count': come_back_count,
+            })
+
+    # Fetch courses and users for the dropdown
+    all_courses = Course.objects.all()
+    all_users = User.objects.all()  # Fetching all users
+
+    return render(request, 'reports/material_duration_report.html', {
+        'report_data': report_data,
+        'all_courses': all_courses,
+        'all_users': all_users,
+        'selected_course': selected_course,
+        'selected_user': selected_user,
+    })

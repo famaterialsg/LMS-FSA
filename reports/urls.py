@@ -20,6 +20,8 @@ urlpatterns = [
     path('price-report/', views.price_report, name='price_report'),
     path('department-report/', views.department_report, name='department_report'),
     path('course-users-report/', views.course_users_report, name='course_users_report'),
+    path('material-duration-report/', views.material_duration_report, name='material_duration_report'),
+
 
     path('user/user_overview_report/', views.user_overview_report, name='user_overview_report'),
     path('user/student-id-report/', views.student_id_report, name='student_id_report'),

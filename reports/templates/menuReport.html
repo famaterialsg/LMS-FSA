@@ -41,6 +41,9 @@
     <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'course_users_report' %}active{% endif %}" href="{% url 'reports:course_users_report' %}">Course's Users</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'material_duration_report' %}active{% endif %}" href="{% url 'reports:material_duration_report' %}">Material Duration</a>
+    </li>
     <li class="nav-item ms-auto">
         <a href="{% url 'reports:report_dashboard' %}" class="btn btn-secondary">Back to Report</a>
     </li>
