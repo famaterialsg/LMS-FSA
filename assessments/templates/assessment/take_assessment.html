@@ -1,6 +1,6 @@
 {% extends "assessment/main_course_view.html" %}
 {% load static %}
-
+{% load count_correct %}
 {% block title %}{{ assessment.assessment_title }}{% endblock %}
 
 {% block left_content %}
@@ -25,10 +25,11 @@
                         <p class="question-text">{{ question.question_text|safe|linebreaksbr }}</p>
                     </div>
 
-                    {% if question.question_type == "TEXT" %}
-                    <textarea name="text_response_{{ question.id }}" rows="4" class="form-control mt-3" required
-                        placeholder="Enter your answer..."></textarea>
-                    {% else %}
+                    <!-- Lấy số câu đúng bằng filter count_correct -->
+                    {% with correct_count=question|correct_answer_count %}
+
+                    <!-- Sử dụng Radio hoặc Checkbox dựa vào số câu đúng -->
+                    {% if correct_count == 1 %}
                     <ul class="list-group mt-3">
                         {% for option in question.answer_options.all %}
                         <li class="list-group-item option-item">
@@ -42,7 +43,25 @@
                         </li>
                         {% endfor %}
                     </ul>
+                    {% elif correct_count > 1 %}
+                    <ul class="list-group mt-3">
+                        {% for option in question.answer_options.all %}
+                        <li class="list-group-item option-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="question_{{ question.id }}"
+                                    value="{{ option.id }}" id="option_{{ option.id }}">
+                                <label class="form-check-label" for="option_{{ option.id }}">
+                                    {{ option.option_text }}
+                                </label>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-danger mt-3">This question does not have any correct answers set.</p>
                     {% endif %}
+
+                    {% endwith %}
                 </div>
             </div>
             {% endfor %}

@@ -186,7 +186,9 @@ class Take_assessment(View):
         questions = assessment.questions.all()
         exercises = assessment.exercises.all()
         total_marks = assessment.total_score
+        print(f"total marks là {total_marks}")
         total_questions = questions.count()
+        total_score=0
 
         b64_encoded_attempt_id = request.COOKIES.get('id', None)
         if b64_encoded_attempt_id is None:
@@ -203,15 +205,15 @@ class Take_assessment(View):
             datetime.datetime.now().timestamp()
             - attempt.attempt_date.timestamp()
         )
-        print(duration)
         # Process each question
         total_questions = questions.count()
+        print(f"số lượng câu hỏi là {total_questions}")
         if total_questions > 0:
             for question in questions:
                 # Fetch all selected option IDs for the question (adjust if using checkboxes or other multi-select elements)
                 selected_option_ids = request.POST.getlist(f'question_{question.id}')
                 text_response = request.POST.get(f'text_response_{question.id}')
-
+                
                 # Initialize selected_options as an empty list to store AnswerOption instances
                 selected_options = []
 
@@ -220,6 +222,7 @@ class Take_assessment(View):
                     selected_options = AnswerOption.objects.filter(id__in=selected_option_ids)
 
                 # Create a UserAnswer instance for the question, excluding selected_options for now
+                print(f"take ass and selected_options is {selected_options}")
                 student_answer = UserAnswer.objects.create(
                     attempt=attempt,
                     question=question,
@@ -228,10 +231,24 @@ class Take_assessment(View):
 
                 # Set the selected options using the ManyToManyField's set method
                 student_answer.selected_options.set(selected_options)
-
+                print(f"student_answer.selected_options.set(selected_options) {student_answer.selected_options.set(selected_options)}")
                 # Optional: Count correct answers if selected options are supposed to be evaluated for correctness
-                correct_answers += sum(1 for option in selected_options if option.is_correct)
-            total_quiz_score = (total_marks / total_questions) * correct_answers
+                correct_options = question.answer_options.filter(is_correct=True)  # Các đáp án đúng
+                num_correct_options = correct_options.count()  # Số lượng đáp án đúng
+                print(f"num_correct_options {num_correct_options}")
+                if num_correct_options > 0:
+                    question_score = (total_marks / total_questions)  # Điểm tối đa cho câu hỏi
+                    score_per_option = question_score / num_correct_options  # Điểm cho mỗi đáp án đúng
+                    
+                    for option in selected_options:
+                        if option.is_correct:
+                            total_score += score_per_option  # Cộng điểm cho mỗi đáp án đúng người dùng chọn
+                            correct_answers += 1
+
+            total_quiz_score = total_score
+
+                
+            #total_quiz_score = (total_marks / total_questions) * correct_answers
         else:
             total_quiz_score = 0
 
