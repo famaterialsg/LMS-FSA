@@ -1,12 +1,13 @@
-<a href="{% url 'progress_notification:progress_notification_list' %}" style="color: black;">
-    <h1>Notifications</h1>
+<a href="{% url 'progress_notification:progress_notification_list' %}" style="color: black; text-decoration: none;">
+    <h1>Progress Notifications</h1>
 </a>
+
 <ul>
     {% for notification in notifications %}
     <a href="{% url 'course:course_detail' notification.course.id %}" style="color: black;">
         <strong>{{notification.course}}</strong>
     </a>
-    <li>
+    <li style="padding: 10px; border-bottom: 1px solid #eee;">
         {{ notification.notification_message }} - {{ notification.notification_date }}
         {% if not notification.is_read %}
             <strong>(Unread)</strong>

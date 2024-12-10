@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', function () {
             loadNotifications();  // Load notifications
         } else {
             notificationDropdown.style.display = 'none';  // Hide dropdown
+            updateNotificationCount(); 
+
         }
     });
 
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('click', function (event) {
         if (!notificationBtn.contains(event.target) && !notificationDropdown.contains(event.target)) {
             notificationDropdown.style.display = 'none';
+            updateNotificationCount(); 
         }
     });
 });

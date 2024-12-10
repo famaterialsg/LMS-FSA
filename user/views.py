@@ -119,7 +119,7 @@ def student_list(request):
 
     students = students.order_by('user__username')
 
-    paginator = Paginator(students, 5)
+    paginator = Paginator(students, 10)
     page = request.GET.get('page', 1)
 
     try:
@@ -567,7 +567,7 @@ def instructor_list(request):
 
     instructors = instructors.order_by('user__username')
 
-    paginator = Paginator(instructors, 5)
+    paginator = Paginator(instructors, 10)
     page = request.GET.get('page', 1)
 
     try:

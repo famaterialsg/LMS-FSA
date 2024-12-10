@@ -10,25 +10,9 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
     <style>
-        .container {
-            width: 100%; /* Chiếm toàn bộ chiều rộng màn hình */
-            padding: 0px; /* Thêm padding nhỏ để tránh nội dung dính sát mép màn hình */
-        }
+      
 
-        @media (min-width: 768px) { /* Áp dụng cho màn hình từ medium trở lên */
-            #quizCards .col-md-4 {
-                flex: 0 0 33.333%; /* Mỗi card chiếm 1/3 chiều rộng */
-                max-width: 33.333%; /* Đảm bảo card không vượt quá 1/3 */
-                
-            }
-        }
-         /* Thêm style cho màn hình nhỏ */
-        @media (max-width: 767px) {
-            #quizCards .col-md-4 {
-                flex: 0 0 100%; /* Mỗi card chiếm toàn bộ chiều rộng trên màn hình nhỏ */
-                max-width: 100%;
-            }
-        }
+        
 
         .quiz-card {
             padding: 10px;
@@ -184,44 +168,10 @@
         }
 
 
-        .qualifying {
-            text-align: left;
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .qualifying .progress {
-            width: 100px; /* Set a fixed width for the progress bar */
-            height: 8px; /* Adjust height as needed */
-            margin-left: 10px;
-            border-radius: 5px;
-        }
-
-        .qualifying small {
-            font-size: 0.8rem;
-            color: #555;
-            margin-right: 5px;
-        }
-
-        .progress-bar {
-            animation: progress-animation 1s ease-in-out; /* Thời gian và loại animation */
-        }
-
-        @keyframes progress-animation {
-            from {
-                width: 0%;
-            }
-            to {
-                width: {{ qualifying_percentage }}%; /* Kết thúc tại giá trị phần trăm thực tế */
-            }
-        }
-
-
     </style>
 </head>
 
-<div class="container mt-4 ">
+<div>
     <h1 class="mb-4">Quiz</h1>
 
     <div class="text-center mb-4">
@@ -287,63 +237,23 @@
                             <a class="btn btn-outline-primary btn-sm" href="{% url 'quiz:quiz_detail' quiz.id %}">  
                                 <i class="fas fa-arrow-right"></i> Open
                             </a>
-                            
                         </div>
                         <div class="stats-container">
                             <div>
-                                <p class="card-text"><strong>Course:</strong> {{ quiz.course }}</p>                
-                                <!--<p class="card-text"><strong>Available:</strong> {{ quiz.start_datetime|date:"d M Y H:i" }} - {{ quiz.end_datetime|date:"d M Y H:i" }}</p>-->
-                                <!--<p class="card-text">From: {{ quiz.start_datetime|date:"d M Y H:i" }}</p>
-                                <p class="card-text">Until: {{ quiz.end_datetime|date:"d M Y H:i" }}</p>-->
-                                <div class="qualifying">  <!-- Progress bar container -->
-                                    <small><strong>Qualifying</strong></small>
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar" style="width: {{ qualifying_percentage }}%;" aria-valuenow="{{ qualifying_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <small class="qualifying-percentage">{{ qualifying_percentage }}%</small>
-                                    
-                                </div>
+                                <p class="card-text"><strong>Course:</strong> {{ quiz.course }}</p>
+                                <p class="card-text"><strong>Total Questions:</strong> {{ quiz.questions.count }}</p>
                             </div>
-
-
-                            <div class="invited-assessed-qualified">
-                                <p style="margin-bottom: 0;">{{ invited_count }} invited <i class="fa-regular fa-circle"></i></p>
-                                <p style="margin-bottom: 0;">{{ assessed_count }} assessed <i class="fa-solid fa-circle"></i></p>
-                                <p style="margin-bottom: 0;">{{ qualified_count }} qualified <i class="fa-solid fa-circle"></i></p>
-                                
-                            </div>
-                            
-                        </div>                                      
-                        
-                        <div class="card-footer footer-actions">
-                            <a href="{% url 'quiz:take_quiz' quiz.id %}" class="btn btn-blue btn-sm small-text" title="Preview quiz">
-                                <i class="fas fa-play"></i> Preview
-                            </a>
-                        
-                            {% if quiz.studentquizattempt_set.count > 0 %}
-                                {% with last_attempt=quiz.studentquizattempt_set.last %}
-                                    <a href="{% url 'quiz:quiz_result' quiz.id last_attempt.id %}" class="btn btn-blue-green btn-sm small-text">
-                                        <i class="fas fa-chart-line"></i> Result
-                                    </a>
-                                {% endwith %}
-                            {% else %}
-                                <span class="text-muted" style="font-size: 0.7rem;">No Attempts</span>
-                            {% endif %}
-                        
-                            <div class="copy-preview-duplicate" style="display: inline-block; margin-left: 10px;">
-                                <a href="#" onclick="copyInviteLink(event, '{{ quiz.invite_link }}')" title="Copy invite link">
-                                    <i class="small-text"></i> Copy invite link
-                                </a>
-                            </div>
-                        </div>
-                        
+                        </div>                                                           
                     </div>
+                    <div class="card-footer bg-light d-flex justify-content-end align-items-center small text-muted" style="margin-top: -0.9rem;">   
+                        <small><i class="fas fa-user me-1"></i> {{ quiz.created_by }} | {{ quiz.created_at|date:"Y-m-d" }}</small>
+                    </div>   
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-</div>
+    
 <!-- Import Modal -->
 <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -381,6 +291,9 @@
     </div>
 </div>
 
+<script id="quiz-data">
+    const quizId = {{ quiz.id }}; // Gán quizId tại đây
+</script>
 
 <script>
     function searchQuizzes() {
@@ -417,12 +330,31 @@
         });
     });
     
-    // Hàm copy link
-    function copyInviteLink(event, link) {
-        event.preventDefault();
-        navigator.clipboard.writeText(link);
-        // Có thể thêm thông báo copy thành công ở đây
-    }
+    // Thêm chức năng sao chép link
+    const copyLinkButton = document.getElementById('copyInviteLinkButton'); // Nút Copy Link
+
+    copyLinkButton.addEventListener('click', () => {
+        fetch(`/quiz/${quizId}/copy_public_link/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                navigator.clipboard.writeText(data.link)
+                    .then(() => {
+                        alert("Link copied to clipboard!"); // Thông báo thành công
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err); // Xử lý lỗi sao chép
+                    });
+            })
+            .catch(error => {
+                console.error('Error:', error); // Xử lý lỗi nếu API lỗi
+                alert("Error copying link. Please try again."); // Thông báo lỗi cho người dùng
+            });
+    });
     
 </script>
 

@@ -9,7 +9,7 @@ class Member(models.Model):
     ]
     
     name = models.CharField(max_length=100)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    role_member = models.CharField(max_length=10, choices=ROLE_CHOICES)
     email = models.EmailField()
     homepage = models.URLField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)

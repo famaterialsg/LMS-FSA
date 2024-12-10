@@ -138,7 +138,7 @@ def notification_list(request):
     if request.user.is_authenticated:
         notifications = ProgressNotification.objects.filter(user=request.user).order_by('-notification_date')
         notifications.update(is_read=True)
-        notifications = list(notifications[:6])
+        notifications = list(notifications[:5])
 
         return render(request, 'notification_list.html', {'notifications': notifications})
     else:

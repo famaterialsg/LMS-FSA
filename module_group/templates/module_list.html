@@ -2,17 +2,9 @@
 {% load static %} 
 {% block title %}Module List{% endblock %}
 
-{% block content %}
-<style>
-    /* Define specific widths for each column */
-    .table th:nth-child(1), .table td:nth-child(1) { width: 10%; } /* First column */
-    .table th:nth-child(2), .table td:nth-child(2) { width: 30%; } /* Second column */
-    .table th:nth-child(3), .table td:nth-child(3) { width: 20%; } /* Third column */
-    .table th:nth-child(4), .table td:nth-child(4) { width: 20%; } /* Fourth column */
-    .table th:nth-child(5), .table td:nth-child(5) { width: 20%; } /* Fifth column */
-</style>
 
-<div class="mt-1">
+{% block content %}
+<div class="mt-4">
     <h2>Modules</h2>
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
       <form method="GET" class="flex-grow-1 mb-2 mb-md-0">
@@ -28,11 +20,11 @@
           </div>
       </form>
       <div class="d-flex gap-2">
-          <button class="btn btn-outline-primary" title="Import Module from Excel" 
+          <button class="btn btn-outline-secondary" title="Import Module from Excel" 
                     data-bs-toggle="modal" data-bs-target="#importModal" data-bs-toggle="tooltip">
                 <i class="fas fa-file-import"></i> Import
             </button>
-          <a href="{% url 'module_group:export_modules' %}" class="btn btn-outline-primary" 
+          <a href="{% url 'module_group:export_modules' %}" class="btn btn-outline-secondary" 
              title="Export Users to Excel" data-toggle="tooltip">
               <i class="fas fa-file-export"></i> Export
           </a>
@@ -42,22 +34,17 @@
       </div>
   </div>
 
-<!-- First table (header) -->
-<table class="table table-striped mb-0"> 
-    <thead>
-        <tr>
-            <th class="text-center">#</th>
-            <th>Module Name</th>
-            <th>Module Group</th>
-            <th>Icon</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-</table>
-
-<!-- Scrollable second table (content) -->
-<div class="overflow-auto" style="max-height: 53vh;"> <!-- Adjust height as needed -->
+  <div class="scrollable-table">
     <table class="table table-striped">
+        <thead style="position: sticky; top: 0; background-color: white; z-index: 1;">
+            <tr>
+                <th class="text-center">#</th>
+                <th>Module Name</th>
+                <th>Module Group</th>
+                <th>Icon</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
         <tbody>
             {% for module in modules %}
             <tr>
@@ -65,6 +52,7 @@
                 <td>{{ module.module_name }}</td>
                 <td>{{ module.module_group }}</td>
                 <td><i class="{{ module.icon }} text-secondary"></i></td>
+
                 <td>
                     <a title="Details" href="{% url 'module_group:module_detail' module.pk %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-info-circle"></i></a>
                     <a title="Edit" href="{% url 'module_group:module_edit' module.pk %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-edit"></i></a>
@@ -77,49 +65,48 @@
 </div>
 
 
-</div>
-
 <!-- Import Modal -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-      <div class="modal-content">
-          
-          <!-- Modal Header -->
-          <div class="modal-header">
-              <h5 class="modal-title" id="importModalLabel">Import Module Groups from Excel</h5>
-              <!-- Close Button for Bootstrap 5 -->
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          
-          <!-- Modal Body -->
-          <div class="modal-body">
-              
-              <!-- Import Form -->
-              <form method="post" enctype="multipart/form-data" action="{% url 'module_group:import_modules' %}">
-                  
-                  <!-- Information Text -->
-                  <div class="mb-4">
-                      <span>
-                          Please download and use the 
-                          <a href="{% static 'excel/import_modules.xlsx' %}" target="_blank">Excel template</a>. 
-                          The Excel file must contain exactly one sheet with the required columns.
-                      </span>
-                  </div>
-                  
-                  <!-- CSRF Token for Security -->
-                  {% csrf_token %}
-                  
-                  <!-- Form Fields -->
-                  {{ form.as_p }}
-                  
-                  <!-- Submit Button -->
-                  <div class="form-group">
-                      <button type="submit" class="btn btn-primary">Upload</button>
-                  </div>
-              </form>
-          </div>
-      </div>
-  </div>
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Module Groups from Excel</h5>
+                <!-- Close Button for Bootstrap 5 -->
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="modal-body">
+                
+                <!-- Import Form -->
+                <form method="post" enctype="multipart/form-data" action="{% url 'module_group:import_modules' %}">
+                    
+                    <!-- Information Text -->
+                    <div class="mb-4">
+                        <span>
+                            Please download and use the 
+                            <a href="{% static 'excel/import_modules.xlsx' %}" target="_blank">Excel template</a>. 
+                            The Excel file must contain exactly one sheet with the required columns.
+                        </span>
+                    </div>
+                    
+                    <!-- CSRF Token for Security -->
+                    {% csrf_token %}
+                    
+                    <!-- Form Fields -->
+                    {{ form.as_p }}
+                    
+                    <!-- Submit Button -->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
 </div>
 
 

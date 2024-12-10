@@ -28,8 +28,8 @@
             <div class="card">
                 
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-center" style="flex: 1;">Questions</h5> <!-- Centered title -->
-                    <button type="button" class="btn btn-primary btn-sm" onclick="toggleAddQuestionForm()" style="padding: 0.1rem 0.4rem;">
+                    <h5 class="mb-0 text-center" style="flex: 1;">Questions</h5> <!-- Căn giữa tiêu đề -->
+                    <button type="button" class="btn btn-primary btn-sm" onclick="toggleAddQuestionForm()" style="padding: 0.1rem 0.4rem;"> <!-- Thay đổi kích thước nút -->
                         <i class="fas fa-plus"></i> 
                     </button>
                 </div>
@@ -46,13 +46,13 @@
                                 {{ question_form.question_text.errors }}
                                 {{ question_form.question_text|add_class:"form-control" }}
                             </div>
-                        
+                    
                             <div class="mb-3">  <!-- Question Type -->
                                 <label for="{{ question_form.question_type.id_for_label }}" class="form-label">Type:</label>
                                 {{ question_form.question_type.errors }}
                                 {{ question_form.question_type|add_class:"form-select" }}
                             </div>
-                        
+                    
                             <div class="mb-3">  <!-- Points -->
                                 <label for="{{ question_form.points.id_for_label }}" class="form-label">Points:</label>
                                 {{ question_form.points.errors }}
@@ -61,69 +61,77 @@
                             <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-save"></i> Save</button>
                         </form>
                     </div>
-
                     <div style="height: 12px;"></div>
-                    
                     <!-- Questions List -->
                     <ul class="list-group" id="questionList" style="max-height: 350px; overflow-y: auto;">
-                        {% if questions %}
-                            {% for question in questions %}
-                                <li class="list-group-item question-item d-flex justify-content-between align-items-center border-bottom" data-question-id="{{ question.id }}">
-                                    <div class="question-area flex-grow-1">
-                                        <div class="question-display" id="question-display-{{ question.id }}">
-                                            <div class="text-left">
-                                                <strong>{{ forloop.counter }}.</strong> {{ question.question_text }}
-                                            </div>
+                        {% for question in questions %}
+                            <li class="list-group-item question-item d-flex justify-content-between align-items-center border-bottom" data-question-id="{{ question.id }}" style="position: relative;">
+                                <div class="question-area flex-grow-1">  <!-- Added flex-grow-1 -->
+                                    <div class="question-display" id="question-display-{{ question.id }}">
+                                        <!-- Displaying question number in bold before question text -->
+                                        <div class="text-left">
+                                            <strong>{{ forloop.counter }}.</strong> {{ question.question_text }}
                                         </div>
-                                        
-                                        <!-- Edit Form -->
-                                        <div id="editForm-{{ question.id }}" style="display: none; width: 100%; margin-top: 5px;" class="edit-form">
-                                            <form method="post" action="{% url 'quiz:quiz_question' quiz.id %}" class="edit-question-form">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="edit_question" value="true">
-                                                <input type="hidden" name="question_id" value="{{ question.id }}">
-
-                                                <div class="input-group">
-                                                    <textarea name="question_text" class="form-control form-control-sm" rows="2">{{ question.question_text }}</textarea>
-                                                    <div class="input-group-append">
-                                                        <button type="submit" class="btn btn-sm btn-link text-success ">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-link text-danger" onclick="hideEditForm({{ question.id }})">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <input type="hidden" name="question_type" value="{{ question.question_type }}">
-                                                <input type="hidden" name="points" value="{{ question.points }}">
-                                            </form>
-                                        </div>
-                                    </div>    
-                                    <div class="edit-controls">
-                                        <div class="btn-group">
-                                            <button class="btn btn-sm btn-link text-primary edit-question" data-question-id="{{ question.id }}" onclick="toggleEditForm({{ question.id }})">
-                                                <i class="fas fa-pencil-alt"></i>
-                                            </button>
-                                            <form method="post" action="{% url 'quiz:question_delete' question.id %}" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-link text-danger p-0" 
-                                                onclick="return confirm('Are you sure you want to delete this question?')">
-                                                    <i class="fas fa-times" style="font-size: 20px; color: gray;"></i>
-                                                </button>
-                                            </form>
-                                        </div>    
                                     </div>
-                                </li>
-                            {% endfor %}
-                        {% else %}
-                            <li class="list-group-item text-center">No questions available</li>
-                        {% endif %}
+                                    
+                                    <!-- Edit Form (now below and full width) -->
+                                    <div id="editForm-{{ question.id }}" style="display: none; width: 100%; margin-top: 5px;" class="edit-form">  <!-- width: 100% -->
+                                        <form method="post" action="{% url 'quiz:quiz_question' quiz.id %}" class="edit-question-form">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="edit_question" value="true">
+                                            <input type="hidden" name="question_id" value="{{ question.id }}">
+
+                                            <div class="input-group">
+                                                <textarea name="question_text" class="form-control form-control-sm" rows="2">{{ question.question_text }}</textarea>
+                                                <div class="input-group-append"> <!-- Append buttons to input -->
+                                                    <button type="submit" class="btn btn-sm btn-link text-success ">  <!-- Rounded-0 for square look -->
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-link text-danger" onclick="hideEditForm({{ question.id }})">  <!-- Changed to danger, added rounded-0, added icon -->
+                                                        <i class="fas fa-times"></i>  <!-- X icon -->
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <input type="hidden" name="question_type" value="{{ question.question_type }}">
+                                            <input type="hidden" name="points" value="{{ question.points }}">
+                                        </form>
+                                    </div>
+                                </div>    
+                                <div class="edit-controls"> <div class="btn-group">   <!--- Button group moved inside, added margin -->
+                                    <button class="btn btn-sm btn-link text-primary edit-question" data-question-id="{{ question.id }}" onclick="toggleEditForm({{ question.id }})">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <form method="post" action="{% url 'quiz:question_delete' question.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link text-danger p-0" 
+                                        onclick="return confirm('Are you sure you want to delete this question?')">
+                                            <i class="fas fa-times" style="font-size: 20px; color: gray;"></i> <!-- FontAwesome trash icon for better visibility -->
+                                        </button>
+                                    </form>
+                                </div>    
+
+                                
+                                <div class="answer-options mt-2" id="answer-options-{{ question.id }}" style="display: none;">
+                                    {% for option in question.answer_options.all %}
+                                        <div class="d-flex align-items-center mb-2 border p-2 rounded">
+                                            <div class="form-check me-2">
+                                                <input type="checkbox" class="form-check-input" name="is_correct_{{ option.id }}" id="is_correct_{{ option.id }}" {% if option.is_correct %} checked {% endif %} disabled>
+                                            </div>
+                                            <input type="text" class="form-control me-2" value="{{ option.option_text }}" id="option_text_{{ option.id }}" disabled>
+                                            <button type="button" class="btn btn-link text-danger p-0" onclick="deleteAnswer({{ option.id }}, {{ question.id }})">
+                                                <i class="fas fa-times-circle"></i> <!-- FontAwesome close icon for better visibility -->
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </li>
+                        {% endfor %}
                     </ul>
+                    
                 </div>
             </div>
         </div>
-
 
         <!-- Answer Section -->
         <div class="col-md-7">  
@@ -131,7 +139,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-center" style="flex: 1;">Add/Edit Answers</h5>  
                 </div>
-                <div class="card-body" id="answerFormContainer" style="display: none;">
+                <div class="card-body" id="answerFormContainer">
                     <div id="answerDisplay"></div> 
                     <div class="d-flex justify-content-end"> 
                         <button type="button" class="btn btn-light btn-sm mb-2" id="editButton" style="display:none;" onclick="editAnswers()">
@@ -163,7 +171,7 @@
                     </form>
                 </div>
             </div>
-        </div>       
+        </div>     
     </div>
 </div>
 
@@ -178,9 +186,7 @@
     const addAnswerForm = document.getElementById('addAnswerForm');
     const answerOptionsContainer = document.getElementById('answerOptionsContainer');
     const selectedQuestionIdInput = document.getElementById('selectedQuestionId');
-    const editButton = document.getElementById('editButton');
     let currentlyOpenQuestion = null; // Track currently open question
-
 
     function toggleAddQuestionForm() {
         const addQuestionFormContainer = document.getElementById('addQuestionFormContainer');
@@ -191,6 +197,7 @@
         item.addEventListener('click', () => {
             const questionId = item.dataset.questionId;
 
+            // Check if this question is already open
             if (currentlyOpenQuestion === questionId) {
                 // Clicking the already open question - close it
                 item.classList.remove('highlight');
@@ -200,62 +207,25 @@
             } else {
                 // Clicking a different question - open it (and close any previously open one)
                 if (currentlyOpenQuestion !== null) {
-                    // A question is currently open, so close it first
+                    // Close the previously open question
                     const previouslyOpenItem = document.querySelector(`.question-item[data-question-id="${currentlyOpenQuestion}"]`);
                     if (previouslyOpenItem) {
-                    previouslyOpenItem.classList.remove('highlight');
+                        previouslyOpenItem.classList.remove('highlight');
                     }
                 }
 
-
+                // Open the new question for editing
                 item.classList.add('highlight');
                 answerFormContainer.style.display = 'block';
-                addAnswerForm.style.display = 'none';
-                editButton.style.display = 'block';
-                loadAnswers(questionId);
+                addAnswerForm.style.display = 'block'; // Directly show the answer editing form
+                loadAnswersForEditing(questionId); // Load answers into the editing form
                 currentlyOpenQuestion = questionId;
                 selectedQuestionIdInput.value = questionId; // Update the hidden input field
-
             }
         });
     });
 
-    // Handle Edit button click
-    editButton.addEventListener('click', () => {
-        const questionId = selectedQuestionIdInput.value;
-        loadAnswersForEditing(questionId); // Load answers into edit form
-        addAnswerForm.style.display = 'block';  // Show edit form
-        editButton.style.display = 'none';    // Hide edit button
-        answerDisplay.innerHTML = '';         // Clear displayed answers
-    });
-
-    // Load answers to display or edit
-    function loadAnswers(questionId) {
-        fetch(`/quiz/get_answers/${questionId}/`)
-            .then(response => response.json())
-            .then(data => {
-                answerDisplay.innerHTML = ''; // Clear the display area first
-                if (data.answers.length === 0) { // Check if there are no answers
-                    loadAnswersForEditing(questionId); // Load the edit form directly
-                    addAnswerForm.style.display = 'block';
-                    editButton.style.display = 'none';  // Hide the edit button
-                } else {
-                    answerDisplay.innerHTML = data.answers.map((answer, index) => {
-                        // Calculate the alphabet letter based on the index
-                        const alphabet = String.fromCharCode(65 + index); // 65 is the ASCII code for 'A'
-                        return `
-                            <div class="answer-card mb-3 p-3 border border-light rounded shadow-sm text-start position-relative">
-                                <p class="mb-0" style="text-align: left;"><strong>${alphabet}.</strong> ${answer.option_text}</p>
-                                ${answer.is_correct ? '<i class="fas fa-check-circle position-absolute" style="color: green; right: 10px; top: 10px; font-size: 1.5rem;"></i>' : ''}
-                            </div>
-                        `;
-                    }).join('');
-                }
-            });
-    }
-
-
-    // Load answers into the editing form
+    // Load answers into the editing form directly when the question is clicked
     function loadAnswersForEditing(questionId) {
         fetch(`/quiz/get_answers/${questionId}/`)
             .then(response => response.json())
@@ -316,7 +286,7 @@
         `;
 
         document.getElementById('answerOptionsContainer').appendChild(newAnswerDiv);
-        
+
         // Add event listener for the remove button
         const removeButton = newAnswerDiv.querySelector('.remove-answer');
         removeButton.addEventListener('click', () => {

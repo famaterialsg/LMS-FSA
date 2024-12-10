@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<div class="mt-1">
+<div class="mt-4">
     <h2 class="mb-4">Module Groups</h2>
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <form method="GET" class="flex-grow-1 mb-2 mb-md-0">
@@ -20,12 +20,12 @@
             </div>
         </form>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary" title="Import Module from Excel" 
+            <button class="btn btn-outline-secondary" title="Import Module from Excel" 
                     data-bs-toggle="modal" data-bs-target="#importModal" data-bs-toggle="tooltip">
                 <i class="fas fa-file-import"></i> Import
             </button>
 
-            <a href="{% url 'module_group:export_module_groups' %}" class="btn btn-outline-primary" 
+            <a href="{% url 'module_group:export_module_groups' %}" class="btn btn-outline-secondary" 
                title="Export Users to Excel" data-toggle="tooltip">
                 <i class="fas fa-file-export"></i> Export
             </a>
@@ -34,6 +34,9 @@
             </a>
         </div>
     </div>
+
+
+
     <table class="table table-striped">
         <thead class="thead-dark">
             <tr>

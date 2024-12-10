@@ -7,11 +7,11 @@ from .models import Member
 class MemberResource(resources.ModelResource):
     class Meta:
         model = Member
-        fields = ('id','full_name' ,'name', 'role', 'email', 'homepage', 'profile_picture')  # Các trường cần import/export
-        export_order = ('id','full_name', 'name', 'role', 'email', 'homepage', 'profile_picture')
+        fields = ('id','full_name' ,'name', 'role_member', 'email', 'homepage', 'profile_picture')  # Các trường cần import/export
+        export_order = ('id','full_name', 'name', 'role_member', 'email', 'homepage', 'profile_picture')
 
 # Cấu hình admin sử dụng ImportExportModelAdmin
 @admin.register(Member)
 class MemberAdmin(ImportExportModelAdmin):
     resource_class = MemberResource
-    list_display = ('name', 'full_name','role', 'email', 'homepage')  # Hiển thị các trường này trong admin
+    list_display = ('name', 'full_name','role_member', 'email', 'homepage')  # Hiển thị các trường này trong admin

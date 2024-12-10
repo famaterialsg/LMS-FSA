@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 {% load assessment_tags %}
-{% load custom_filters %}
+{% comment %} {% load key_value_filters %} {% endcomment %}
 
 {% block content %}
-
 <style>
     /* Define specific widths for each column */
     .table th:nth-child(1), .table td:nth-child(1) { width: 3%; } /* First column */
@@ -46,146 +45,152 @@
         background: white;
     }
 </style>
-<div class="mt-2">
+<div class="container mt-4">
     <!-- Assessment Details Section -->
     <div class="card mb-4">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center w-100">
-                <h2 class="m-0">{{ assessment.title }}</h2>
-                <div class="d-flex gap-2">
-                    <a href="{% url 'assessment:assessment_edit' assessment.pk %}" class="btn btn-primary">Edit</a>
-                    <a href="{% url 'assessment:assessment_list' %}" class="btn btn-secondary">Back to Assessments</a>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">{{ assessment.title }}</h2>
+            <div>
+                <a href="{% url 'assessment:assessment_edit' assessment.pk %}" class="btn btn-outline-secondary">Edit</a>
+                <a href="{% url 'assessment:assessment_list' %}" class="btn btn-secondary ml-2">Back to Assessments</a>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-md-6">
+                    <p><strong>Course:</strong> {{ assessment.course }}<br>
+                    <strong>Assessment Type:</strong> {{ assessment.assessment_type }}</p>
+                </div>
+        
+                <!-- Right Column -->
+                <div class="col-md-6">
+                    <p><strong>Due Date:</strong> {{ assessment.due_date|date:"F d, Y" }}<br>
+                    <strong>Total Score:</strong> {{ assessment.total_score }}</p>
                 </div>
             </div>
-        </div>        
+        </div>
         
-        <div class="row ">
-            <!-- Left Column -->
-            <div class="col-md-6">
-                <p class="ms-2"><strong>Course:</strong> {{ assessment.course }}<br>
-                <strong>Assessment Type:</strong> {{ assessment.assessment_type }}</p>
-            </div>
-    
-            <!-- Right Column -->
-            <div class="col-md-6">
-                <p><strong>Due Date:</strong> {{ assessment.due_date|date:"F d, Y" }}<br>
-                <strong>Total Score:</strong> {{ assessment.total_score }}</p>
-            </div>
-        </div> 
     </div>
-    <div class="overflow-auto custom-max-height">
-        <!-- Two-Column Layout for Exercises and Questions -->
-        <div class="row mb-4">
-            <!-- Exercises Section -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Exercises</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                        <ul class="list-group">
-                            {% for exercise in assessment.exercises.all %}
-                            <li class="list-group-item">
+
+    <!-- Two-Column Layout for Exercises and Questions -->
+    <div class="row mb-4">
+        <!-- Exercises Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Exercises</h3>
+                </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    <ul class="list-group">
+                        {% for exercise in assessment.exercises.all %}
+                        <li class="list-group-item">
+                           
+                            <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id 0 %}" target="_blank">{{ exercise.title }}</a>
                             
-                                <a href="{% url 'exercises:exercise_detail' exercise.id assessment.id 0 %}" target="_blank">{{ exercise.title }}</a>
-                                
-                            </li>
-                            {% empty %}
-                            <li class="list-group-item text-muted">No exercises assigned.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-muted">No exercises assigned.</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
-
-            <!-- Questions Section -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Multiple Choice</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                        <ul class="list-group">
-                            {% for question in assessment.questions.all %}
-                            <li class="list-group-item">{{ forloop.counter }}. {{ question.question_text }}</li>
-                            {% empty %}
-                            <li class="list-group-item text-muted">No questions assigned.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Invited Candidates Section at the Bottom -->
-        
-        <div class="card">
-            <div class="card-header">
-                <h5>Invited Candidates</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive" style="max-height: 53vh; overflow-y: auto; border: 1px solid #dee2e6;">
-                    <table class="table table-striped table-bordered">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Ordinal</th>
-                                <!-- <th>Candidate</th> -->
-                                <th>Email</th>
-                                <th>Invitation Date</th>
-                                <!-- <th>Expiration Date</th> -->
-                                <th>Quiz Score</th>
-                                <th title="Assignment Score">Challenge Score</th>
-                                <th>Cheating Check</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <!-- Scrollable second table (content) -->
-                        <tbody>
-                            {% if invited_candidates %}
-                                {% for candidate in invited_candidates %}
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td style="text-align: left;">{{ candidate.email }}</td>
-                                        <td>{{ candidate.invitation_date|date:"d/m/Y" }}</td>
-                                        <td>
-                                            {% with quiz_score=None %}
-                                                {% for attempt in registered_attempts %}
-                                                    {% if attempt.email == candidate.email and candidate.assessment == attempt.assessment %}
-                                                        {% with quiz_score=attempt.score_quiz %}
-                                                        {% endwith %}
-                                                    {% endif %}
-                                                {% endfor %}
-                                                {{ quiz_score|default:"-"|floatformat:0 }}
-                                            {% endwith %}
-                                        </td>
-                                        <td>
-                                            {% with ass_score=None %}
-                                                {% for attempt in registered_attempts %}
-                                                    {% if attempt.email == candidate.email and candidate.assessment == attempt.assessment %}
-                                                        {% with ass_score=attempt.score_ass %}
-                                                        {% endwith %}
-                                                    {% endif %}
-                                                {% endfor %}
-                                                {{ ass_score|default:"-"|floatformat:0 }}
-                                            {% endwith %}
-                                        </td>
-                                        <td></td>
-                                        <td>
-                                            <a href="{% url 'assessment:assessment_report' assessment.id candidate.id candidate.email %}">View report</a>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted">No candidates have been invited yet.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+        <!-- Questions Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Multiple Choice</h3>
                 </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    <ul class="list-group">
+                        {% for question in assessment.questions.all %}
+                        <li class="list-group-item">{{ forloop.counter }}. {{ question.question_text|safe }}</li>
+                        {% empty %}
+                        <li class="list-group-item text-muted">No questions assigned.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Invited Candidates Section at the Bottom -->
+     
+    <div class="card">
+        <div class="card-header">
+            <h3>Invited Candidates</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive" style="max-height: 53vh; overflow-y: auto; border: 1px solid #dee2e6;">
+                <table class="table table-sm table-striped table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Candidate</th>
+                            <th>Email</th>
+                            <th>Invitation Date</th>
+                            <th>Expiration Date</th>
+                            <th>Quiz Score</th>
+                            <th>Assignment Score</th>
+                            <th>Cheating Check</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in registered_attempts %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td style="text-align: left;">
+                                    {% if attempt.email in invited_candidates_emails %}
+                                        {{ attempt.email }}
+                                    {% else %}
+                                        Not Invited
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: left;">{{ attempt.email }}</td>
+                                <td>
+                                    {% for candidate in invited_candidates %}
+                                        {% if candidate.email == attempt.email %}
+                                            {{ candidate.invitation_date }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>                        
+                                <td>
+                                    {% for candidate in invited_candidates %}
+                                        {% if candidate.email == attempt.email %}
+                                        {{ candidate.expiration_date }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>{{ attempt.score_quiz|floatformat:0 }}</td>
+                                <td>
+                                    {% for key, value in final_scores.items %}
+                                        {% if attempt.email == key %}
+                                            {{value|floatformat:1}}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'cheat_logger:statistics' %}?attempt_model_name=StudentAssessmentAttempt&attempt_id={{ attempt.id }}">View</a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'assessment:assessment_report' assessment.id attempt.id attempt.email %}">View</a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No attempts yet.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+    
 </div>
 {% endblock %}

@@ -1,5 +1,6 @@
 # context_processors.py
 from .models import SiteStatus
+from django.urls import resolve
 
 def site_status(request):
     # Lấy bản ghi đầu tiên của SiteStatus (trạng thái trang web)
@@ -9,36 +10,66 @@ def site_status(request):
     return {
         'is_site_locked': not site_status.status if site_status else False
     }
-from django.urls import resolve
+
 
 def breadcrumb(request):
     # Lấy session của breadcrumb hoặc khởi tạo mới
     breadcrumbs = request.session.get('breadcrumbs', [{"name": "Home", "url": "/"}])
 
     current_path = request.path
-    app_name = request.resolver_match.app_name if request.resolver_match else None
+    resolver_match = request.resolver_match
+    app_name = resolver_match.app_name if resolver_match else None
 
     # Nếu đang ở trang chủ, chỉ hiển thị Home
     if current_path == '/':
         breadcrumbs = [{"name": "Home", "url": "/"}]
     else:
-        # Kiểm tra nếu người dùng đang chuyển sang một module khác
-        # Nếu không phải trang chủ và không cùng app, reset breadcrumb
-        if breadcrumbs and (not current_path.startswith(breadcrumbs[-1]['url']) or (app_name and app_name != breadcrumbs[-1]['url'].strip('/'))):
-            breadcrumbs = [{"name": "Home", "url": "/"}]
-
-        # Lấy thông tin về tên đường dẫn hiện tại
-        resolver_match = request.resolver_match
         if resolver_match:
             url_name = resolver_match.url_name
+            current_title = url_name.replace('_', ' ').capitalize() if url_name else ""
 
-            # Thêm app_name vào breadcrumb nếu chưa có
-            if app_name and not any(crumb["name"] == app_name.capitalize() for crumb in breadcrumbs):
-                breadcrumbs.append({"name": app_name.capitalize(), "url": f"/{app_name}/"})
+            # Kiểm tra nếu breadcrumbs hiện tại không khớp với đường dẫn mới
+            if not breadcrumbs or breadcrumbs[-1]["url"] != current_path:
+                # Điều kiện đặc biệt cho Book search
+                if "book search" in current_title.lower():
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    breadcrumbs.append({"name": "Book search", "url": current_path})
+                
+                elif app_name == "reports":
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    
+                    # Kiểm tra nếu là trang báo cáo chính (dashboard)
+                    if current_path == "/reports/":
+                        breadcrumbs.append({"name": "Report", "url": "/reports/"})
+                    else:
+                        # Các báo cáo khác
+                        breadcrumbs.append({"name": "Report", "url": "/reports/"})
+                        breadcrumbs.append({"name": current_title, "url": current_path})
 
-            # Thêm url_name vào breadcrumb nếu chưa có
-            if url_name and not any(crumb["name"] == url_name.replace('_', ' ').capitalize() for crumb in breadcrumbs):
-                breadcrumbs.append({"name": url_name.replace('_', ' ').capitalize(), "url": current_path})
+
+                # Điều kiện đặc biệt cho module_group/modules
+                elif current_path.startswith('/module_group/modules/'):
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    breadcrumbs.append({"name": "Module Group List", "url": "/module_group/"})  # Sửa thành /module_group/
+                    breadcrumbs.append({"name": "Modules", "url": current_path})
+                
+                # Điều kiện đặc biệt cho Activity, Achievement, Quiz Bank
+                elif app_name in ["activity", "achievement", "quiz_bank"]:
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    breadcrumbs.append({"name": app_name.capitalize(), "url": current_path})
+                
+                # Xử lý các module khác
+                elif "list" in current_title.lower():
+                    breadcrumbs = [{"name": "Home", "url": "/"}]
+                    breadcrumbs.append({"name": f"{app_name.capitalize()} List", "url": current_path})
+                else:
+                    # Xử lý cho các chức năng khác
+                    if len(breadcrumbs) > 1 and "list" in breadcrumbs[-1]["name"].lower():
+                        breadcrumbs.append({"name": current_title, "url": current_path})
+                    else:
+                        breadcrumbs = [{"name": "Home", "url": "/"}]
+                        breadcrumbs.append({"name": f"{app_name.capitalize()} List", "url": f"/{app_name}/list/"})
+                        breadcrumbs.append({"name": current_title, "url": current_path})
 
     # Cập nhật session
     request.session['breadcrumbs'] = breadcrumbs

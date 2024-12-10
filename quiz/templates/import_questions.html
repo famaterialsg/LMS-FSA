@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-4">
     <h1>Import Questions for "{{ quiz.quiz_title }}"</h1>
-    <p>Please download and use the <a href="{% static 'excel/import_question.xlsx' %}" target="_blank">Excel template</a>. The Excel file must contain exactly one sheet with the required columns.</p>
+    <p>Please download and use the <a href="{% static 'excel/JPL_Quiz_03_questions_with_images (5).xlsx' %}" target="_blank">Excel template</a>. The Excel file must contain exactly one sheet with the required columns.</p>
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="mb-3">

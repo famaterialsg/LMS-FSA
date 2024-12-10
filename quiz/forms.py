@@ -17,7 +17,7 @@ class QuizForm(forms.ModelForm):
 class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = ['question_text', 'question_type', 'points']
+        fields = ['question_text']
 
 class AnswerOptionForm(forms.ModelForm):
     class Meta:

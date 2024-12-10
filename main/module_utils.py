@@ -1,5 +1,5 @@
 from module_group.models import Module, ModuleGroup
-from role.models import Role, RoleModule
+from role.models import Role
 
 def get_grouped_modules(user, temporary_role_id=None):
     """
@@ -9,7 +9,7 @@ def get_grouped_modules(user, temporary_role_id=None):
     user_modules = Module.objects.all()  # Mặc định không có modules nào
 
     if user.is_authenticated:
-        if user.is_superuser:
+        if user.is_superuser or (user.profile.role and user.profile.role.role_name == "Manager"):
             # Nếu là superuser, kiểm tra role tạm thời
             if temporary_role_id:
                 try:
@@ -32,11 +32,15 @@ def get_grouped_modules(user, temporary_role_id=None):
     module_groups = ModuleGroup.objects.all()
     grouped_modules = {}
     
-    # Nhóm các module theo group
+    # Nhóm các module theo group và sắp xếp theo tên module
     for module in user_modules:
         group = module.module_group
         if group not in grouped_modules:
             grouped_modules[group] = []
         grouped_modules[group].append(module)
     
+    # Sắp xếp modules trong từng group theo tên (module_name)
+    for group, modules in grouped_modules.items():
+        grouped_modules[group] = sorted(modules, key=lambda module: module.module_name.lower())
+
     return module_groups, grouped_modules

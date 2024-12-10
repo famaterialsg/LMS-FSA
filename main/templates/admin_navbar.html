@@ -3,18 +3,21 @@
         {% if user.is_authenticated %}
         <a class="navbar-brand" href="{% url 'main:home' %}">FSA</a>
         <button class="btn btn-dark" type="button" id="sidebarToggle" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation" >
-            <i class="fas fa-arrow-alt-circle-right mt-1" style="font-size: 22px;"></i>
+            <i class="fas fa-arrow-alt-circle-right mt-1"></i>
         </button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        {% else %}
+        <a class="navbar-brand" href="{% url 'main:home' %}">FSA</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         {% endif %}
         <div class="collapse navbar-collapse" id="navbarNav">
-    
             {% if user.is_authenticated %}
             <ul class="navbar-nav ms-auto">
                 {% include 'notification_bell.html' %}
-                {% if user.is_superuser %}
                 <a class="nav-link" href="{% url 'student_portal:course_list' %}">
                     <i class="fas fa-user-graduate"></i> Go to Learn &nbsp;|&nbsp;
                 </a>
@@ -24,51 +27,51 @@
                         <i class="fas fa-users"></i> Team
                     </a>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="roleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user-shield"></i> Role
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="roleDropdown">
-                        <li>
-                            <form action="{% url 'role:select_role' %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <select name="role" class="form-select" onchange="this.form.submit()">
-                                    <option value="" class="text-muted" disabled selected>Select Role</option>
-                                    {% for role in roles %}
-                                    <option value="{{ role.role_name }}" {% if role.role_name == request.user.profile.role.role_name or role.role_name == temporary_role %}selected{% endif %}>
-                                        {{ role.role_name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </form>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form action="{% url 'role:reset_role' %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="dropdown-item">Reset Role</button>
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'main:home' %}" target="_blank">
-                        <i class="fas fa-user-shield"></i> Admin LMS
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'admin:index' %}" target="_blank">
-                        <i class="fas fa-user-shield"></i> Admin Django &nbsp;|&nbsp;
-                    </a>
-                </li>
-                {% endif %} 
+                {% if user.is_superuser or user.profile.role.role_name == "Manager" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="roleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-shield"></i> Role
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="roleDropdown">
+                            <li>
+                                <form action="{% url 'role:select_role' %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <select name="role" class="form-select" onchange="this.form.submit()">
+                                        <option value="" class="text-muted" disabled selected>Select Role</option>
+                                        {% for role in roles %}
+                                            {% if role.role_name != "Super Admin" %}
+                                                {% if role.role_name != user.profile.role.role_name and role.role_name != temporary_role %}
+                                                    <option value="{{ role.role_name }}" {% if role.role_name == temporary_role %}selected{% endif %}>
+                                                        {{ role.role_name }}
+                                                    </option>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{% url 'role:reset_role' %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">Reset Role</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin:index' %}" target="_blank">
+                            <i class="fas fa-user-shield"></i> Admin Django &nbsp;|&nbsp;
+                        </a>
+                    </li>
+                {% endif %}
+           
                 <li class="nav-item dropdown">
                     <a class="nav-link d-flex align-items-center" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {% if request.user.profile.profile_picture_url %}
                             <img src="{{ request.user.profile.profile_picture_url }}" class="img-fluid rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
                         {% else %}
-                            <i class="fas fa-user rounded-circle mt-1"></i>
+                            <i class="fas fa-user rounded-circle mt-2"></i>
                         {% endif %}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-center" aria-labelledby="navbarUserDropdown">
@@ -83,7 +86,7 @@
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
-                
+                        
                         <!-- My Learning -->
                         <li>
                             <a class="dropdown-item d-flex align-items-center" href="{% url 'mylearning:index' %}">
@@ -103,13 +106,13 @@
                         </li>
                     </ul>
                 </li>
-                
             {% else %}
-            <a class="navbar-brand" href="{% url 'main:home' %}">FSA</a>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="{% url 'main:register_email' %}">Register</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'main:login' %}">Login</a></li>
-            </ul>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'main:register_email' %}">Register</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'main:login' %}">Login</a></li>
+                </ul>
+            </div>
             {% endif %}
         </div>
 
