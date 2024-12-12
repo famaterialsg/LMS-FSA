@@ -389,35 +389,49 @@ function filterInstructorFeedback() {
     window.location.href = url.toString();
 }
 
-function toggleRatingSort() {
-    const button = document.getElementById('ratingSortButton');
-    const icon = button.querySelector('i');
-    const currentSort = icon.classList.contains('fa-sort-amount-down') ? 'asc' : 'desc';
-
-    // Build URL with sort parameter
-    const url = new URL(window.location.href);
-    url.searchParams.set('course_sort', currentSort);
-
-    // Preserve other parameters
-    url.searchParams.set('tab', 'course-feedback');
-
-    // Navigate to sorted URL
-    window.location.href = url.toString();
-}
-
 function toggleInstructorRatingSort() {
     const button = document.getElementById('instructorRatingSortButton');
     const icon = button.querySelector('i');
     const currentSort = icon.classList.contains('fa-sort-amount-down') ? 'asc' : 'desc';
 
-    // Build URL with sort parameter
+    // Get the table rows
+    const tableRows = Array.from(document.querySelectorAll('#instructorFeedbackTable tbody tr'));
+
+    // Sort the table rows
+    tableRows.sort((a, b) => {
+        const ratingA = parseFloat(a.cells[2].textContent);
+        const ratingB = parseFloat(b.cells[2].textContent);
+        return currentSort === 'asc' ? ratingA - ratingB : ratingB - ratingA;
+    });
+
+    // Update the table
+    const tbody = document.querySelector('#instructorFeedbackTable tbody');
+    tbody.innerHTML = '';
+    tableRows.forEach((row) => {
+        tbody.appendChild(row);
+    });
+
+    // Update the icon
+    icon.classList.remove('fa-sort-amount-down', 'fa-sort-amount-up');
+    icon.classList.add(currentSort === 'asc' ? 'fa-sort-amount-up' : 'fa-sort-amount-down');
+}
+
+function toggleRatingSort() {
+    const button = document.getElementById('ratingSortButton');
+    const icon = button.querySelector('i');
+
+    // Determine the current sort direction and toggle it
+    const currentSort = icon.classList.contains('fa-sort-amount-down') ? 'desc' : 'asc'; // Correct toggle logic
+
+    // Update the URL parameters with the new sort value
     const url = new URL(window.location.href);
-    url.searchParams.set('instructor_sort', currentSort);
+    url.searchParams.set('course_sort', currentSort);
 
-    // Preserve other parameters
-    url.searchParams.set('tab', 'instructor-feedback');
+    // Update the icon based on the new sort direction
+    icon.classList.remove('fa-sort-amount-down', 'fa-sort-amount-up');
+    icon.classList.add(currentSort === 'asc' ? 'fa-sort-amount-up' : 'fa-sort-amount-down');
 
-    // Navigate to sorted URL
+    // Refresh the page with the updated URL
     window.location.href = url.toString();
 }
 
